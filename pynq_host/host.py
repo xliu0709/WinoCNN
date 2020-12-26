@@ -354,15 +354,15 @@ class ConvDesc_t():
         self.relu_flag=self.relu_flag;
 
     def to_array(self, params):
-        params[0]=self.inheight;
-        params[1]=self.inwidth;
-        params[2]=self.indepth;
-        params[3]=self.outheight;
-        params[4]=self.outwidth;
-        params[5]=self.outdepth;
+        params[0]=self.input_height;
+        params[1]=self.input_width;
+        params[2]=self.input_depth;
+        params[3]=self.output_height;
+        params[4]=self.output_width;
+        params[5]=self.output_depth;
         params[6]=self.kernel_size;
         params[7]=self.pad_size;
-        params[8]=self.stride;
+        params[8]=self.stride_size;
         params[9]=self.wino3x3_flag; 
         params[10]=self.wino_output_tile_size;
         params[11]=self.indepth_align_minitile_size;
