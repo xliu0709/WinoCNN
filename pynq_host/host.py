@@ -444,7 +444,7 @@ if __name__ == "__main__":
     sys_command+=" random"
     sys_command+=" random"
 
-    os.system("./single_csim.out "+sys_command)
+    # os.system("./single_csim.out "+sys_command)
 
 
     xlnk = Xlnk()
