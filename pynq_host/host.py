@@ -472,12 +472,12 @@ if __name__ == "__main__":
             print(i,params[i],params_load[i])
             params[i]=params_load[i]
 
-    input_load=np.fromfile("input.bin",dtype=np.int32)
+    input_load=np.fromfile("input.bin",dtype=np.int16)
     for i in range(len(input_load)):
         input_FM[i]=input_load[i]
 
 
-    weight_load=np.fromfile("weight.bin",dtype=np.int32)
+    weight_load=np.fromfile("weight.bin",dtype=np.int16)
     for i in range(len(weight_load)):
         weight[i]=weight_load[i]
     
@@ -508,9 +508,15 @@ if __name__ == "__main__":
 
 
 
-    output_load=np.fromfile("output.bin",dtype=np.int32)
+    output_load=np.fromfile("output.bin",dtype=np.int16)
     count=0;
+
+    # for i in range( conv_desc.output_height):
+    #     for j in range( conv_desc.output_width):
+    #         for k in range( conv_desc.output_depth/8):
+    #             print(i,j,l, output_FM[])        
+        
     for i in range(len(output_load)):
-        if(output_FM[i]!=output_load[i]):
+        if output_load[i]!=output_FM[i]:
             count+=1
     print("error num", count)
