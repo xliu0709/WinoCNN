@@ -524,7 +524,7 @@ if __name__ == "__main__":
                 for l in range(8):
                     val=output_FM[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+l]
 
-                    print("[",val/256,val%256,"]",end=",")
+                    print("[",val//256,val%256,"]",end=",")
                 print("")        
         
     # for i in range(len(output_load)):
