@@ -633,21 +633,21 @@ void wino_systolic_top(
     ap_uint<1> ap_clk_div2=0;
     // #endif
 
-    #pragma HLS interface m_axi port= input_DDR3 offset=slave   bundle=input_DDR3
-    #pragma HLS interface m_axi port= input_DDR2 offset=slave   bundle=input_DDR2
-    #pragma HLS interface m_axi port= input_DDR1 offset=slave   bundle=input_DDR1
-    #pragma HLS interface m_axi port= input_DDR0 offset=slave   bundle=input_DDR0
-    #pragma HLS interface m_axi port= weight_DDR0 offset=slave  bundle=weight_DDR0
-    #pragma HLS interface m_axi port= output_DDR3 offset=slave  bundle=output_DDR3
-    #pragma HLS interface m_axi port= output_DDR2 offset=slave  bundle=output_DDR2
-    #pragma HLS interface m_axi port= output_DDR1 offset=slave  bundle=output_DDR1
-    #pragma HLS interface m_axi port= output_DDR0 offset=slave  bundle=output_DDR0
+    #pragma HLS interface m_axi port= input_DDR3 offset=slave   bundle=input_DDR3 depth=65535
+    #pragma HLS interface m_axi port= input_DDR2 offset=slave   bundle=input_DDR2 depth=65535
+    #pragma HLS interface m_axi port= input_DDR1 offset=slave   bundle=input_DDR1 depth=65535
+    #pragma HLS interface m_axi port= input_DDR0 offset=slave   bundle=input_DDR0 depth=65535
+    #pragma HLS interface m_axi port= weight_DDR0 offset=slave  bundle=weight_DDR0 depth=65535
+    #pragma HLS interface m_axi port= output_DDR3 offset=slave  bundle=output_DDR3 depth=65535
+    #pragma HLS interface m_axi port= output_DDR2 offset=slave  bundle=output_DDR2 depth=65535
+    #pragma HLS interface m_axi port= output_DDR1 offset=slave  bundle=output_DDR1 depth=65535
+    #pragma HLS interface m_axi port= output_DDR0 offset=slave  bundle=output_DDR0 depth=65535
     // #pragma HLS interface m_axi port= weight_DDR3 offset=slave depth=65535
     // #pragma HLS interface m_axi port= weight_DDR2 offset=slave depth=65535
     // #pragma HLS interface m_axi port= weight_DDR1 offset=slave depth=65535
 
-    #pragma HLS interface m_axi port= mem_params offset=slave  bundle=mem_params
-    #pragma HLS interface m_axi port= bias_mem offset=slave  bundle=bias_mem
+    #pragma HLS interface m_axi port= mem_params offset=slave  bundle=mem_params depth=65535
+    #pragma HLS interface m_axi port= bias_mem offset=slave  bundle=bias_mem depth=65535
 	#pragma HLS INTERFACE s_axilite register port=return
 
     //input buffer declaration
