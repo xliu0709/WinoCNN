@@ -470,6 +470,7 @@ if __name__ == "__main__":
     for i in range(74):
         if( params[i]!=params_load[i] ):
             print(i,params[i],params_load[i])
+            params[i]=params_load[i]
 
     input_load=np.fromfile("input.bin",dtype=np.int32)
     for i in range(len(input_load)):
