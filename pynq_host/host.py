@@ -519,7 +519,7 @@ if __name__ == "__main__":
 
     for i in range( conv_desc.output_height):
         for j in range( conv_desc.output_width):
-            for k in range( conv_desc.output_depth//8)
+            for k in range( conv_desc.output_depth//8):
                 print(i,j,k,end=":")
                 for l in range(8):
                     val=output_FM[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+l]
