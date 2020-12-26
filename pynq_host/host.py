@@ -517,24 +517,24 @@ if __name__ == "__main__":
     output_load=np.fromfile("output.bin",dtype=np.int16)
     count=0;
 
-    for i in range( conv_desc.output_height):
-        for j in range( conv_desc.output_width):
-            for k in range( conv_desc.output_depth//8):
-                print(i,j,k,end=":")
-                for l in range(8):
-                    val=output_load[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+l]
+    # for i in range( conv_desc.output_height):
+    #     for j in range( conv_desc.output_width):
+    #         for k in range( conv_desc.output_depth//8):
+    #             print(i,j,k,end=":")
+    #             for l in range(8):
+    #                 val=output_load[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+l]
 
-                    print("[",val//256,val%256,"]",end=",")
-                print("")  
-                print(i,j,k,end=":")
-                for l in range(8):
-                    val=output_FM[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+l]
+    #                 print("[",val//256,val%256,"]",end=",")
+    #             print("")  
+    #             print(i,j,k,end=":")
+    #             for l in range(8):
+    #                 val=output_FM[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+l]
                     
-                    print("[",val//256,val%256,"]",end=",")
-                print("")        
+    #                 print("[",val//256,val%256,"]",end=",")
+    #             print("")        
         
-    # for i in range(len(output_load)):
-    #     if output_load[i]!=output_FM[i]:
-    #         print( output_load[i],output_FM[i])
-    #         count+=1
-    # print("error num", count)
+    for i in range(len(output_load)):
+        if output_load[i]!=output_FM[i]:
+            print( output_load[i],output_FM[i])
+            count+=1
+    print("error num", count)

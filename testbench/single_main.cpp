@@ -258,7 +258,7 @@ int main(int argc, char** argv)
 
     fptr=fopen("output.bin","w");
 
-    fwrite(fmap_dict["in"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
+    fwrite(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
     fclose(fptr);
 
        char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
