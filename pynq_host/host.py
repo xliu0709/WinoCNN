@@ -518,5 +518,5 @@ if __name__ == "__main__":
         
     for i in range(len(output_load)):
         if output_load[i]!=output_FM[i]:
-            count+=1
+            print( output_load[i],output_FM[i])
     print("error num", count)
