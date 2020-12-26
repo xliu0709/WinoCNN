@@ -477,7 +477,7 @@ if __name__ == "__main__":
         input_FM[i]=input_load[i]
 
 
-    weight_load=np.fromfile("weight.bin",dtype=np.int16)
+    weight_load=np.fromfile("weight.bin",dtype=np.int32)
     for i in range(len(weight_load)):
         weight[i]=weight_load[i]
     
