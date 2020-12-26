@@ -478,7 +478,7 @@ if __name__ == "__main__":
 
     weight_load=np.fromfile("weight.bin",dtype=np.int32)
     for i in range(len(weight_load)):
-        weight_FM[i]=weight_load[i]
+        weight[i]=weight_load[i]
     
     test.write(0x10,input_FM.physical_address)
     test.write(0x18,input_FM.physical_address)
