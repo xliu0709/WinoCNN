@@ -519,7 +519,8 @@ if __name__ == "__main__":
     #         for k in range( conv_desc.output_depth//8):
     #             print(i,j,k, output_FM[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8:(i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+8 ])        
         
-    # for i in range(len(output_load)):
-    #     if output_load[i]!=output_FM[i]:
-    #         print( output_load[i],output_FM[i])
+    for i in range(len(output_load)):
+        if output_load[i]!=output_FM[i]:
+            print( output_load[i],output_FM[i])
+            count+=1
     print("error num", count)
