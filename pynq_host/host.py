@@ -463,7 +463,7 @@ if __name__ == "__main__":
     params = xlnk.cma_array(shape=(128), dtype=np.int32)
     bias = xlnk.cma_array(shape=(1024*16), dtype=np.int32)
 
-
+    output_FM.fill(0)
     conv_desc.to_array(params)
 
     params_load=np.fromfile("param.bin",dtype=np.int32)
@@ -483,6 +483,9 @@ if __name__ == "__main__":
 
     for i in range(32):
         print(bias[i])
+
+    for i in range(len(weight_load)):
+        weight[i]=weight_load[i]
     
     test.write(0x10,input_FM.physical_address)
     test.write(0x18,input_FM.physical_address)
