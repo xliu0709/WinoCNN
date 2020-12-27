@@ -66,6 +66,7 @@ int main(int argc, char** argv)
     std::string input_gold(argv[12]);
     std::string output_gold(argv[13]);
     std::string weight_gold(argv[14]);
+    std::string dump_method(argv[15]);
     int group_indepth_offset=0;
     int group_indepth=ALIGN(input_depth,8);
     int group_outdepth_offset=0;
@@ -261,48 +262,57 @@ int main(int argc, char** argv)
     fwrite(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
     fclose(fptr);
 
+
+    if( dump_method=="dump_txt")
+    {
        char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
        char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
 
-       featuremap_hw_to_int_pointers(
-           fmap_dict["out"].buffers_hw[0],
-           out_hw1,
-           out_hw2,
-           linfo_vect[0].outdim[1],
-           linfo_vect[0].outdim[2],
-           linfo_vect[0].outdim[0],
-           0,
-           linfo_vect[0].outdim[0]
-       );
+        featuremap_hw_to_int_pointers(
+            fmap_dict["out"].buffers_hw[0],
+            out_hw1,
+            out_hw2,
+            linfo_vect[0].outdim[1],
+            linfo_vect[0].outdim[2],
+            linfo_vect[0].outdim[0],
+            0,
+            linfo_vect[0].outdim[0]
+        );
 
-       print_feature_map<char>(fmap_dict["out"].buffers_int[0],
-       "C1_mdoel_int_out.txt",
-       linfo_vect[0].outdim[1],
-       linfo_vect[0].outdim[2],
-       linfo_vect[0].outdim[0]
-       );
+        print_feature_map<char>(fmap_dict["out"].buffers_int[0],
+        "C1_mdoel_int_out.txt",
+        linfo_vect[0].outdim[1],
+        linfo_vect[0].outdim[2],
+        linfo_vect[0].outdim[0]
+        );
 
-       print_feature_map<char>(out_hw1,
-       "C1_hw_out.txt",
-       linfo_vect[0].outdim[1],
-       linfo_vect[0].outdim[2],
-       linfo_vect[0].outdim[0]
-       );
+        print_feature_map<char>(out_hw1,
+        "C1_hw_out.txt",
+        linfo_vect[0].outdim[1],
+        linfo_vect[0].outdim[2],
+        linfo_vect[0].outdim[0]
+        );
 
 
-       print_feature_map<char>(fmap_dict["out"].buffers_int[1],
-       "C2_mdoel_int_out.txt",
-       linfo_vect[0].outdim[1],
-       linfo_vect[0].outdim[2],
-       linfo_vect[0].outdim[0]
-       );
+        print_feature_map<char>(fmap_dict["out"].buffers_int[1],
+        "C2_mdoel_int_out.txt",
+        linfo_vect[0].outdim[1],
+        linfo_vect[0].outdim[2],
+        linfo_vect[0].outdim[0]
+        );
 
-       print_feature_map<char>(out_hw2,
-       "C2_hw_out.txt",
-       linfo_vect[0].outdim[1],
-       linfo_vect[0].outdim[2],
-       linfo_vect[0].outdim[0]
-       );
+        print_feature_map<char>(out_hw2,
+        "C2_hw_out.txt",
+        linfo_vect[0].outdim[1],
+        linfo_vect[0].outdim[2],
+        linfo_vect[0].outdim[0]
+        );
+    }
+    else
+    {
+        /* code */
+    }
+    
 
     // FREE(input_DDR);
     // FREE(weight_DDR);

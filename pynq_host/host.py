@@ -5,8 +5,8 @@ import os
 import sys
 import math
 import time
-from pynq import Xlnk
-from pynq import Overlay
+# from pynq import Xlnk
+# from pynq import Overlay
 import numpy as np
 
 
@@ -444,7 +444,7 @@ if __name__ == "__main__":
     sys_command+=" random"
     sys_command+=" random"
 
-    # os.system("./single_csim.out "+sys_command)
+    os.system("./single_csim.out "+sys_command)
 
 
     xlnk = Xlnk()
@@ -506,7 +506,6 @@ if __name__ == "__main__":
     test.write(0x00, 1)
     isready = test.read(0x00)
     while( isready == 1 ):
-        # print("start calling", isready)
         isready = test.read(0x00)
 
     end = time.time()
@@ -517,21 +516,7 @@ if __name__ == "__main__":
     output_load=np.fromfile("output.bin",dtype=np.int16)
     count=0;
 
-    # for i in range( conv_desc.output_height):
-    #     for j in range( conv_desc.output_width):
-    #         for k in range( conv_desc.output_depth//8):
-    #             print(i,j,k,end=":")
-    #             for l in range(8):
-    #                 val=output_load[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+l]
-
-    #                 print("[",val//256,val%256,"]",end=",")
-    #             print("")  
-    #             print(i,j,k,end=":")
-    #             for l in range(8):
-    #                 val=output_FM[ (i*conv_desc.output_depth//8+k*conv_desc.output_width+j)*8+l]
-                    
-    #                 print("[",val//256,val%256,"]",end=",")
-    #             print("")        
+    
         
     for i in range(len(output_load)):
         if output_load[i]!=output_FM[i]:
