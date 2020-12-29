@@ -454,7 +454,7 @@ def running_test( argv,validate_dict):
     validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ] = [ret_val, argv[11]]
     
     
-    if(ret_val !=0):
+    if(ret_val%256 !=0):
         validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append("NA")
         validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append("NA")
         return
