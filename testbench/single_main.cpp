@@ -260,6 +260,8 @@ int main(int argc, char** argv)
    fwrite(fmap_dict["in"].buffers_hw[0], 16,input_depth/8*input_height*input_height,fptr);
    fclose(fptr);
 
+    if(dump_method !="dump_bin")
+    {
      wino_systolic_top(
          (ap_uint<128> *) inputddr,
          (ap_uint<128> *) inputddr,
@@ -274,6 +276,7 @@ int main(int argc, char** argv)
          (ap_int<32>*) bias
          // (linfo_vect[0].biasbuffer_quant[0])
          );
+    }
 
 
  
@@ -289,8 +292,28 @@ int main(int argc, char** argv)
     delete [] conv_desc_param;
     delete [] bias;
 
+    if(dump_method=="dump_bin")
+    {
+        featuremap_int_to_hw_pointers(
+        fmap_dict["out"].buffers_int[0],
+        fmap_dict["out"].buffers_int[1],
+        fmap_dict["out"].buffers_hw[0],
+        fmap_dict["out"].blob_info->dim[1],
+        fmap_dict["out"].blob_info->dim[2],
+        fmap_dict["out"].blob_info->dim[0],
+        0,
+        ALIGN(fmap_dict["out"].blob_info->dim[0],8));
 
-    if( dump_method=="dump_txt")
+
+
+        fptr=fopen("output.bin","w");
+        fwrite(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
+        fclose(fptr);
+        del_featuremap_mem(fmap_dict);
+        del_weight_buffer_pointer(linfo_vect);
+        return 0;
+    }
+    else if( dump_method=="dump_txt")
     {
         char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
         char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
@@ -339,6 +362,7 @@ int main(int argc, char** argv)
         
         delete [] out_hw1;
         delete [] out_hw2;
+        return 0;
         
         
     }
@@ -367,21 +391,7 @@ int main(int argc, char** argv)
 
 
 
-        featuremap_int_to_hw_pointers(
-        fmap_dict["out"].buffers_int[0],
-        fmap_dict["out"].buffers_int[1],
-        fmap_dict["out"].buffers_hw[0],
-        fmap_dict["out"].blob_info->dim[1],
-        fmap_dict["out"].blob_info->dim[2],
-        fmap_dict["out"].blob_info->dim[0],
-        0,
-        ALIGN(fmap_dict["out"].blob_info->dim[0],8));
 
-
-
-        fptr=fopen("output.bin","w");
-        fwrite(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
-        fclose(fptr);
         del_featuremap_mem(fmap_dict);
         del_weight_buffer_pointer(linfo_vect);
 
