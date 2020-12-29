@@ -451,12 +451,19 @@ def running_test( argv,validate_dict):
 
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
-    validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ] = [ret_val, argv[11]]
+    key=int(argv[1]),int(argv[3]),int(argv[7])
+    prefix=""
+    for i in key:
+        prefix=prefix+str(i)+"_"
+
+
+
+    validate_dict[ key ] = [ret_val, argv[11]]
     
     
     if(ret_val%256 !=0):
-        validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append("NA")
-        validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append("NA")
+        validate_dict[ key ].append("NA")
+        validate_dict[ key ].append("NA")
         return
 
     xlnk = Xlnk()
@@ -466,9 +473,6 @@ def running_test( argv,validate_dict):
     overlay = Overlay("design_1_wrapper.bit")
     print("bitstream loaded")
     test = overlay.wino_systolic_top_0
-    print("start calling", test.read(0x00))
-
-   
     input_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
     weight = xlnk.cma_array(shape=(3*3*512*512), dtype=np.int32)
     output_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
@@ -478,22 +482,29 @@ def running_test( argv,validate_dict):
     output_FM.fill(0)
     conv_desc.to_array(params)
 
+
+
+    
+
     params_load=np.fromfile("param.bin",dtype=np.int32)
     for i in range(74):
         if( params[i]!=params_load[i] ):
             params[i]=params_load[i]
 
+    os.system("cp param.bin bin/"+prefix+"param.bin")
+
+
     input_load=np.fromfile("input.bin",dtype=np.int16)
     for i in range(len(input_load)):
         input_FM[i]=input_load[i]
-
+    os.system("cp input.bin bin/"+prefix+"input.bin")
 
     weight_load=np.fromfile("weight.bin",dtype=np.int32)
     for i in range(len(weight_load)):
         weight[i]=weight_load[i]
 
-    for i in range(len(weight_load)):
-        weight[i]=weight_load[i]
+
+    
     
     test.write(0x10,input_FM.physical_address)
     test.write(0x18,input_FM.physical_address)
@@ -522,14 +533,18 @@ def running_test( argv,validate_dict):
 
 
     output_load=np.fromfile("output.bin",dtype=np.int16)
+    os.system("cp output.bin bin/"+prefix+"output.bin")
+    validate_dict[ key ].append(output_load)
+    
     count=0;
 
     for i in range(len(output_load)):
         if(output_load[i]!=output_FM[i]):
             count+=1
     error_rate=count/len(output_load)
-    validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append((end - start)*1e9/100) 
-    validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append(error_rate )
+    print("error_rate",error_rate)
+    validate_dict[ key ].append((end - start)*1e9/100) 
+    validate_dict[ key ].append(error_rate )
     
 
 
@@ -543,9 +558,14 @@ if __name__ == "__main__":
         for j in depth_test_case:
             scale_fact=(1<<14)//j//9;
             argv=[0,i,i,j,i,i,j,3,1,1,1,scale_fact,"src/wino_hw_config.h"]
-
             running_test(argv, result_dict)
     
+
+    for key, val in result_dict.items():
+        
+        prefix=""
+        for i in key:
+            prefix+="key"
     print(result_dict)
 
 
