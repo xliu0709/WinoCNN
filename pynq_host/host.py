@@ -446,7 +446,7 @@ def running_test( argv,validate_dict):
     sys_command+=" random"
     sys_command+=" random"
     sys_command+=" random"
-    sys_command+=" compare"
+    sys_command+=" dump_bin"
     
 
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
@@ -481,7 +481,6 @@ def running_test( argv,validate_dict):
     params_load=np.fromfile("param.bin",dtype=np.int32)
     for i in range(74):
         if( params[i]!=params_load[i] ):
-            print(i,params[i],params_load[i])
             params[i]=params_load[i]
 
     input_load=np.fromfile("input.bin",dtype=np.int16)
