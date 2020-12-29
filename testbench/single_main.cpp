@@ -260,20 +260,20 @@ int main(int argc, char** argv)
    fwrite(fmap_dict["in"].buffers_hw[0], 16,input_depth/8*input_height*input_height,fptr);
    fclose(fptr);
 
-    //  wino_systolic_top(
-    //      (ap_uint<128> *) inputddr,
-    //      (ap_uint<128> *) inputddr,
-    //      (ap_uint<128> *) inputddr,
-    //      (ap_uint<128> *) inputddr,
-    //      WEIGHT_PORTS_CALL((ap_uint<128>*) weightddr),
-    //      (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-    //      (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-    //      (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-    //      (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-    //      (ap_int<32>*) & (linfo_vect[0].conv_desc),
-    //      (ap_int<32>*) bias
-    //      // (linfo_vect[0].biasbuffer_quant[0])
-    //      );
+     wino_systolic_top(
+         (ap_uint<128> *) inputddr,
+         (ap_uint<128> *) inputddr,
+         (ap_uint<128> *) inputddr,
+         (ap_uint<128> *) inputddr,
+         WEIGHT_PORTS_CALL((ap_uint<128>*) weightddr),
+         (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+         (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+         (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+         (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+         (ap_int<32>*) & (linfo_vect[0].conv_desc),
+         (ap_int<32>*) bias
+         // (linfo_vect[0].biasbuffer_quant[0])
+         );
 
 
     fptr=fopen("output.bin","w");
