@@ -536,8 +536,8 @@ def running_test( argv,validate_dict):
 
 if __name__ == "__main__":
 
-    depth_test_case=[8]
-    input_dim_test_cases=[56]
+    depth_test_case=[8,16,32,48,64,72,96]
+    input_dim_test_cases=[14,28,56]
 
     result_dict={}
     for i in input_dim_test_cases:
