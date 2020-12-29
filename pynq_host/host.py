@@ -5,8 +5,8 @@ import os
 import sys
 import math
 import time
-# from pynq import Xlnk
-# from pynq import Overlay
+from pynq import Xlnk
+from pynq import Overlay
 import numpy as np
 
 
@@ -432,20 +432,32 @@ class ConvDesc_t():
         params[75]=self.relu_flag;
 
 
-if __name__ == "__main__":
-    
-    conv_desc=ConvDesc_t(sys.argv)
+
+def running_test( argv,validate_dict):
+    conv_desc=ConvDesc_t(argv)
     conv_desc.gen_conv_desc()
+
+  
+
 
     sys_command=""
     for i in range(1,12):
-        sys_command+=" "+sys.argv[i]
+        sys_command+=" "+str(argv[i])
     sys_command+=" random"
     sys_command+=" random"
     sys_command+=" random"
+    sys_command+=" compare"
+    
 
-    os.system("./single_csim.out "+sys_command)
+    ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
+    validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ] = [ret_val, argv[11]]
+    
+    
+    if(ret_val !=0):
+        validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append("NA")
+        validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append("NA")
+        return
 
     xlnk = Xlnk()
     xlnk.xlnk_reset()
@@ -516,10 +528,28 @@ if __name__ == "__main__":
     output_load=np.fromfile("output.bin",dtype=np.int16)
     count=0;
 
-    
-        
     for i in range(len(output_load)):
-        if output_load[i]!=output_FM[i]:
-            print( output_load[i],output_FM[i])
+        if(output_load[i]!=output_FM[i]):
             count+=1
-    print("error num", count)
+    error_rate=count/len(output_load)
+    validate_dict[ int(argv[1]),int(argv[3]),int(argv[7]) ].append((end - start)*1e9/100,error_rate )
+    
+
+
+if __name__ == "__main__":
+
+    depth_test_case=[8,16,32,48,64,72,96]
+    input_dim_test_cases=[14,28,56]
+
+    result_dict={}
+    for i in input_dim_test_cases:
+        for j in depth_test_case:
+            scale_fact=(1<<14)//j//9;
+            argv=[0,i,i,j,i,i,j,3,1,1,1,scale_fact,"src/wino_hw_config.h"]
+
+            running_test(argv, result_dict)
+    
+    print(result_dict)
+
+
+

@@ -2,7 +2,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-
+#include <csignal>
 #include <cstdio>
 #include <iostream>
 #include <fstream>
@@ -263,10 +263,16 @@ int main(int argc, char** argv)
     fclose(fptr);
 
 
+
+
+    delete [] conv_desc_param;
+    delete [] bias;
+
+
     if( dump_method=="dump_txt")
     {
-       char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
-       char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
+        char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
+        char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
 
         featuremap_hw_to_int_pointers(
             fmap_dict["out"].buffers_hw[0],
@@ -307,12 +313,43 @@ int main(int argc, char** argv)
         linfo_vect[0].outdim[2],
         linfo_vect[0].outdim[0]
         );
+        del_featuremap_mem(fmap_dict);
+        del_weight_buffer_pointer(linfo_vect);
+        
+        delete [] out_hw1;
+        delete [] out_hw2;
+        
+        
     }
     else
     {
-        /* code */
+        char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
+        char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
+
+        featuremap_hw_to_int_pointers(
+            fmap_dict["out"].buffers_hw[0],
+            out_hw1,
+            out_hw2,
+            linfo_vect[0].outdim[1],
+            linfo_vect[0].outdim[2],
+            linfo_vect[0].outdim[0],
+            0,
+            linfo_vect[0].outdim[0]
+        );
+
+        bool yes1=diff_feature_map<char>(fmap_dict["out"].buffers_int[0], out_hw1,linfo_vect[0].outdim[1],linfo_vect[0].outdim[2],linfo_vect[0].outdim[0]);
+        bool yes2=diff_feature_map<char>(fmap_dict["out"].buffers_int[1], out_hw2,linfo_vect[0].outdim[1],linfo_vect[0].outdim[2],linfo_vect[0].outdim[0]);
+
+        delete [] out_hw1;
+        delete [] out_hw2;
+
+        del_featuremap_mem(fmap_dict);
+        del_weight_buffer_pointer(linfo_vect);
+        if(yes1 && yes2) return 0;
+        else return 3;
     }
     
+
 
     // FREE(input_DDR);
     // FREE(weight_DDR);

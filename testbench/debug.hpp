@@ -103,6 +103,22 @@ void print_feature_map(
     fclose(fptr);
 }
 
+template<class T>
+bool diff_feature_map(
+    T *feature_map1,
+    T *feature_map2,
+    int height,
+    int width,
+    int depth)
+{
+    for(int i=0;i<height*width*depth;i++)
+    {
+        if(feature_map1[i]!=feature_map2[i]) return false;
+    }
+
+    return true;
+}
+
 template<int BUFFER_HEIGHT, int BUFFER_WIDTH, int BUFFER_DEPTH>
 void clear_buffer_content(ap_uint<16> input_buffer[BUFFER_HEIGHT][BUFFER_WIDTH][BUFFER_DEPTH])
 {
