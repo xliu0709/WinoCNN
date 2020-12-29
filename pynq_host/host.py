@@ -5,8 +5,8 @@ import os
 import sys
 import math
 import time
-# from pynq import Xlnk
-# from pynq import Overlay
+from pynq import Xlnk
+from pynq import Overlay
 import numpy as np
 
 
