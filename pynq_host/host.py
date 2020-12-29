@@ -579,11 +579,9 @@ if __name__ == "__main__":
     
 
     for key, val in result_dict.items():
-        
-        prefix=""
-        for i in key:
-            prefix+="key"
-    print(result_dict)
+        print (key , val)
+
+   
 
 
 
