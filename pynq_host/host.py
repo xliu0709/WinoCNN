@@ -553,10 +553,10 @@ def running_test( argv,validate_dict):
     
     output_load.tofile("bin/hw_"+prefix+"output.bin")
 
-    os.system("cp output.bin bin/"+prefix+"output.bin")
-    os.system("cp param.bin bin/"+prefix+"param.bin")
-    os.system("cp input.bin bin/"+prefix+"input.bin")
-    os.system("cp weight.bin bin/"+prefix+"weight.bin")
+    # os.system("cp output.bin bin/"+prefix+"output.bin")
+    # os.system("cp param.bin bin/"+prefix+"param.bin")
+    # os.system("cp input.bin bin/"+prefix+"input.bin")
+    # os.system("cp weight.bin bin/"+prefix+"weight.bin")
 
 
 
