@@ -345,7 +345,10 @@ int main(int argc, char** argv)
 
         del_featuremap_mem(fmap_dict);
         del_weight_buffer_pointer(linfo_vect);
-        if(yes1 && yes2) return 0;
+        if(yes1 && yes2){
+            printf("different!\n");
+            return 0;
+        } 
         else return 3;
     }
     
