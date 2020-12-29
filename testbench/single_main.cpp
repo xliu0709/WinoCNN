@@ -22,7 +22,7 @@
 #include <ap_int.h>
 #include "cxxopts.hpp"
 
-
+#include <cstdint>
 
 
 int main(int argc, char** argv)
@@ -104,7 +104,7 @@ int main(int argc, char** argv)
 
 
     // declare layer info wiehgt
-    char* weight_int = new char[ kernel_size*kernel_size* input_depth*output_depth];
+    int8_t* weight_int = new int8_t[ kernel_size*kernel_size* input_depth*output_depth];
     short* bias_int = new short[ ALIGN(output_depth,8) ];
     
     linfo_vect[0].weightbuffer_quant.push_back(weight_int);
@@ -162,7 +162,7 @@ int main(int argc, char** argv)
 
 
 
-    init_weight<char>(linfo_vect[0].weightbuffer_quant[0],input_depth,output_depth,kernel_size,weight_gold);
+    init_weight<int8_t>(linfo_vect[0].weightbuffer_quant[0],input_depth,output_depth,kernel_size,weight_gold);
     process_hw_weight_buffer_single_layer(linfo_vect[0]);
     // print_weight<0>( (ap_uint<128>*) linfo_vect[0].weightbuffers_hw[0],"idepthweight.txt", linfo_vect[0].port_segment_size[0]*WEIGHT_PORT_NUM*128/8);
 
@@ -230,13 +230,13 @@ int main(int argc, char** argv)
 
     if(dump_method=="dump_txt")
     {
-        print_feature_map<char>(fmap_dict["in"].buffers_int[0],
+        print_feature_map<int8_t>(fmap_dict["in"].buffers_int[0],
         "C1_mdoel_int_in.txt",
         linfo_vect[0].indim[1],
         linfo_vect[0].indim[2],
         linfo_vect[0].indim[0]
         );
-        print_feature_map<char>(fmap_dict["in"].buffers_int[1],
+        print_feature_map<int8_t>(fmap_dict["in"].buffers_int[1],
         "C2_mdoel_int_in.txt",
         linfo_vect[0].indim[1],
         linfo_vect[0].indim[2],
@@ -260,20 +260,20 @@ int main(int argc, char** argv)
    fwrite(fmap_dict["in"].buffers_hw[0], 16,input_depth/8*input_height*input_height,fptr);
    fclose(fptr);
 
-     wino_systolic_top(
-         (ap_uint<128> *) inputddr,
-         (ap_uint<128> *) inputddr,
-         (ap_uint<128> *) inputddr,
-         (ap_uint<128> *) inputddr,
-         WEIGHT_PORTS_CALL((ap_uint<128>*) weightddr),
-         (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-         (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-         (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-         (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-         (ap_int<32>*) & (linfo_vect[0].conv_desc),
-         (ap_int<32>*) bias
-         // (linfo_vect[0].biasbuffer_quant[0])
-         );
+    //  wino_systolic_top(
+    //      (ap_uint<128> *) inputddr,
+    //      (ap_uint<128> *) inputddr,
+    //      (ap_uint<128> *) inputddr,
+    //      (ap_uint<128> *) inputddr,
+    //      WEIGHT_PORTS_CALL((ap_uint<128>*) weightddr),
+    //      (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+    //      (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+    //      (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+    //      (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+    //      (ap_int<32>*) & (linfo_vect[0].conv_desc),
+    //      (ap_int<32>*) bias
+    //      // (linfo_vect[0].biasbuffer_quant[0])
+    //      );
 
 
     fptr=fopen("output.bin","w");
@@ -290,8 +290,8 @@ int main(int argc, char** argv)
 
     if( dump_method=="dump_txt")
     {
-        char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
-        char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
+        int8_t* out_hw1 = new int8_t[ fmap_dict["out"].buffer_size_int];
+        int8_t* out_hw2 = new int8_t[ fmap_dict["out"].buffer_size_int];
 
         featuremap_hw_to_int_pointers(
             fmap_dict["out"].buffers_hw[0],
@@ -304,14 +304,14 @@ int main(int argc, char** argv)
             linfo_vect[0].outdim[0]
         );
 
-        print_feature_map<char>(fmap_dict["out"].buffers_int[0],
+        print_feature_map<int8_t>(fmap_dict["out"].buffers_int[0],
         "C1_mdoel_int_out.txt",
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
         linfo_vect[0].outdim[0]
         );
 
-        print_feature_map<char>(out_hw1,
+        print_feature_map<int8_t>(out_hw1,
         "C1_hw_out.txt",
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
@@ -319,14 +319,14 @@ int main(int argc, char** argv)
         );
 
 
-        print_feature_map<char>(fmap_dict["out"].buffers_int[1],
+        print_feature_map<int8_t>(fmap_dict["out"].buffers_int[1],
         "C2_mdoel_int_out.txt",
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
         linfo_vect[0].outdim[0]
         );
 
-        print_feature_map<char>(out_hw2,
+        print_feature_map<int8_t>(out_hw2,
         "C2_hw_out.txt",
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
@@ -342,8 +342,8 @@ int main(int argc, char** argv)
     }
     else
     {
-        char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
-        char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
+        int8_t* out_hw1 = new int8_t[ fmap_dict["out"].buffer_size_int];
+        int8_t* out_hw2 = new int8_t[ fmap_dict["out"].buffer_size_int];
 
         featuremap_hw_to_int_pointers(
             fmap_dict["out"].buffers_hw[0],
@@ -356,8 +356,8 @@ int main(int argc, char** argv)
             linfo_vect[0].outdim[0]
         );
 
-        bool yes1=diff_feature_map<char>(fmap_dict["out"].buffers_int[0], out_hw1,linfo_vect[0].outdim[1],linfo_vect[0].outdim[2],linfo_vect[0].outdim[0]);
-        bool yes2=diff_feature_map<char>(fmap_dict["out"].buffers_int[1], out_hw2,linfo_vect[0].outdim[1],linfo_vect[0].outdim[2],linfo_vect[0].outdim[0]);
+        bool yes1=diff_feature_map<int8_t>(fmap_dict["out"].buffers_int[0], out_hw1,linfo_vect[0].outdim[1],linfo_vect[0].outdim[2],linfo_vect[0].outdim[0]);
+        bool yes2=diff_feature_map<int8_t>(fmap_dict["out"].buffers_int[1], out_hw2,linfo_vect[0].outdim[1],linfo_vect[0].outdim[2],linfo_vect[0].outdim[0]);
 
         delete [] out_hw1;
         delete [] out_hw2;

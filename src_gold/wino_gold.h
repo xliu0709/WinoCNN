@@ -13,15 +13,15 @@
 #define GOLD_OUT_WIDTH 32
 
 void wino_model_int(
-    char* input,
+    int8_t* input,
     int input_depth,
     int input_height,
     int input_width,
-    char* output,
+    int8_t* output,
     int output_depth,
     int output_height,
     int output_width,
-    char* weight,
+    int8_t* weight,
     short* bias,
     int kernel_size,
     int pad_size,

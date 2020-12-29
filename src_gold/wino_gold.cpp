@@ -495,15 +495,15 @@ void wino_model_float_offset(
 
 
 void wino_model_int(
-    char* input,
+    int8_t* input,
     int input_depth,
     int input_height,
     int input_width,
-    char* output,
+    int8_t* output,
     int output_depth,
     int output_height,
     int output_width,
-    char* weight,
+    int8_t* weight,
     short* bias,
     int kernel_size,
     int pad_size,
@@ -572,7 +572,7 @@ void wino_model_int(
                     {
                         int input_tile[WINO_DOMAIN_SIZE_SQUARE];
 
-                        get_wino_input_tile<char,int>(input,input_tile,input_depth,input_width,input_height,WINO_DOMAIN_SIZE,
+                        get_wino_input_tile<int8_t,int>(input,input_tile,input_depth,input_width,input_height,WINO_DOMAIN_SIZE,
                                                         input_depth_idx,start_output_row+merge_kernel_row_offset,start_output_col+merge_kernel_col_offset,pad_size);
 
                         int dBT[WINO_DOMAIN_SIZE_SQUARE];
@@ -612,7 +612,7 @@ void wino_model_int(
                         if(kernel_size!=5)
                         {
                             int g[WINO_DOMAIN_SIZE_SQUARE];
-                            get_merge_weight_tile<char,int>(weight,g,input_depth,output_depth,kernel_size,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
+                            get_merge_weight_tile<int8_t,int>(weight,g,input_depth,output_depth,kernel_size,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
                             
                             // print_tile<int>(g,9,"weight_tile");
                             int gGT[3*WINO_DOMAIN_SIZE];
@@ -644,7 +644,7 @@ void wino_model_int(
                             #endif
                         }
                         else
-                            get_weight_tile<char,int>(weight,wino_weight_tile,input_depth,output_depth,WINO_DOMAIN_SIZE,input_depth_idx,output_depth_idx);   
+                            get_weight_tile<int8_t,int>(weight,wino_weight_tile,input_depth,output_depth,WINO_DOMAIN_SIZE,input_depth_idx,output_depth_idx);   
                         
 
                         int off = (output_depth_idx*OH_ALIGNED*OW_ALIGNED

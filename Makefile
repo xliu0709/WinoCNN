@@ -38,7 +38,7 @@ exec.o:software/exec.cpp
 
 IP_DEP += buffer.o
 IP_DEP += param.o
-IP_DEP += wino.o
+# IP_DEP += wino.o
 IP_DEP += gold.o
 IP_DEP += misc.o
 # IP_DEP += exec.o

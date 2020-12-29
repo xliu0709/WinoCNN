@@ -47,7 +47,7 @@ class LayerInfo_t{
         std::vector<int> weightbuffers_float_scaled_size;
 
 
-        std::vector<char*> weightbuffer_quant; 
+        std::vector<int8_t*> weightbuffer_quant; 
         std::vector<int> weightbuffer_quant_size;
         std::vector<short*> biasbuffer_quant;
 

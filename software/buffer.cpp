@@ -12,9 +12,11 @@
 #include "matrix_utility.hpp"
 #include <map>
 
+#include <cstdint>
+
 void feature_to_ddr(
-    char* feature_map1,
-    char* feature_map2,
+    int8_t* feature_map1,
+    int8_t* feature_map2,
     ConvDesc_t &conv_desc,
     char* &input_DDR,
     char* &output_DDR
@@ -63,8 +65,8 @@ void feature_to_ddr(
                     if(depth_idx < conv_desc.indepth && col < width )
                     {
                         int feature_map_address= depth_idx*height*width +row*width +col;
-                        char data1= feature_map1[feature_map_address];
-                        char data2= feature_map2[feature_map_address];
+                        int8_t data1= feature_map1[feature_map_address];
+                        int8_t data2= feature_map2[feature_map_address];
                         // printf("here %d %d %d\n",ddr_address,data1,data2);
                         input_DDR[ddr_address++]=data1;
                         input_DDR[ddr_address++]=data2;
@@ -83,8 +85,8 @@ void feature_to_ddr(
 
 
 void ddr_to_featuremap(
-    char* feature_map1,
-    char* feature_map2,
+    int8_t* feature_map1,
+    int8_t* feature_map2,
     char* DDR,
     ConvDesc_t &conv_desc
 )
@@ -164,7 +166,7 @@ void feature_map_init(
 }
 
 char* wino6x6_weight_to_ddr(
-    char* weight,
+    int8_t* weight,
     ConvDesc_t conv_desc
 )
 {
@@ -247,7 +249,7 @@ char* wino6x6_weight_to_ddr(
 
 
 void weight_to_ddr(
-    char* weight,
+    int8_t* weight,
     char* weight_wino,
     ConvDesc_t conv_desc
 )
@@ -349,82 +351,6 @@ void weight_to_ddr(
 }
 
 
-// void weight_to_ddr_1x1(
-//     char* weight,
-//     char* weight_wino,
-//     ConvDesc_t conv_desc
-// )
-// {
-//     // int weight_ddr;
-//     int port_segment_size=conv_desc.weightDDR_port_burst_length * conv_desc.weightDDR_burst_number;
-//     // int buffer_segment_size = conv_desc.weightDDR_buffer_burst_length * conv_desc.weightDDR_burst_number;
-//     assert(port_segment_size*4*sizeof(ap_uint<128>)<WEIGHT_PORT_DEPTH*16);
-
-//     // char* weight_wino=(char*) MALLOC(WEIGHT_PORT_DEPTH*16*2);
-//     //= new char[port_segment_size*4*sizeof(ap_uint<128>)];
-//     printf("port_segment_size %d, %d \n",port_segment_size,conv_desc.weightDDR_burst_number);
-//     fflush(stdout);
-//     ap_uint<128>* weight_wino_128bit = (ap_uint<128>*) weight_wino;
-//     // int buffer_128_address[OUTDEPTH_MINITILE_SIZE]={0};
-    
-//     printf("Odepth minitile size %d\n",OUTDEPTH_MINITILE_SIZE);
-
-//     int weight_load_idx=0;
-//     for(int outdepth_buffertile_baseidx=0;outdepth_buffertile_baseidx<conv_desc.outdepth;outdepth_buffertile_baseidx+=conv_desc.weightbuffer_load_outdepth_step)
-//     {
-//         for(int indepth_buffertile_baseidx=0;indepth_buffertile_baseidx<conv_desc.indepth;indepth_buffertile_baseidx+=conv_desc.weightbuffer_load_indepth_step)
-//         {
-
-//             int buffer_128_address=0;
-//             for(int indepth_minitile_baseidx=0;indepth_minitile_baseidx<conv_desc.weightbuffer_load_indepth_step; indepth_minitile_baseidx += INDEPTH_MINITILE_SIZE)
-//             {
-//                 for(int outdepth_minitile_baseidx=0;outdepth_minitile_baseidx<conv_desc.weightbuffer_load_outdepth_step; outdepth_minitile_baseidx += OUTDEPTH_MINITILE_SIZE)
-//                 {
-//                     for(int outdepth_minitile_idx=0;outdepth_minitile_idx<OUTDEPTH_MINITILE_SIZE;outdepth_minitile_idx++)
-//                     {
-                        
-//                         int buffer_segment_offset=outdepth_minitile_idx/WEIGHT_FEED_NUMBER_PER_PORT*port_segment_size
-//                                                     +weight_load_idx*conv_desc.weightDDR_port_burst_length
-//                                                     +outdepth_minitile_idx%WEIGHT_FEED_NUMBER_PER_PORT*conv_desc.weightDDR_buffer_burst_length;
-
-
-
-//                         ap_uint<128> indepth_minitile_data;
-
-                        
-
-//                         memset(&indepth_minitile_data,0,INDEPTH_MINITILE_SIZE/2*sizeof(ap_uint<128>));
-           
-//                         for(int indepth_minitile_idx=0;indepth_minitile_idx<INDEPTH_MINITILE_SIZE;indepth_minitile_idx++)
-//                         {
-//                             int indepth_idx=indepth_buffertile_baseidx+indepth_minitile_baseidx+indepth_minitile_idx;
-//                             int outdepth_idx=outdepth_buffertile_baseidx+outdepth_minitile_baseidx+outdepth_minitile_idx;
-//                             int start_weight_offset = (outdepth_idx*conv_desc.indepth+indepth_idx)*1;
-
-
-//                             if(indepth_idx<conv_desc.indepth && outdepth_idx < conv_desc.outdepth)
-//                             {
-//                                 // memcpy(indepth_minitile_data+indepth_minitile_idx*WINO_DOMAIN_SIZE_SQUARE,weight+start_weight_offset,WINO_DOMAIN_SIZE_SQUARE);
-//                                  indepth_minitile_data.range(0*G_WIDTH+G_WIDTH-1,0*G_WIDTH)=weight[start_weight_offset+0];
-//                                  indepth_minitile_data.range(1*G_WIDTH+G_WIDTH-1,1*G_WIDTH)=weight[start_weight_offset+1];
-//                                  indepth_minitile_data.range(2*G_WIDTH+G_WIDTH-1,2*G_WIDTH)=weight[start_weight_offset+2];
-//                                  indepth_minitile_data.range(3*G_WIDTH+G_WIDTH-1,3*G_WIDTH)=weight[start_weight_offset+3];
-//                             }
-//                         }
-
-
-//                         int write_address_128bit = buffer_128_address+buffer_segment_offset;
-                        
-//                         memcpy(weight_wino_128bit+write_address_128bit,&indepth_minitile_data,sizeof(ap_uint<128>));
-//                         // buffer_128_address[outdepth_minitile_idx]+=WEIGHTDDR_INDEPTH_MINITILE_128BIT_STEP;
-//                     }
-//                     buffer_128_address++;
-//                 }
-//             }
-//             weight_load_idx++;
-//         }
-//     }
-// }
 
 
 
@@ -469,7 +395,7 @@ void weight_seperation(
 }
 
 void weight_int_to_merged_DDR(
-    char* weight,
+    int8_t* weight,
     char* weight_hw,
     int kernel_size, 
     int merge_kernel_size,
@@ -478,9 +404,9 @@ void weight_int_to_merged_DDR(
 {
     int indepth=conv_desc.indepth;
     int outdepth=conv_desc.outdepth;
-    char* weight_sep=new char[ALIGN(kernel_size,merge_kernel_size)* ALIGN(kernel_size,merge_kernel_size)*indepth*outdepth];
+    int8_t* weight_sep=new int8_t[ALIGN(kernel_size,merge_kernel_size)* ALIGN(kernel_size,merge_kernel_size)*indepth*outdepth];
     
-    weight_seperation<char,char>( weight, weight_sep, kernel_size, merge_kernel_size, indepth,outdepth);
+    weight_seperation<int8_t,int8_t>( weight, weight_sep, kernel_size, merge_kernel_size, indepth,outdepth);
 
     // an single 3x3 weight segment length
     int weight_hw_step=16*conv_desc.weightDDR_port_burst_length * conv_desc.weightDDR_burst_number*4;
@@ -560,7 +486,7 @@ void init_weight_float(
 
 
 char* fc_weight_to_ddr(
-    char* weight,
+    int8_t* weight,
     short* bias,
     int indepth,
     int outdepth
@@ -782,26 +708,6 @@ void alloc_float_weight_buffer(
             {
                 memset(layerinfo_vect[i].biasbuffers_sw[0],0,sizeof(float)*layerinfo_vect[i].outdim[0]);
             }
-            
-            //TODO: move following code blocks to alloc_hw_weight_buffer
-            //*********
-            // int wino_length = layerinfo_vect[i].indim[0] * layerinfo_vect[i].outdim[0] * WINO_DOMAIN_SIZE_SQUARE;
-            // char* weight_char = new char[wino_length];
-            // char* bias_char = new char[layerinfo_vect[i].outdim[0]]; 
-
-            // layerinfo_vect[i].wino_weightbuffers.push_back(weight_char);
-            // layerinfo_vect[i].wino_weightbuffers.push_back(bias_char);
-
-            // int port_segment_size=layerinfo_vect[i].conv_desc.weightDDR_port_burst_length * layerinfo_vect[i].conv_desc.weightDDR_burst_number;
-
-            // #if DEBUG_SIM
-            //     assert(port_segment_size*4*sizeof(ap_uint<128>)<WEIGHT_PORT_DEPTH*16);
-            //     char* weight_wino=(char*) MALLOC(WEIGHT_PORT_DEPTH*16*2);
-            // #else
-            //     char* weight_wino=(char*) MALLOC(port_segment_size*4*sizeof(ap_uint<128>));
-            // #endif
-            // layerinfo_vect[i].wino_weightbuffers_hw.push_back(weight_wino);
-            //*********
         }
         else if( layerinfo_vect[i].layer_type == "linear")
         {
@@ -1160,7 +1066,7 @@ void scale_weight_bias_data_float(
 
 void reorder_weight_quant(
     float* weight,
-    char* weight_quant,
+    int8_t* weight_quant,
     int indepth,
     int outdepth,
     int K
@@ -1200,7 +1106,7 @@ void weight_preprocess_quant(
             int kernel_size = layerinfo_vect[i].kernel_size;
             if(kernel_size ==5) kernel_size=6;
 
-            char* weight_quant = new char[weight_size];
+            int8_t* weight_quant = new int8_t[weight_size];
             fflush(stdout);
             reorder_weight_quant(
                 layerinfo_vect[i].weightbuffers_float_scaled[0],
@@ -1222,7 +1128,7 @@ void weight_preprocess_quant(
         else if(layerinfo_vect[i].layer_type=="linear")
         {
             int weight_size = layerinfo_vect[i].weightbuffers_float_scaled_size[0];
-            char* weight_quant = new char[weight_size];
+            int8_t* weight_quant = new int8_t[weight_size];
 
             for(int k=0;k<weight_size;k++)
             {
@@ -1254,8 +1160,8 @@ void alloc_int_featuremap_mem(
         int length_int= blobinfo_vect[i].dim[0]*blobinfo_vect[i].dim[1]*blobinfo_vect[i].dim[2];
         bufferstruct.byte_size_int=length_int*sizeof(char);
         bufferstruct.buffer_size_int=length_int;
-        char *featuremap1 = new char[length_int];
-        char *featuremap2 = new char[length_int];
+        int8_t *featuremap1 = new int8_t[length_int];
+        int8_t *featuremap2 = new int8_t[length_int];
         bufferstruct.buffers_int.push_back(featuremap1);
         bufferstruct.buffers_int.push_back(featuremap2);
     }
@@ -1525,8 +1431,8 @@ void process_hw_weight_buffer(
 
 void featuremap_hw_to_int_pointers(
     char* sourceDDR,
-    char* target0,
-    char* target1,
+    int8_t* target0,
+    int8_t* target1,
     int height,
     int width,
     int depth,
@@ -1539,8 +1445,8 @@ void featuremap_hw_to_int_pointers(
     int group_depth_offset_by8=group_depth_offset/8;
     int depth_ceildiv8 = CEIL_DIV(depth,8);
 
-    char* feature_map1=target0;
-    char* feature_map2=target1;
+    int8_t* feature_map1=target0;
+    int8_t* feature_map2=target1;
     char* featuremap_buffer_hw=sourceDDR;
 
     int ddr_address = 0;
@@ -1562,8 +1468,8 @@ void featuremap_hw_to_int_pointers(
                     if(depth_idx < depth && col < width )
                     {
                         int feature_map_address= depth_idx*height*width +row*width +col;
-                        char data1=featuremap_buffer_hw[ddr_address++] ;
-                        char data2=featuremap_buffer_hw[ddr_address++];
+                        int8_t data1=featuremap_buffer_hw[ddr_address++] ;
+                        int8_t data2=featuremap_buffer_hw[ddr_address++];
                         feature_map1[feature_map_address]=data1;
                         feature_map2[feature_map_address]=data2;
                     }
@@ -1579,8 +1485,8 @@ void featuremap_hw_to_int_pointers(
 
 
 void featuremap_int_to_hw_pointers(
-    char* source0,
-    char* source1,
+    int8_t* source0,
+    int8_t* source1,
     char* targetDDR,
     int height,
     int width,
@@ -1593,8 +1499,8 @@ void featuremap_int_to_hw_pointers(
     int width_align8= ALIGN(width,8);
     int group_depth_offset_by8=group_depth_offset/8;
     int depth_ceildiv8 = CEIL_DIV(depth,8);
-    char* feature_map1=source0;
-    char* feature_map2=source1;
+    int8_t* feature_map1=source0;
+    int8_t* feature_map2=source1;
     char* featuremap_buffer_hw=targetDDR;
 
     int ddr_address = 0;
@@ -1619,8 +1525,8 @@ void featuremap_int_to_hw_pointers(
                     if(depth_idx < depth && col < width )
                     {
                         int feature_map_address= depth_idx*height*width +row*width +col;
-                        char data1= feature_map1[feature_map_address];
-                        char data2= feature_map2[feature_map_address];
+                        int8_t data1= feature_map1[feature_map_address];
+                        int8_t data2= feature_map2[feature_map_address];
                         // printf("here %d %d %d\n",ddr_address,data1,data2);
                         featuremap_buffer_hw[ddr_address++]=data1;
                         featuremap_buffer_hw[ddr_address++]=data2;
@@ -1653,8 +1559,8 @@ void featuremap_int_to_hw(
     int group_depth_offset_by8=group_depth_offset/8;
     int depth_ceildiv8 = CEIL_DIV(depth,8);
 
-    char* feature_map1;
-    char* feature_map2;
+    int8_t* feature_map1;
+    int8_t* feature_map2;
     
     if(featuremap.buffers_int.size()==2)
     {
@@ -1704,8 +1610,8 @@ void featuremap_int_to_hw(
                     if(depth_idx < depth && col < width )
                     {
                         int feature_map_address= depth_idx*height*width +row*width +col;
-                        char data1= feature_map1[feature_map_address];
-                        char data2= feature_map2[feature_map_address];
+                        int8_t data1= feature_map1[feature_map_address];
+                        int8_t data2= feature_map2[feature_map_address];
                         // printf("here %d %d %d\n",ddr_address,data1,data2);
                         featuremap_buffer_hw[ddr_address++]=data1;
                         featuremap_buffer_hw[ddr_address++]=data2;
@@ -1731,7 +1637,7 @@ void apply_scale_factor(FeatureMapBuffer_t &fmap)
             fmap.blob_info->dim,
             fmap.Scale_blob
         );
-        scale_on<float,char>(
+        scale_on<float,int8_t>(
             fmap.buffers_gold[i],
             fmap.buffers_int[i],
             fmap.blob_info->dim,
@@ -1828,7 +1734,7 @@ void del_weight_buffer_pointer(
             free_buffer<float>(layerinfo_vect[i].winobuffers_float);
             free_buffer<float>(layerinfo_vect[i].weightbuffers_float_scaled);
             free_buffer<float>(layerinfo_vect[i].bias_float_scaled);
-            free_buffer<char>(layerinfo_vect[i].weightbuffer_quant);
+            free_buffer<int8_t>(layerinfo_vect[i].weightbuffer_quant);
             free_buffer<short>(layerinfo_vect[i].biasbuffer_quant);
             free_buffer_hw<char>(layerinfo_vect[i].weightbuffers_hw);
             free_buffer_hw<char>(layerinfo_vect[i].biasbuffers_hw);
@@ -1848,7 +1754,7 @@ void del_weight_buffer_pointer(
             free_buffer<float>(layerinfo_vect[i].weightbuffers_float_scaled);
             free_buffer<float>(layerinfo_vect[i].bias_float_scaled);
             
-            free_buffer<char>(layerinfo_vect[i].weightbuffer_quant);
+            free_buffer<int8_t>(layerinfo_vect[i].weightbuffer_quant);
             free_buffer<short>(layerinfo_vect[i].biasbuffer_quant);
             
             free_buffer_hw<char>(layerinfo_vect[i].weightbuffers_hw);

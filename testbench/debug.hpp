@@ -119,6 +119,10 @@ bool diff_feature_map(
     return true;
 }
 
+
+
+
+
 template<int BUFFER_HEIGHT, int BUFFER_WIDTH, int BUFFER_DEPTH>
 void clear_buffer_content(ap_uint<16> input_buffer[BUFFER_HEIGHT][BUFFER_WIDTH][BUFFER_DEPTH])
 {

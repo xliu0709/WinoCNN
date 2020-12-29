@@ -36,7 +36,7 @@ class FeatureMapBuffer_t{
         std::vector< float* > buffers_gold;
         std::vector< float* > buffers_sw;
         std::vector< float* > buffers_scale;
-        std::vector< char* > buffers_int;
+        std::vector< int8_t* > buffers_int;
         std::vector< char* > buffers_hw;
 };
 
@@ -153,8 +153,8 @@ void alloc_hw_featuremap_mem(
 void apply_scale_factor(FeatureMapBuffer_t &fmap);
 void featuremap_hw_to_int_pointers(
     char* sourceDDR,
-    char* target0,
-    char* target1,
+    int8_t* target0,
+    int8_t* target1,
     int height,
     int width,
     int depth,
@@ -162,8 +162,8 @@ void featuremap_hw_to_int_pointers(
     int group_depth
 );
 void featuremap_int_to_hw_pointers(
-    char* source0,
-    char* source1,
+    int8_t* source0,
+    int8_t* source1,
     char* targetDDR,
     int height,
     int width,
@@ -178,8 +178,8 @@ void featuremap_int_to_hw(
 );
 
 void featuremap_int_to_hw_from_pointer(
-    char* resource0,
-    char* resource1,
+    int8_t* resource0,
+    int8_t* resource1,
     FeatureMapBuffer_t & featuremap,
     int group_depth_offset,
     int group_depth
