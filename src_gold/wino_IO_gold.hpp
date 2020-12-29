@@ -11,8 +11,8 @@
 
 template<int dummy>
 void load_input_row_DDR_uniformed(
-    int8_t* input0,
-    int8_t* input1,
+    char* input0,
+    char* input1,
     ap_uint<16> input_buffer[INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],
     int input_height,
     int input_width,
@@ -77,8 +77,8 @@ void load_input_row_DDR_uniformed(
 
 template<int dummy>
 void load_input_DDR_uniform(
-        int8_t* input0,
-        int8_t* input1,
+        char* input0,
+        char* input1,
 		ap_uint<16> input_buffer[INBUFFER_HEIGHT][INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],
         int input_height,
         int input_width,

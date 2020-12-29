@@ -6,7 +6,7 @@ IFLAG += -D__SIM_FPO__ -D__SIM_OPENCV__ -D__SIM_FFT__ -D__SIM_FIR__ -D__SIM_DDS_
 
 # IFLAG += -DDEBUG_FILE_PRINT=1
 IFLAG +=  -g 
-CFLAG += -fPIC  -O3 -fsanitize=address
+CFLAG += -fPIC  -O3 -fsanitize=address -fsigned-char
 CC      = g++ 
 
 
