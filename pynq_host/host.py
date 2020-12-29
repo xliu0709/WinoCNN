@@ -458,7 +458,7 @@ def running_test( argv,validate_dict):
 
 
 
-    validate_dict[ key ] = [ret_val, argv[11]]
+    validate_dict[ key ] = [0, argv[11]]
     
     
     # if(ret_val%256 !=0):
