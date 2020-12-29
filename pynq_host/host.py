@@ -449,7 +449,7 @@ def running_test( argv,validate_dict):
     sys_command+=" dump_bin"
 
 
-    # ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
+    ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
     key=int(argv[1]),int(argv[3]),int(argv[7])
     prefix=""
