@@ -369,14 +369,14 @@ int main(int argc, char** argv)
 
 
         featuremap_int_to_hw_pointers(
-        fmap_dict["output"].buffers_int[0],
-        fmap_dict["output"].buffers_int[1],
-        fmap_dict["output"].buffers_hw[0],
-        fmap_dict["output"].blob_info->dim[1],
-        fmap_dict["output"].blob_info->dim[2],
-        fmap_dict["output"].blob_info->dim[0],
+        fmap_dict["out"].buffers_int[0],
+        fmap_dict["out"].buffers_int[1],
+        fmap_dict["out"].buffers_hw[0],
+        fmap_dict["out"].blob_info->dim[1],
+        fmap_dict["out"].blob_info->dim[2],
+        fmap_dict["out"].blob_info->dim[0],
         0,
-        ALIGN(fmap_dict["output"].blob_info->dim[0],8));
+        ALIGN(fmap_dict["out"].blob_info->dim[0],8));
 
 
 
