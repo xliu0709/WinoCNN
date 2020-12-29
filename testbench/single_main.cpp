@@ -228,6 +228,25 @@ int main(int argc, char** argv)
 
     FILE* fptr=fopen("param.bin","w");
 
+    if(dump_method=="dump_txt")
+    {
+        print_feature_map<char>(fmap_dict["in"].buffers_int[0],
+        "C1_mdoel_int_in.txt",
+        linfo_vect[0].indim[1],
+        linfo_vect[0].indim[2],
+        linfo_vect[0].indim[0]
+        );
+        print_feature_map<char>(fmap_dict["in"].buffers_int[1],
+        "C2_mdoel_int_in.txt",
+        linfo_vect[0].indim[1],
+        linfo_vect[0].indim[2],
+        linfo_vect[0].indim[0]
+        );
+    }
+
+    
+
+
    fwrite(conv_desc_param,sizeof(int),128,fptr);
    fclose(fptr);
 
@@ -347,7 +366,7 @@ int main(int argc, char** argv)
         del_weight_buffer_pointer(linfo_vect);
         if(yes1 && yes2){
             printf("different!\n");
-            return 0;
+            
         } 
         else return 3;
     }
