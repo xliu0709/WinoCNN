@@ -540,13 +540,14 @@ def running_test( argv,validate_dict):
 
     for i in range(len(output_load)):
         if(output_load[i]!=output_FM[i]):
+            output_load[i]=output_FM[i]
             count+=1
     error_rate=count/len(output_load)
     print("error_rate",error_rate)
     validate_dict[ key ].append((end - start)*1e9/100) 
     validate_dict[ key ].append(error_rate )
     
-    output_FM[0: len(output_load)-1].tofile("bin/hw_"+prefix+"output.bin")
+    output_load.tofile("bin/hw_"+prefix+"output.bin")
 
     os.system("cp output.bin bin/"+prefix+"output.bin")
     os.system("cp param.bin bin/"+prefix+"param.bin")
