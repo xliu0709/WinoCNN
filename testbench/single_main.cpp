@@ -276,10 +276,12 @@ int main(int argc, char** argv)
          );
 
 
-    fptr=fopen("output.bin","w");
+ 
 
-    fwrite(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
-    fclose(fptr);
+
+
+
+
 
 
 
@@ -364,9 +366,28 @@ int main(int argc, char** argv)
 
         del_featuremap_mem(fmap_dict);
         del_weight_buffer_pointer(linfo_vect);
+
+
+        featuremap_int_to_hw_pointers(
+        fmap_dict["output"].buffers_int[0],
+        fmap_dict["output"].buffers_int[1],
+        fmap_dict["output"].buffers_hw[0],
+        fmap_dict["output"].blob_info->dim[1],
+        fmap_dict["output"].blob_info->dim[2],
+        fmap_dict["output"].blob_info->dim[0],
+        0,
+        ALIGN(fmap_dict["output"].blob_info->dim[0],8));
+
+
+
+        fptr=fopen("output.bin","w");
+        fwrite(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
+        fclose(fptr);
+    
+
+
         if(yes1 && yes2){
             printf("different!\n");
-            
         } 
         else return 3;
     }

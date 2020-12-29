@@ -493,9 +493,6 @@ def running_test( argv,validate_dict):
     for i in range(len(weight_load)):
         weight[i]=weight_load[i]
 
-    for i in range(32):
-        print(bias[i])
-
     for i in range(len(weight_load)):
         weight[i]=weight_load[i]
     
