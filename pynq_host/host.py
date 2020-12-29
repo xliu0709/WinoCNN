@@ -449,7 +449,7 @@ def running_test( argv,validate_dict):
     sys_command+=" dump_bin"
 
 
-    ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
+    # ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
     key=int(argv[1]),int(argv[3]),int(argv[7])
     prefix=""
@@ -499,7 +499,7 @@ def running_test( argv,validate_dict):
         input_FM[i]=input_load[i]
 
 
-    weight_load=np.fromfile("weight.bin",dtype=np.int32)
+    weight_load=np.fromfile("bin/"+prefix+"weight.bin",dtype=np.int32)
     for i in range(len(weight_load)):
         weight[i]=weight_load[i]
 
@@ -558,8 +558,13 @@ def running_test( argv,validate_dict):
 
 if __name__ == "__main__":
 
-    depth_test_case=[8,16,32,48,64,72,96]
-    input_dim_test_cases=[14,28,56]
+
+    if(len(sys.argv)==1 ):
+        depth_test_case=[8,16,32,48,64,72,96]
+        input_dim_test_cases=[14,28,56]
+    else:
+        depth_test_case=[int(argv[2])]
+        input_dim_test_cases=[int(argv[1])]
 
     result_dict={}
     for i in input_dim_test_cases:
