@@ -563,8 +563,8 @@ if __name__ == "__main__":
         depth_test_case=[8,16,32,48,64,72,96]
         input_dim_test_cases=[14,28,56]
     else:
-        depth_test_case=[int(argv[2])]
-        input_dim_test_cases=[int(argv[1])]
+        depth_test_case=[int(sys.argv[2])]
+        input_dim_test_cases=[int(sys.argv[1])]
 
     result_dict={}
     for i in input_dim_test_cases:
