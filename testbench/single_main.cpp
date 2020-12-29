@@ -222,11 +222,17 @@ int main(int argc, char** argv)
     char* weightddr3=linfo_vect[0].weightbuffers_hw[3];
 
     int* conv_desc_param=new int[128];
+
+    for( int i=0;i<128;i++)
+    {
+        conv_desc.param=0;
+    }
     int* bias=new int[128];
 
     memcpy(conv_desc_param,&(linfo_vect[0].conv_desc),sizeof(ConvDesc_t));
 
     FILE* fptr=fopen("param.bin","w");
+
 
     if(dump_method=="dump_txt")
     {

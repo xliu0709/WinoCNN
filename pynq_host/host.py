@@ -447,9 +447,9 @@ def running_test( argv,validate_dict):
     sys_command+=" random"
     sys_command+=" random"
     sys_command+=" dump_bin"
-    
 
-    ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
+
+    # ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
     key=int(argv[1]),int(argv[3]),int(argv[7])
     prefix=""
@@ -461,10 +461,10 @@ def running_test( argv,validate_dict):
     validate_dict[ key ] = [ret_val, argv[11]]
     
     
-    if(ret_val%256 !=0):
-        validate_dict[ key ].append("NA")
-        validate_dict[ key ].append("NA")
-        return
+    # if(ret_val%256 !=0):
+    #     validate_dict[ key ].append("NA")
+    #     validate_dict[ key ].append("NA")
+    #     return
 
     xlnk = Xlnk()
     xlnk.xlnk_reset()
@@ -486,18 +486,18 @@ def running_test( argv,validate_dict):
 
     
 
-    params_load=np.fromfile("param.bin",dtype=np.int32)
+    params_load=np.fromfile(prefix+"param.bin",dtype=np.int32)
     for i in range(74):
         if( params[i]!=params_load[i] ):
             params[i]=params_load[i]
 
-    os.system("cp param.bin bin/"+prefix+"param.bin")
 
 
-    input_load=np.fromfile("input.bin",dtype=np.int16)
+
+    input_load=np.fromfile(prefix+"input.bin",dtype=np.int16)
     for i in range(len(input_load)):
         input_FM[i]=input_load[i]
-    os.system("cp input.bin bin/"+prefix+"input.bin")
+
 
     weight_load=np.fromfile("weight.bin",dtype=np.int32)
     for i in range(len(weight_load)):
@@ -533,7 +533,7 @@ def running_test( argv,validate_dict):
 
 
     output_load=np.fromfile("output.bin",dtype=np.int16)
-    os.system("cp output.bin bin/"+prefix+"output.bin")
+
     validate_dict[ key ].append(output_load)
     
     count=0;
@@ -546,6 +546,13 @@ def running_test( argv,validate_dict):
     validate_dict[ key ].append((end - start)*1e9/100) 
     validate_dict[ key ].append(error_rate )
     
+    output_FM[0: len(output_load)-1].tofile("bin/hw_"+prefix+"output.bin")
+
+    os.system("cp output.bin bin/"+prefix+"output.bin")
+    os.system("cp param.bin bin/"+prefix+"param.bin")
+    os.system("cp input.bin bin/"+prefix+"input.bin")
+    os.system("cp weight.bin bin/"+prefix+"weight.bin")
+
 
 
 if __name__ == "__main__":
