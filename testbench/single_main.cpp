@@ -345,31 +345,36 @@ int main(int argc, char** argv)
             0,
             linfo_vect[0].outdim[0]
         );
+        char filename[100];
+        sprintf(filename, "text/model_%d_%d_%d_output1.txt", input_height,input_depth,kernel_size);
 
         print_feature_map<char>(fmap_dict["out"].buffers_int[0],
-        "C1_mdoel_int_out.txt",
+        filename,
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
         linfo_vect[0].outdim[0]
         );
+        
+        sprintf(filename, "text/hw_%d_%d_%d_output1.txt", input_height,input_depth,kernel_size);
 
         print_feature_map<char>(out_hw1,
-        "C1_hw_out.txt",
+        filename,
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
         linfo_vect[0].outdim[0]
         );
 
-
+        sprintf(filename, "text/model_%d_%d_%d_output2.txt", input_height,input_depth,kernel_size);
         print_feature_map<char>(fmap_dict["out"].buffers_int[1],
-        "C2_mdoel_int_out.txt",
+        filename,
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
         linfo_vect[0].outdim[0]
         );
 
+        sprintf(filename, "text/hw_%d_%d_%d_output2.txt", input_height,input_depth,kernel_size);
         print_feature_map<char>(out_hw2,
-        "C2_hw_out.txt",
+        filename,
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
         linfo_vect[0].outdim[0]

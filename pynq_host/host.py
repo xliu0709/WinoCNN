@@ -504,6 +504,11 @@ def running_test( argv,validate_dict):
         weight[i]=weight_load[i]
 
 
+    output_load=np.fromfile("bin/"+prefix+"output.bin",dtype=np.int16)
+
+    for i in range(len(weight_load)):
+        output_FM[i]=0xAA
+    
     
     
     test.write(0x10,input_FM.physical_address)
@@ -532,7 +537,6 @@ def running_test( argv,validate_dict):
 
 
 
-    output_load=np.fromfile("bin/"+prefix+"output.bin",dtype=np.int16)
 
     validate_dict[ key ].append(output_load)
     
