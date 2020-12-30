@@ -263,7 +263,7 @@ int main(int argc, char** argv)
    fwrite(fmap_dict["in"].buffers_hw[0], 16,CEIL_DIV(input_depth,8)*input_height*ALIGN(input_height,8),fptr);
    fclose(fptr);
 
-    if(dump_method == "compare")
+    if(dump_method == "compare" || dump_method=="dump_txt")
     {
         wino_systolic_top(
             (ap_uint<128> *) inputddr,

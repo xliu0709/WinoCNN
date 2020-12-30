@@ -535,7 +535,7 @@ def running_test( argv,validate_dict):
 
     end = time.time()
     print( (end - start)*1e9/100 )
-
+    time.sleep()
 
 
 
