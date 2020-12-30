@@ -67,6 +67,7 @@ int main(int argc, char** argv)
     std::string output_gold(argv[13]);
     std::string weight_gold(argv[14]);
     std::string dump_method(argv[15]);
+    std::string folder(argv[16]);
     int group_indepth_offset=0;
     int group_indepth=ALIGN(input_depth,8);
     int group_outdepth_offset=0;
@@ -282,7 +283,7 @@ int main(int argc, char** argv)
     else if(dump_method== "dump_gen"   )
     {
         char filename[100];
-        sprintf(filename, "bin/hw_%d_%d_%d_output.bin", input_height,input_depth,kernel_size);
+        sprintf(filename, "bin/cnm_%d_%d_%d_output.bin", input_height,input_depth,kernel_size);
         if(  (fptr=fopen(filename,"rb")) !=NULL)
         {
             fread(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
@@ -330,60 +331,60 @@ int main(int argc, char** argv)
     }
     else if( dump_method=="dump_txt" || dump_method == "dump_gen" )
     {
-        char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
-        char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
+        // char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
+        // char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
 
-        featuremap_hw_to_int_pointers(
+        // featuremap_hw_to_int_pointers(
+        //     fmap_dict["out"].buffers_hw[0],
+        //     out_hw1,
+        //     out_hw2,
+        //     linfo_vect[0].outdim[1],
+        //     linfo_vect[0].outdim[2],
+        //     linfo_vect[0].outdim[0],
+        //     0,
+        //     linfo_vect[0].outdim[0]
+        // );
+
+
+
+        char filename[100];
+        sprintf(filename, "%s/hw_%d_%d_%d.txt",folder.c_str(),input_height,input_depth,kernel_size);
+
+    
+        print_hw_buffers<char>(
             fmap_dict["out"].buffers_hw[0],
-            out_hw1,
-            out_hw2,
+            filename,
             linfo_vect[0].outdim[1],
             linfo_vect[0].outdim[2],
-            linfo_vect[0].outdim[0],
-            0,
-            linfo_vect[0].outdim[0]
-        );
-        char filename[100];
-        sprintf(filename, "model_%d_%d_%d_output1.txt", input_height,input_depth,kernel_size);
+            linfo_vect[0].outdim[0]);
 
-        print_feature_map<char>(fmap_dict["out"].buffers_int[0],
-        filename,
-        linfo_vect[0].outdim[1],
-        linfo_vect[0].outdim[2],
-        linfo_vect[0].outdim[0]
-        );
-        
-        sprintf(filename, "hw_%d_%d_%d_output1.txt", input_height,input_depth,kernel_size);
 
-        print_feature_map<char>(out_hw1,
-        filename,
-        linfo_vect[0].outdim[1],
-        linfo_vect[0].outdim[2],
-        linfo_vect[0].outdim[0]
-        );
+        featuremap_int_to_hw_pointers(
+        fmap_dict["out"].buffers_int[0],
+        fmap_dict["out"].buffers_int[1],
+        fmap_dict["out"].buffers_hw[0],
+        fmap_dict["out"].blob_info->dim[1],
+        fmap_dict["out"].blob_info->dim[2],
+        fmap_dict["out"].blob_info->dim[0],
+        0,
+        ALIGN(fmap_dict["out"].blob_info->dim[0],8));
 
-        sprintf(filename, "model_%d_%d_%d_output2.txt", input_height,input_depth,kernel_size);
-        print_feature_map<char>(fmap_dict["out"].buffers_int[1],
-        filename,
-        linfo_vect[0].outdim[1],
-        linfo_vect[0].outdim[2],
-        linfo_vect[0].outdim[0]
-        );
 
-        sprintf(filename, "hw_%d_%d_%d_output2.txt", input_height,input_depth,kernel_size);
-        print_feature_map<char>(out_hw2,
-        filename,
-        linfo_vect[0].outdim[1],
-        linfo_vect[0].outdim[2],
-        linfo_vect[0].outdim[0]
-        );
+        sprintf(filename, "%s/model_%d_%d_%d.txt",folder.c_str(),input_height,input_depth,kernel_size);
+
+    
+        print_hw_buffers<char>(
+            fmap_dict["out"].buffers_hw[0],
+            filename,
+            linfo_vect[0].outdim[1],
+            linfo_vect[0].outdim[2],
+            linfo_vect[0].outdim[0]);
+
 
 
         del_featuremap_mem(fmap_dict);
         del_weight_buffer_pointer(linfo_vect);
         
-        delete [] out_hw1;
-        delete [] out_hw2;
         return 0;
         
         

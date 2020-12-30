@@ -79,6 +79,39 @@ void print_feature_map_ddr_type(T* input, char* filename, int length)
 }
 
 
+
+template<class T>
+void print_hw_buffers(
+    T* sourceDDR,
+    char* filename,
+    int height,
+    int width,
+    int depth
+)
+{
+    FILE* fptr = fopen(filename,"w");
+    int width_align8= ALIGN(width,8);
+    int depth_align8 = ALIGN(depth,8);
+
+    
+    for(int i=0;i<height;i++)
+    for(int j=0;j<depth_align8;j+=8)
+    for(int k=0;k<width_align8;k++)
+    {
+        fprintf(fptr, "DATA[%3d %3d %3d]: ",i,k,j);
+        for(int l=0;l<8;l++)
+        {
+            int address = (i*width_align8*depth_align8 +j*width+k*8+l)*2;
+            fprintf(fptr,"[%8d]", sourceDDR[address],sourceDDR[address+1]);
+        }
+        fprintf(fptr, "\n");
+
+    }
+    fclose(fptr);
+}
+
+
+
 template<class T>
 void print_feature_map(
     T *feature_map,

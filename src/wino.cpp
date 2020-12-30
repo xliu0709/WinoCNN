@@ -817,32 +817,32 @@ void wino_systolic_top(
         
     }
 
-    if(pingpong )
-    {
-        write_output_to_DDR3(
-        output_DDR0,
-        output_DDR1,
-        output_DDR2,
-        output_DDR3,
-        output_buffer1,
-        write_start_row,
-        write_start_row==0,
-        conv_desc
-        );
+    // if(pingpong )
+    // {
+    //     write_output_to_DDR3(
+    //     output_DDR0,
+    //     output_DDR1,
+    //     output_DDR2,
+    //     output_DDR3,
+    //     output_buffer1,
+    //     write_start_row,
+    //     write_start_row==0,
+    //     conv_desc
+    //     );
 
-    }
-    else
-    {
-        write_output_to_DDR3(
-        output_DDR0,
-        output_DDR1,
-        output_DDR2,
-        output_DDR3,
-        output_buffer0,
-        write_start_row,
-        write_start_row==0,
-        conv_desc
-        );
+    // }
+    // else
+    // {
+    //     write_output_to_DDR3(
+    //     output_DDR0,
+    //     output_DDR1,
+    //     output_DDR2,
+    //     output_DDR3,
+    //     output_buffer0,
+    //     write_start_row,
+    //     write_start_row==0,
+    //     conv_desc
+    //     );
 
-    }
+    // }
 }
