@@ -547,7 +547,9 @@ def running_test( argv,validate_dict):
         if(output_load[i]!=output_FM[i]):
             output_load[i]=output_FM[i]
             count+=1
-    error_rate=count/len(output_load)
+
+    error_rate=count/(conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
+    print(key, conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
     print("error_rate",error_rate)
     validate_dict[ key ].append((end - start)*1e9/100) 
     validate_dict[ key ].append(error_rate )
