@@ -894,7 +894,7 @@ void load_input_rowtile_from_ddr(
 
 
 template<int port_idx>
-void write_output_to_DDR_one_row_64bit(
+void write_output_row(
 	ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR,
 	ap_uint<OUT_WIDTH*2> out_buffer0[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> rowtile_baseaddr0,
@@ -1861,33 +1861,33 @@ void write_output_to_DDR3(
 
 
 		
-		write_output_to_DDR_one_row_64bit<0>(
+		write_output_row<0>(
 		out_DDR0+out_ddr_offset0,
 		out_buffer[0],
 		rowtile_baseaddr0,
-		row_idx,
+		outrow_idx,
 		conv_desc);
 
-		write_output_to_DDR_one_row_64bit<1>(
+		write_output_row<1>(
 		out_DDR1+out_ddr_offset1,
 		out_buffer[1],
 		rowtile_baseaddr0,
-		row_idx+1,
+		outrow_idx+1,
 		conv_desc);
 
-		write_output_to_DDR_one_row_64bit<2>(
+		write_output_row<2>(
 		out_DDR2+out_ddr_offset2,
 		out_buffer[2],
 		rowtile_baseaddr0,
-		row_idx+2,
+		outrow_idx+2,
 		conv_desc);
 
 
-		write_output_to_DDR_one_row_64bit<3>(
+		write_output_row<3>(
 		out_DDR3+out_ddr_offset3,
 		out_buffer[3],
 		rowtile_baseaddr0,
-		row_idx+3,
+		outrow_idx+3,
 		conv_desc);
 
 		out_ddr_offset0+=conv_desc.out_ddr_increment_step;
@@ -1898,6 +1898,7 @@ void write_output_to_DDR3(
 
 
 		rowtile_baseaddr0+=rowtile_baseaddr_increment_step;
+		outrow_idx+=conv_desc.wino_output_tile_size;
 
 	}
 }

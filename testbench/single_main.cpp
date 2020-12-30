@@ -262,7 +262,7 @@ int main(int argc, char** argv)
    fwrite(fmap_dict["in"].buffers_hw[0], 16,input_depth/8*input_height*input_height,fptr);
    fclose(fptr);
 
-    if(dump_method =="compare" )
+    if(dump_method =="dump_txt"  )
     {
         wino_systolic_top(
             (ap_uint<128> *) inputddr,
@@ -279,7 +279,7 @@ int main(int argc, char** argv)
             // (linfo_vect[0].biasbuffer_quant[0])
             );
     }
-    else if(dump_method=="dump_txt"  )
+    else if(dump_method== "compare" )
     {
         char filename[100];
         sprintf(filename, "bin/hw_%d_%d_%d_output.bin", input_height,input_depth,kernel_size);
@@ -290,8 +290,6 @@ int main(int argc, char** argv)
         }
         else
             std::cout<<"output not found!"<<std::endl;
-
-
     }
     
 
@@ -346,7 +344,7 @@ int main(int argc, char** argv)
             linfo_vect[0].outdim[0]
         );
         char filename[100];
-        sprintf(filename, "text/model_%d_%d_%d_output1.txt", input_height,input_depth,kernel_size);
+        sprintf(filename, "model_%d_%d_%d_output1.txt", input_height,input_depth,kernel_size);
 
         print_feature_map<char>(fmap_dict["out"].buffers_int[0],
         filename,
@@ -355,7 +353,7 @@ int main(int argc, char** argv)
         linfo_vect[0].outdim[0]
         );
         
-        sprintf(filename, "text/hw_%d_%d_%d_output1.txt", input_height,input_depth,kernel_size);
+        sprintf(filename, "hw_%d_%d_%d_output1.txt", input_height,input_depth,kernel_size);
 
         print_feature_map<char>(out_hw1,
         filename,
@@ -364,7 +362,7 @@ int main(int argc, char** argv)
         linfo_vect[0].outdim[0]
         );
 
-        sprintf(filename, "text/model_%d_%d_%d_output2.txt", input_height,input_depth,kernel_size);
+        sprintf(filename, "model_%d_%d_%d_output2.txt", input_height,input_depth,kernel_size);
         print_feature_map<char>(fmap_dict["out"].buffers_int[1],
         filename,
         linfo_vect[0].outdim[1],
@@ -372,13 +370,15 @@ int main(int argc, char** argv)
         linfo_vect[0].outdim[0]
         );
 
-        sprintf(filename, "text/hw_%d_%d_%d_output2.txt", input_height,input_depth,kernel_size);
+        sprintf(filename, "hw_%d_%d_%d_output2.txt", input_height,input_depth,kernel_size);
         print_feature_map<char>(out_hw2,
         filename,
         linfo_vect[0].outdim[1],
         linfo_vect[0].outdim[2],
         linfo_vect[0].outdim[0]
         );
+
+
         del_featuremap_mem(fmap_dict);
         del_weight_buffer_pointer(linfo_vect);
         

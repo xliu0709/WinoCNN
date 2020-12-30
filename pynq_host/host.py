@@ -506,8 +506,8 @@ def running_test( argv,validate_dict):
 
     output_load=np.fromfile("bin/"+prefix+"output.bin",dtype=np.int16)
 
-    for i in range(len(weight_load)):
-        output_FM[i]=0xAA
+    for i in range(224*224*64):
+        output_FM[i]=0xAAAA
     
     
     
