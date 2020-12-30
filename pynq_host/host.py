@@ -543,7 +543,7 @@ def running_test( argv,validate_dict):
     
     count=0;
 
-    for i in range(len(output_load)):
+    for i in range(conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height):
         if(output_load[i]!=output_FM[i]):
             output_load[i]=output_FM[i]
             count+=1
