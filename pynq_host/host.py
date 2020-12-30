@@ -554,7 +554,7 @@ def running_test( argv,validate_dict):
     validate_dict[ key ].append((end - start)*1e9/100) 
     validate_dict[ key ].append(error_rate )
     
-    output_load.tofile("bin/hw_"+prefix+"output.bin")
+    output_load.tofile("bin/cnm_"+prefix+"output.bin")
 
     os.system("cp output.bin bin/"+prefix+"output.bin")
     os.system("cp param.bin bin/"+prefix+"param.bin")
