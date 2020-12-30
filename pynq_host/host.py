@@ -486,7 +486,7 @@ def running_test( argv,validate_dict):
 
     
 
-    params_load=np.fromfile("bin/"+prefix+"param.bin",dtype=np.int32)
+    params_load=np.fromfile("param.bin",dtype=np.int32)
     for i in range(74):
         if( params[i]!=params_load[i] ):
             params[i]=params_load[i]
@@ -494,17 +494,17 @@ def running_test( argv,validate_dict):
 
 
 
-    input_load=np.fromfile("bin/"+prefix+"input.bin",dtype=np.int16)
+    input_load=np.fromfile("input.bin",dtype=np.int16)
     for i in range(len(input_load)):
         input_FM[i]=input_load[i]
 
 
-    weight_load=np.fromfile("bin/"+prefix+"weight.bin",dtype=np.int32)
+    weight_load=np.fromfile("weight.bin",dtype=np.int32)
     for i in range(len(weight_load)):
         weight[i]=weight_load[i]
 
 
-    output_load=np.fromfile("bin/"+prefix+"output.bin",dtype=np.int16)
+    output_load=np.fromfile("output.bin",dtype=np.int16)
 
 
     for i in range(224*224*64):
@@ -554,10 +554,10 @@ def running_test( argv,validate_dict):
     
     output_load.tofile("bin/hw_"+prefix+"output.bin")
 
-    # os.system("cp output.bin bin/"+prefix+"output.bin")
-    # os.system("cp param.bin bin/"+prefix+"param.bin")
-    # os.system("cp input.bin bin/"+prefix+"input.bin")
-    # os.system("cp weight.bin bin/"+prefix+"weight.bin")
+    os.system("cp output.bin bin/"+prefix+"output.bin")
+    os.system("cp param.bin bin/"+prefix+"param.bin")
+    os.system("cp input.bin bin/"+prefix+"input.bin")
+    os.system("cp weight.bin bin/"+prefix+"weight.bin")
 
 
 
