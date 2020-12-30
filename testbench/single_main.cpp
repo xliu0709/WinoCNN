@@ -259,10 +259,10 @@ int main(int argc, char** argv)
 
    fptr=fopen("input.bin","w");
 
-   fwrite(fmap_dict["in"].buffers_hw[0], 16,input_depth/8*input_height*input_height,fptr);
+   fwrite(fmap_dict["in"].buffers_hw[0], 16,CEIL_DIV(input_depth,8)*input_height*ALIGN(input_height,8),fptr);
    fclose(fptr);
 
-    if(dump_method =="dump_txt"  )
+    if(dump_method == "compare")
     {
         wino_systolic_top(
             (ap_uint<128> *) inputddr,
@@ -279,7 +279,7 @@ int main(int argc, char** argv)
             // (linfo_vect[0].biasbuffer_quant[0])
             );
     }
-    else if(dump_method== "compare" )
+    else if(dump_method== "dump_gen"   )
     {
         char filename[100];
         sprintf(filename, "bin/hw_%d_%d_%d_output.bin", input_height,input_depth,kernel_size);
@@ -322,13 +322,13 @@ int main(int argc, char** argv)
 
 
         fptr=fopen("output.bin","w");
-        fwrite(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
+        fwrite(fmap_dict["out"].buffers_hw[0], 16, CEIL_DIV(input_depth,8)*output_height*ALIGN(output_height,8),fptr);
         fclose(fptr);
         del_featuremap_mem(fmap_dict);
         del_weight_buffer_pointer(linfo_vect);
         return 0;
     }
-    else if( dump_method=="dump_txt")
+    else if( dump_method=="dump_txt" || dump_method == "dump_gen" )
     {
         char* out_hw1 = new char[ fmap_dict["out"].buffer_size_int];
         char* out_hw2 = new char[ fmap_dict["out"].buffer_size_int];
