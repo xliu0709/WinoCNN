@@ -535,9 +535,7 @@ def running_test( argv,validate_dict):
 
     end = time.time()
     print( (end - start)*1e9/100 )
-    time.sleep(3)
-
-
+ 
 
     validate_dict[ key ].append(output_load)
     
@@ -560,6 +558,13 @@ def running_test( argv,validate_dict):
     os.system("cp param.bin bin/"+prefix+"param.bin")
     os.system("cp input.bin bin/"+prefix+"input.bin")
     os.system("cp weight.bin bin/"+prefix+"weight.bin")
+
+
+    input_FM.close()
+    weight.close()
+    output_FM.close()
+    params.close()
+    bias.close()
 
 
 

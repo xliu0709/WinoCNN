@@ -610,6 +610,29 @@ int idx=0;
 // #pragma SDS data sys_port(mem_params:ps_e_S_AXI_HP0_FPD)
 // #pragma SDS data sys_port(bias_mem:ps_e_S_AXI_HP1_FPD)
 
+
+template<int out_width, int batch_size, int wino_height, int wino_width, int wino_out_size, int outbuffer_depth>
+void clear_output_buffer_content(
+    ap_uint<out_width*batch_size> output_buffer[wino_out_size][wino_out_size][wino_height][wino_width][outbuffer_depth]
+)
+{
+    for(int i)
+    for(int wh=0;wh<wino_height;wh++)
+    {
+        for(int wr=0;wr<wino_out_size;wr++)
+        {
+            for(int ww=0;ww<wino_width;ww++)
+            {
+                for(int wc=0;wc<wino_out_size;wc++)
+                {
+                   
+                    output_buffer[wr][wc][wh][ww],0xAA,sizeof(ap_uint<out_width*batch_size>)*outbuffer_depth);
+                }
+            }
+        }
+    }
+}
+
 void wino_systolic_top(
     ap_uint<128> *input_DDR0,
     ap_uint<128> *input_DDR1,
@@ -675,12 +698,12 @@ void wino_systolic_top(
 
     #if DEBUG_FILE_PRINT
         // clear_buffer_content<INBUFFER_HEIGHT,INBUFFER_WIDTH, INPUT_BUFFER_DEPTH>(input_buffer);
-        clear_output_buffer_content_uniformed_hw<OUT_WIDTH,BATCH_SIZE,WINO_HEIGHT,WINO_WIDTH,WINO_OUT_SIZE_CELL,OUTPUT_BUFFER_DEPTH>(output_buffer0);
-        clear_output_buffer_content_uniformed_hw<OUT_WIDTH,BATCH_SIZE,WINO_HEIGHT,WINO_WIDTH,WINO_OUT_SIZE_CELL,OUTPUT_BUFFER_DEPTH>(output_buffer1);
+        clear_output_buffer_content<OUT_WIDTH,BATCH_SIZE,WINO_HEIGHT,WINO_WIDTH,WINO_OUT_SIZE_CELL,OUTPUT_BUFFER_DEPTH>(output_buffer0);
+        clear_output_buffer_content<OUT_WIDTH,BATCH_SIZE,WINO_HEIGHT,WINO_WIDTH,WINO_OUT_SIZE_CELL,OUTPUT_BUFFER_DEPTH>(output_buffer1);
     #endif
 
 
-  
+
     load_params(mem_params,conv_desc);
 
     load_bias_value(bias_mem, bias_buffer0, bias_buffer1,conv_desc.outdepth_align8);
@@ -729,6 +752,18 @@ void wino_systolic_top(
        
         if(pingpong )
         {
+
+            write_output_to_DDR3(
+            output_DDR0,
+            output_DDR1,
+            output_DDR2,
+            output_DDR3,
+            output_buffer1,
+            write_start_row,
+            write_start_row==0,
+            conv_desc
+            );
+
             wino_input_compute(
                 input_DDR0,
                 input_DDR1,
@@ -754,20 +789,25 @@ void wino_systolic_top(
         // //     getchar();
         // //     #endif
 
+
+
+        }
+        else
+        {
+
             write_output_to_DDR3(
             output_DDR0,
             output_DDR1,
             output_DDR2,
             output_DDR3,
-            output_buffer1,
+            output_buffer0,
             write_start_row,
             write_start_row==0,
             conv_desc
             );
 
-        }
-        else
-        {
+
+
             wino_input_compute(
                 input_DDR0,
                 input_DDR1,
@@ -793,16 +833,7 @@ void wino_systolic_top(
         // //     #endif
 
 
-            write_output_to_DDR3(
-            output_DDR0,
-            output_DDR1,
-            output_DDR2,
-            output_DDR3,
-            output_buffer0,
-            write_start_row,
-            write_start_row==0,
-            conv_desc
-            );
+
 
         }
 
