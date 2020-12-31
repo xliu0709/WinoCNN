@@ -507,7 +507,7 @@ def running_test( argv,validate_dict):
     output_load=np.fromfile("output.bin",dtype=np.int16)
 
 
-    for i in range(224*224*64):
+    for i in range(len(output_FM) ):
         output_FM[i]=0xAAAA
     
     output_FM.tofile("filecontent")
