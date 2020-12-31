@@ -543,7 +543,7 @@ def running_test( argv,validate_dict):
 
     for i in range(conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height):
         if(output_load[i]!=output_FM[i]):
-            output_load[i]=output_FM[i]
+            # output_load[i]=output_FM[i]
             count+=1
 
     error_rate=count/(conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
@@ -552,7 +552,7 @@ def running_test( argv,validate_dict):
     validate_dict[ key ].append((end - start)*1e9/100) 
     validate_dict[ key ].append(error_rate )
     
-    output_load.tofile("bin/cnm_"+prefix+"output.bin")
+    output_FM.tofile("bin/cnm_"+prefix+"output.bin")
 
     os.system("cp output.bin bin/"+prefix+"output.bin")
     os.system("cp param.bin bin/"+prefix+"param.bin")
