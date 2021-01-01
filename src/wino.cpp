@@ -611,27 +611,7 @@ int idx=0;
 // #pragma SDS data sys_port(bias_mem:ps_e_S_AXI_HP1_FPD)
 
 
-template<int out_width, int batch_size, int wino_height, int wino_width, int wino_out_size, int outbuffer_depth>
-void clear_output_buffer_content(
-    ap_uint<out_width*batch_size> output_buffer[wino_out_size][wino_out_size][wino_height][wino_width][outbuffer_depth]
-)
-{
-    for(int i)
-    for(int wh=0;wh<wino_height;wh++)
-    {
-        for(int wr=0;wr<wino_out_size;wr++)
-        {
-            for(int ww=0;ww<wino_width;ww++)
-            {
-                for(int wc=0;wc<wino_out_size;wc++)
-                {
-                   
-                    output_buffer[wr][wc][wh][ww],0xAA,sizeof(ap_uint<out_width*batch_size>)*outbuffer_depth);
-                }
-            }
-        }
-    }
-}
+
 
 void wino_systolic_top(
     ap_uint<128> *input_DDR0,

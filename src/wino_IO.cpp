@@ -934,10 +934,6 @@ void write_output_row(
 	int out_address=0;
 
 	ap_uint<2> stride=conv_desc.stride;
-
-	std::cout<<"start_write_address "<<out_DDR<<std::endl;
-	std::cout<<"start_write_address "<<out_DDR+conv_desc.output_burst_length<<std::endl;
-	getchar();
 	for(int out_address=0;out_address<conv_desc.output_burst_length;out_address++)
 	// for(int o8=0;o8<conv_desc.outdepth_align8;o8+=8)
 	// for(int col=0;col<conv_desc.outwidth_align8;col++)

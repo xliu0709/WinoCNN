@@ -283,7 +283,7 @@ int main(int argc, char** argv)
     else if(dump_method== "dump_gen"   )
     {
         char filename[100];
-        sprintf(filename, "bin/cnm_%d_%d_%d_output.bin", input_height,input_depth,kernel_size);
+        sprintf(filename, "bin/cnm_%d_%d_%d_output.bin", output_height,output_depth,kernel_size);
         if(  (fptr=fopen(filename,"rb")) !=NULL)
         {
             fread(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
