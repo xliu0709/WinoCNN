@@ -219,6 +219,41 @@ void load_input_tile(
 	}
 }
 
+
+void load_input_tile_cell(
+	ap_int<BTB_WIDTH> input_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE],
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg[INDEPTH_MINITILE_SIZE]
+)
+{
+	#pragma HLS pipeline
+
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+	#pragma HLS array_partition variable = stream_temp_reg0 complete dim=1
+
+
+	for(int iid=0;iid<INDEPTH_MINITILE_SIZE;iid++){
+		#pragma HLS unroll
+		for(int i=0;i<WINO_DOMAIN_SIZE;i++){
+			#pragma HLS unroll
+			for(int j=0;j<WINO_DOMAIN_SIZE;j++){
+				#pragma HLS unroll
+				for(int k=0;k<BATCH_SIZE;k++){
+				#pragma HLS unroll
+					//if(stream_pingpong_flag)
+						input_tile[iid][i][j][k]=
+						stream_temp_reg[iid].range(  ((i*WINO_DOMAIN_SIZE+j)*BATCH_SIZE+k)*BTB_WIDTH+BTB_WIDTH-1, ((i*WINO_DOMAIN_SIZE+j)*BATCH_SIZE+k)*BTB_WIDTH);
+				}
+			}
+		}
+	}
+
+}
+
+
 void load_weight_tile(
 		ap_int<W_WIDTH> weight_tile[WINO_HEIGHT][INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE],
 		ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> weight_value_temp[WINO_HEIGHT]
@@ -250,6 +285,37 @@ void load_weight_tile(
 			}
 		}
 }
+
+
+void load_weight_tile_cell(
+		ap_int<W_WIDTH> weight_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE],
+		ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> weight_value_temp
+)
+{
+		#pragma HLS array_partition variable = weight_tile complete dim=3
+		#pragma HLS array_partition variable = weight_tile complete dim=2
+		#pragma HLS array_partition variable = weight_tile complete dim=1
+
+
+
+			for(int id=0;id<INDEPTH_MINITILE_SIZE;id++)
+			{
+				#pragma HLS unroll
+				for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+				{
+					#pragma HLS unroll
+					for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+					{
+						#pragma HLS unroll
+						weight_tile[id][i][j]=weight_value_temp.range(
+							(id*WINO_DOMAIN_SIZE_SQUARE+i*WINO_DOMAIN_SIZE+j)*W_WIDTH+W_WIDTH-1,
+							(id*WINO_DOMAIN_SIZE_SQUARE+i*WINO_DOMAIN_SIZE+j)*W_WIDTH);
+					}
+				}
+			}
+
+}
+
 
 template<int dummy>
 void element_wise_mult_6x6(
@@ -300,6 +366,56 @@ void element_wise_mult_6x6(
 		}
 	}
 }
+
+
+template<int dummy>
+void element_wise_mult_4x4_cell(
+		ap_int<UV_MUL_WIDTH> UV_MUL_TILE[INDEPTH_MINITILE_SIZE/2][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE],
+		ap_int<BTB_WIDTH> input_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE],
+		ap_int<W_WIDTH> weight_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE],
+		ap_int<1> ap_clk_div2
+)
+{
+	#pragma HLS pipeline
+
+	#pragma HLS array_partition variable=UV_MUL_TILE complete dim=1
+	#pragma HLS array_partition variable=UV_MUL_TILE complete dim=2
+	#pragma HLS array_partition variable=UV_MUL_TILE complete dim=3
+	#pragma HLS array_partition variable=UV_MUL_TILE complete dim=4
+
+
+
+
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+	#pragma HLS array_partition variable = weight_tile complete dim=3
+	#pragma HLS array_partition variable = weight_tile complete dim=2
+	#pragma HLS array_partition variable = weight_tile complete dim=1
+
+	for(int wr=0;wr<WINO_DOMAIN_SIZE;wr++)
+	{
+	#pragma HLS unroll
+		for(int wc=0; wc<WINO_DOMAIN_SIZE;wc++)
+		{
+		#pragma HLS unroll
+			for(int id2=0,id=0;id2<INDEPTH_MINITILE_SIZE/2;id2++,id+=2)
+			{
+			#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+				#pragma HLS unroll
+
+					UV_MUL_TILE[id2][wr][wc][b]=weight_tile[id][wr][wc]*input_tile[id][wr][wc][b]+weight_tile[id+1][wr][wc]*input_tile[id+1][wr][wc][b];
+					// UV_MUL_TILE[1][id2][wr][wc][b]=__builtin_mac16x2( weight_tile[1][id][wr][wc],weight_tile[1][id+1][wr][wc],input_tile[id][wr][wc][b],input_tile[id+1][wr][wc][b],0,1,ap_clk_div2);
+				}
+			}
+		}
+	}
+}
+
 
 template<int dummy>
 void element_wise_mult_4x4(
@@ -434,6 +550,2251 @@ void DSP_LOADER(ap_int<32> &rst, ap_int<16> a0, ap_int<16> a1, ap_int<16> b0, ap
 
 
 
+void wino_stream_cell(
+		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &top_stream_in,
+		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &bottom_stream_out,
+		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &left_stream_in,
+		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &right_stream_out,
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer0[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer1[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer2[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer3[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<16> weightbuffer_outdepth_minitile_number,
+		ap_uint<24> total_input_stream_tile,
+		ap_uint<16> loop_omini_base_reset_cycle,
+		ap_uint<10> loop_wino_tile_rowcol_self_reset_cycle_min1,
+		ap_uint<32> loop_iload_reset_cycle,
+		ap_uint<32> loop_wino_cell_bound,
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_oload_increment_step,
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_omini_increment_step,
+		ap_uint<1> wino3x3_flag,
+		bool clear_flag
+		#if DEBUG_CONV_DESC
+		,ConvDesc_t conv_desc
+		#endif
+		,ap_uint<1> ap_clk_div2
+		)
+{
+	#if DEBUG_FILE_PRINT
+	printf("---wino_stream_block---\n");fflush(stdout);
+	#endif
+
+
+
+	#pragma HLS resource variable=out_buffer0 core=RAM_T2P_BRAM 
+	#pragma HLS resource variable=out_buffer1 core=RAM_T2P_BRAM 
+	#pragma HLS resource variable=out_buffer2 core=RAM_T2P_BRAM 
+	#pragma HLS resource variable=out_buffer3 core=RAM_T2P_BRAM 
+	
+	#pragma HLS interface ap_stable port=weightbuffer_outdepth_minitile_number
+	#pragma HLS interface ap_stable port=total_input_stream_tile
+	#pragma HLS interface ap_stable port=loop_omini_base_reset_cycle
+	#pragma HLS interface ap_stable port=loop_wino_tile_rowcol_self_reset_cycle_min1
+	#pragma HLS interface ap_stable port=loop_iload_reset_cycle
+	#pragma HLS interface ap_stable port=loop_wino_cell_bound
+	#pragma HLS interface ap_stable port=outbuffer_oload_increment_step
+	#pragma HLS interface ap_stable port=outbuffer_omini_increment_step
+	#pragma HLS interface ap_stable port=wino3x3_flag
+
+
+	#pragma HLS array_partition variable=out_buffer0 dim=1 complete
+	#pragma HLS array_partition variable=out_buffer1 dim=1 complete
+	#pragma HLS array_partition variable=out_buffer2 dim=1 complete
+	#pragma HLS array_partition variable=out_buffer3 dim=1 complete
+
+
+	
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg0[INDEPTH_MINITILE_SIZE];
+	#pragma HLS array_partition variable = stream_temp_reg0 complete dim=1
+	
+
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg1[INDEPTH_MINITILE_SIZE];
+	#pragma HLS array_partition variable = stream_temp_reg1 complete dim=1
+
+
+
+	#if DEBUG_FILE_PRINT
+	for(int i=0;i<WINO_WIDTH;i++)
+	{
+		memset(stream_temp_reg0[i],0xAB,INDEPTH_MINITILE_SIZE*sizeof(ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE>));
+		memset(stream_temp_reg1[i],0xAB,INDEPTH_MINITILE_SIZE*sizeof(ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE>));
+	}
+	#endif
+
+	ap_int<BTB_WIDTH> input_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+
+	ap_int<BTB_WIDTH> input_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+
+
+	#if 0
+	memset(stream_temp_reg0,0xAA,2*2*36*2);
+	memset(stream_temp_reg1,0xAA,2*2*36*2);
+	#endif
+
+
+
+	for(int i=0;i<INDEPTH_MINITILE_SIZE;i++)
+	{
+		#pragma HLS unroll
+		for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+		{
+			#pragma HLS unroll
+			stream_temp_reg0[imini_idx]=stream_temp_reg0[imini_idx+1];
+		}
+		
+		top_stream_in>>stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		bottom_stream_out<<stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		
+	}
+
+
+
+
+
+
+	ap_uint<1> load_input_flag=1;
+	ap_uint<1> stream_pingpong_flag=1;
+	ap_uint<24> loaded_input_stream_tile_number=1;
+	ap_uint<16> loop_omini_base_cnt=1;
+	ap_uint<10> loop_wino_tile_rowcol_cnt=0;
+	ap_uint<32>	loop_iload_cnt=1;
+
+
+	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_oload_offset=0;
+	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_omini_offset=0;
+
+
+	ap_uint<10> idepth_minitile_idx=0;
+
+
+
+
+	#if DEBUG_FILE_PRINT
+	int write_idx=0;
+	#endif
+	LOOP_MAIN:for(int cycle=0;cycle < loop_wino_cell_bound; cycle++)
+	{
+		#pragma HLS PIPELINE 
+
+		// for(int oload_idx=0;oload_idx<conv_desc.weightbuffer_load_outdepth_number;oload_idx++)
+		// for(int iload_idx=0;iload_idx<conv_desc.weightbuffer_load_indepth_number;iload_idx++)
+		// for(int imini_base_idx=0;imini_base_idx<conv_desc.weightbuffer_indepth_minitile_number;imini_base_idx++)
+		// for(int wino_tile_row_idx=0;wino_tile_row_idx<conv_desc.wino_tile_number_in_out_rowstep;wino_tile_row_idx++)
+		// for(int wino_tile_col_idx=0;wino_tile_col_idx<conv_desc.wino_tile_number_in_outwidth;wino_tile_col_idx++)
+		// for(int omini_base_idx=0;omini_base_idx<loop_omini_base_reset_cycle ;omini_base_idx++)
+
+		#pragma HLS dependence variable=out_buffer0 inter false
+		#pragma HLS dependence variable=out_buffer1 inter false
+		#pragma HLS dependence variable=out_buffer2 inter false
+		#pragma HLS dependence variable=out_buffer3 inter false
+		#pragma HLS dependence variable=out_buffer0 intra false
+		#pragma HLS dependence variable=out_buffer1 intra false
+		#pragma HLS dependence variable=out_buffer2 intra false
+		#pragma HLS dependence variable=out_buffer3 intra false
+
+		ap_uint<1> load_input_flag_reg = (load_input_flag  && loaded_input_stream_tile_number !=  total_input_stream_tile);
+
+		if(stream_pingpong_flag)
+			load_input_tile_cell(input_tile,stream_temp_reg0);
+		else
+			load_input_tile_cell(input_tile,stream_temp_reg1);
+
+		
+
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr = outbuffer_oload_offset + loop_wino_tile_rowcol_cnt +  outbuffer_omini_offset;
+
+		// #if DEBUG_FILE_PRINT
+		// int rowtile_idx=loop_wino_tile_rowcol_cnt/conv_desc.wino_tile_number_in_outwidth;
+		// int coltile_idx=loop_wino_tile_rowcol_cnt%conv_desc.wino_tile_number_in_outwidth;
+		// int outdepth_minitile_idx= (outbuffer_oload_offset+outbuffer_omini_offset)/(conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth);
+		// if((outbuffer_oload_offset+outbuffer_omini_offset)%(conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth))
+		// {
+		// 	printf("outdepth_minitile_idx not valid\n");
+		// 	exit(-3);
+		// }
+		// #endif
+
+
+		if(stream_pingpong_flag && load_input_flag_reg)
+		{
+
+			for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+			{
+				#pragma HLS unroll
+				stream_temp_reg1[imini_idx]=stream_temp_reg1[imini_idx+1];
+			}
+	
+			
+			top_stream_in>>stream_temp_reg1[INDEPTH_MINITILE_SIZE-1];
+			bottom_stream_out<< stream_temp_reg1[INDEPTH_MINITILE_SIZE-1];
+		}
+		else if(load_input_flag_reg)
+		{
+
+			for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+			{
+				#pragma HLS unroll
+				stream_temp_reg0[imini_idx]=stream_temp_reg0[imini_idx+1];
+			}
+		
+			top_stream_in>>stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+			bottom_stream_out<< stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		}
+
+
+
+		ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> weight_value_temp; 
+
+		if(loop_omini_base_cnt <= weightbuffer_outdepth_minitile_number)
+		{
+
+			
+			left_stream_in>>weight_value_temp;
+			right_stream_out<<weight_value_temp;
+			#if 0
+				printf("wino_row_idx: %2d --", i*WEIGHT_FEED_NUMBER_PER_PORT+j);
+				for(int k=0;k<WINO_DOMAIN_SIZE_SQUARE;k++)
+				{
+					printf("[%08x]", (unsigned int) weight_value_temp[i*WEIGHT_FEED_NUMBER_PER_PORT+j].range(k*32+31,k*32) );
+				}
+				printf("\n");
+			#endif
+
+		}
+
+		ap_int<W_WIDTH> weight_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
+		#pragma HLS array_partition variable = weight_tile complete dim=3
+		#pragma HLS array_partition variable = weight_tile complete dim=2
+		#pragma HLS array_partition variable = weight_tile complete dim=1
+
+		load_weight_tile_cell(weight_tile,weight_value_temp);
+
+
+
+		ap_int<BTB_WIDTH> input_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable = input_tile_reg complete dim=4
+		#pragma HLS array_partition variable = input_tile_reg complete dim=3
+		#pragma HLS array_partition variable = input_tile_reg complete dim=2
+		#pragma HLS array_partition variable = input_tile_reg complete dim=1
+
+
+		ap_int<W_WIDTH> weight_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
+
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=3
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=2
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=1
+
+
+		ap_int<UV_MUL_WIDTH> UV_MUL_TILE[INDEPTH_MINITILE_SIZE/2][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=1
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=2
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=3
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=4
+
+		load_reg_tile4<ap_int<BTB_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE,BATCH_SIZE>(input_tile_reg, input_tile);
+
+
+		#if WINO_DOMAIN_SIZE==6
+		load_reg_tile3<ap_int<W_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE>(weight_tile_reg, weight_tile[wino_array_idx%WINO_HEIGHT]);
+		#else
+		load_reg_tile3<ap_int<W_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE>(weight_tile_reg, weight_tile);
+		#endif
+
+
+			
+		#if WINO_DOMAIN_SIZE==6
+		element_wise_mult_6x6<0>(UV_MUL_TILE,input_tile_reg,weight_tile_reg, ap_clk_div2 );
+		#else
+		// element_wise_mult_6x6<0>(UV_MUL_TILE[0],input_tile_reg,weight_tile_reg[0], ap_clk_div2 );
+		// element_wise_mult_6x6<0>(UV_MUL_TILE[1],input_tile_reg,weight_tile_reg[1], ap_clk_div2 );
+		element_wise_mult_4x4_cell<0>(UV_MUL_TILE,input_tile_reg,weight_tile_reg, ap_clk_div2 );
+		#endif
+		
+
+
+			
+
+		ap_int<UV_WIDTH> UV[WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=UV complete dim=1
+		#pragma HLS array_partition variable=UV complete dim=2
+		#pragma HLS array_partition variable=UV complete dim=3
+
+		for(int wino_row=0;wino_row<WINO_DOMAIN_SIZE;wino_row++)
+		{
+			#pragma HLS unroll
+			for(int wino_col=0;wino_col<WINO_DOMAIN_SIZE;wino_col++)
+			{
+				#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+					#pragma HLS unroll
+					#if WINO_DOMAIN_SIZE==6
+					ap_int<UV_MUL_WIDTH> temp=0;
+					for(int id2=0;id2<INDEPTH_MINITILE_SIZE/2;id2++)
+					{
+						#pragma HLS unroll
+						temp+=UV_MUL_TILE[id2][wino_row][wino_col][b];
+					}
+					UV[wino_row][wino_col][b]=temp>>UV_QUANT_BIT;
+					#else
+					ap_int<UV_MUL_WIDTH> temp0=0;
+					for(int id2=0;id2<INDEPTH_MINITILE_SIZE/2;id2++)
+					{
+						#pragma HLS unroll
+						temp0+=UV_MUL_TILE[id2][wino_row][wino_col][b];
+					}
+					UV[wino_row][wino_col][b]=temp0>>UV_QUANT_BIT;
+					#endif
+				}
+			}
+		}
+
+
+		#if DEBUG_FILE_PRINT
+			char uvfilename[100];
+			#if WINO_DOMAIN_SIZE==6
+			
+			if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+			{
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV,write_idx,uvfilename);
+			}
+			#else
+			
+			if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+			{
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV[0],write_idx,uvfilename);
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT+1,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV[1],write_idx,uvfilename);
+			}
+			#endif
+		#endif
+
+
+		ap_int<UVA_WIDTH> UVA[WINO_DOMAIN_SIZE][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=UVA complete dim=1
+		#pragma HLS array_partition variable=UVA complete dim=2
+		#pragma HLS array_partition variable=UVA complete dim=3
+
+		
+		for(int ridx=0;ridx<WINO_DOMAIN_SIZE;ridx++)
+		{
+			#pragma HLS unroll
+			for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+			{
+				#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE==6
+				UVA_row(UVA,UV,ridx,bidx,wino3x3_flag);
+				#else
+				UVA_row(UVA,UV,ridx,bidx,wino3x3_flag);
+				#endif
+			}
+		}
+
+
+		ap_int<ATA_WIDTH> ATA[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=ATA complete dim=1
+		#pragma HLS array_partition variable=ATA complete dim=2
+		#pragma HLS array_partition variable=ATA complete dim=3
+
+		#if WINO_OUT_SIZE_CELL == 4 && WINO_OUT_SIZE==2
+		if(wino3x3_flag)
+		{
+		#endif
+			for(int cidx=0;cidx<WINO_OUT_SIZE_CELL;cidx++)
+			{
+				#pragma HLS unroll
+
+				for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+				{
+					#pragma HLS unroll
+					
+	
+					#if WINO_DOMAIN_SIZE==6
+					ATA_col(ATA,UVA,cidx,bidx,wino3x3_flag);
+					#else
+
+						ATA_col(ATA,UVA,cidx,bidx,wino3x3_flag);
+					#endif
+				}
+			}
+		
+		#if WINO_OUT_SIZE_CELL == 4 && WINO_OUT_SIZE==2
+		}
+		else
+		{
+			for(int cidx=0;cidx<WINO_OUT_SIZE_CELL;cidx++)
+			{
+				#pragma HLS unroll
+				for(int ridx=0;ridx<WINO_OUT_SIZE_CELL;ridx++)
+				{
+					#pragma HLS unroll
+					for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+					{
+						#pragma HLS unroll
+						ATA[ridx][cidx][bidx]=UV[ridx][cidx][bidx]*4;
+					}
+
+				}
+			}
+		}
+		#endif
+
+
+			
+
+
+		ap_int<OUT_WIDTH> out_value[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=out_value complete dim=1
+		#pragma HLS array_partition variable=out_value complete dim=2
+		#pragma HLS array_partition variable=out_value complete dim=3
+
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr_reg;
+		load_reg< ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> >(outbuffer_addr_reg,outbuffer_addr);
+
+
+		for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+		{
+			#pragma HLS unroll
+
+			ap_uint<OUT_WIDTH*BATCH_SIZE> data0[4];
+			#pragma HLS array_partition variable=data0 complete
+
+			if(idepth_minitile_idx==0 && clear_flag)
+			{
+				data0[0]=0;
+				data0[1]=0;
+				data0[2]=0;
+				data0[3]=0;
+			}
+			else
+			{
+				data0[0]=out_buffer0[c][outbuffer_addr_reg];
+				data0[1]=out_buffer1[c][outbuffer_addr_reg];
+				data0[2]=out_buffer2[c][outbuffer_addr_reg];
+				data0[3]=out_buffer3[c][outbuffer_addr_reg];
+			}
+			(out_value[0][c][1],out_value[0][c][0])=data0[0];
+			(out_value[1][c][1],out_value[1][c][0])=data0[1];
+			(out_value[2][c][1],out_value[2][c][0])=data0[2];
+			(out_value[3][c][1],out_value[3][c][0])=data0[3];
+
+		}
+	
+
+
+		ap_int<OUT_WIDTH> out_value_back[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=out_value_back complete dim=1
+		#pragma HLS array_partition variable=out_value_back complete dim=2
+		#pragma HLS array_partition variable=out_value_back complete dim=3
+
+		for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
+		{
+			#pragma HLS unroll
+			for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+			{
+				#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+
+					#pragma HLS unroll
+					ap_int<ATA_WIDTH+1> sum_sat0;
+					
+					sum_sat0=ATA[r][c][b]+out_value[r][c][b];
+
+					#if ATA_WIDTH+1 > OUT_WIDTH
+						ap_int<ATA_WIDTH+2-OUT_WIDTH> judgebit0=sum_sat0.range(ATA_WIDTH,OUT_WIDTH-1);
+						if(judgebit0 == 0 ||  judgebit0 == -1)
+							out_value_back[r][c][b]=sum_sat0;
+						else if (sum_sat0[ATA_WIDTH]==1 )
+						{
+							// std::cout<<"Encountering MIN"<<std::endl;
+							out_value_back[r][c][b]=OUT_SAT_MIN;
+						}
+						else
+						{
+							// std::cout<<"Encountering MAX"<<std::endl;
+							out_value_back[r][c][b]=OUT_SAT_MAX;
+						}
+					#else
+						out_value_back[0][r][c][b]=sum_sat0;
+						out_value_back[1][r][c][b]=sum_sat1;
+					#endif 
+
+
+				}
+			}
+		}
+
+		if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+		{
+			for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+			{
+				#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE == 6
+				out_buffer[r][c][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg]=(out_value_back[r][c][1],out_value_back[r][c][0]);
+				#else
+				out_buffer0[c][outbuffer_addr_reg]=(out_value_back[0][c][1],out_value_back[0][c][0]);
+				out_buffer1[c][outbuffer_addr_reg]=(out_value_back[1][c][1],out_value_back[1][c][0]);
+				out_buffer2[c][outbuffer_addr_reg]=(out_value_back[2][c][1],out_value_back[2][c][0]);
+				out_buffer3[c][outbuffer_addr_reg]=(out_value_back[3][c][1],out_value_back[3][c][0]);
+				#endif
+			}
+		}
+	
+
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle && loop_wino_tile_rowcol_cnt==loop_wino_tile_rowcol_self_reset_cycle_min1)
+		{
+			idepth_minitile_idx++;
+		}
+		else if(loop_iload_cnt==loop_iload_reset_cycle)
+		{
+			idepth_minitile_idx=0;
+		}
+		
+		
+	
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle && loop_wino_tile_rowcol_cnt==loop_wino_tile_rowcol_self_reset_cycle_min1)
+		{
+			loop_wino_tile_rowcol_cnt=0;
+		}
+		else if(loop_omini_base_cnt==loop_omini_base_reset_cycle)
+		{
+			loop_wino_tile_rowcol_cnt++;
+		}
+
+
+
+		if(loop_iload_cnt==loop_iload_reset_cycle)
+		{
+			loop_iload_cnt=1;
+			outbuffer_oload_offset+=outbuffer_oload_increment_step;
+		}
+		else
+		{
+			loop_iload_cnt++;
+		}
+		
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle ) 
+		{
+			load_input_flag = 1;
+		}
+		else if(loop_omini_base_cnt==INDEPTH_MINITILE_SIZE)
+		{
+			load_input_flag = 0;
+		}
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle)
+		{
+			loop_omini_base_cnt=1;
+			loaded_input_stream_tile_number++;
+			stream_pingpong_flag=~stream_pingpong_flag;
+			outbuffer_omini_offset=0;
+		}
+		else
+		{
+			loop_omini_base_cnt++;
+			outbuffer_omini_offset+=outbuffer_omini_increment_step;
+		}	
+	}
+
+}
+
+
+
+
+void wino_stream_cell_right(
+		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &top_stream_in,
+		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &bottom_stream_out,
+		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &left_stream_in,
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer0[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer1[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer2[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer3[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<16> weightbuffer_outdepth_minitile_number,
+		ap_uint<24> total_input_stream_tile,
+		ap_uint<16> loop_omini_base_reset_cycle,
+		ap_uint<10> loop_wino_tile_rowcol_self_reset_cycle_min1,
+		ap_uint<32> loop_iload_reset_cycle,
+		ap_uint<32> loop_wino_cell_bound,
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_oload_increment_step,
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_omini_increment_step,
+		ap_uint<1> wino3x3_flag,
+		bool clear_flag
+		#if DEBUG_CONV_DESC
+		,ConvDesc_t conv_desc
+		#endif
+		,ap_uint<1> ap_clk_div2
+		)
+{
+	#if DEBUG_FILE_PRINT
+	printf("---wino_stream_block---\n");fflush(stdout);
+	#endif
+
+
+
+
+	#pragma HLS interface ap_stable port=weightbuffer_outdepth_minitile_number
+	#pragma HLS interface ap_stable port=total_input_stream_tile
+	#pragma HLS interface ap_stable port=loop_omini_base_reset_cycle
+	#pragma HLS interface ap_stable port=loop_wino_tile_rowcol_self_reset_cycle_min1
+	#pragma HLS interface ap_stable port=loop_iload_reset_cycle
+	#pragma HLS interface ap_stable port=loop_wino_cell_bound
+	#pragma HLS interface ap_stable port=outbuffer_oload_increment_step
+	#pragma HLS interface ap_stable port=outbuffer_omini_increment_step
+	#pragma HLS interface ap_stable port=wino3x3_flag
+
+
+	#pragma HLS array_partition variable = out_buffer0 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer1 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer2 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer3 dim=1 complete
+
+
+	
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg0[INDEPTH_MINITILE_SIZE];
+	#pragma HLS array_partition variable = stream_temp_reg0 complete dim=1
+	
+
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg1[INDEPTH_MINITILE_SIZE];
+	#pragma HLS array_partition variable = stream_temp_reg1 complete dim=1
+
+
+
+	#if DEBUG_FILE_PRINT
+	for(int i=0;i<WINO_WIDTH;i++)
+	{
+		memset(stream_temp_reg0[i],0xAB,INDEPTH_MINITILE_SIZE*sizeof(ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE>));
+		memset(stream_temp_reg1[i],0xAB,INDEPTH_MINITILE_SIZE*sizeof(ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE>));
+	}
+	#endif
+
+	ap_int<BTB_WIDTH> input_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+
+	ap_int<BTB_WIDTH> input_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+
+
+	#if 0
+	memset(stream_temp_reg0,0xAA,2*2*36*2);
+	memset(stream_temp_reg1,0xAA,2*2*36*2);
+	#endif
+
+
+
+	for(int i=0;i<INDEPTH_MINITILE_SIZE;i++)
+	{
+		#pragma HLS unroll
+		for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+		{
+			#pragma HLS unroll
+			stream_temp_reg0[imini_idx]=stream_temp_reg0[imini_idx+1];
+		}
+		
+		top_stream_in>>stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		bottom_stream_out<<stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		
+	}
+
+
+
+
+
+
+	ap_uint<1> load_input_flag=1;
+	ap_uint<1> stream_pingpong_flag=1;
+	ap_uint<24> loaded_input_stream_tile_number=1;
+	ap_uint<16> loop_omini_base_cnt=1;
+	ap_uint<10> loop_wino_tile_rowcol_cnt=0;
+	ap_uint<32>	loop_iload_cnt=1;
+
+
+	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_oload_offset=0;
+	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_omini_offset=0;
+
+
+	ap_uint<10> idepth_minitile_idx=0;
+
+
+
+
+	#if DEBUG_FILE_PRINT
+	int write_idx=0;
+	#endif
+	LOOP_MAIN:for(int cycle=0;cycle < loop_wino_cell_bound; cycle++)
+	{
+		#pragma HLS PIPELINE 
+
+		// for(int oload_idx=0;oload_idx<conv_desc.weightbuffer_load_outdepth_number;oload_idx++)
+		// for(int iload_idx=0;iload_idx<conv_desc.weightbuffer_load_indepth_number;iload_idx++)
+		// for(int imini_base_idx=0;imini_base_idx<conv_desc.weightbuffer_indepth_minitile_number;imini_base_idx++)
+		// for(int wino_tile_row_idx=0;wino_tile_row_idx<conv_desc.wino_tile_number_in_out_rowstep;wino_tile_row_idx++)
+		// for(int wino_tile_col_idx=0;wino_tile_col_idx<conv_desc.wino_tile_number_in_outwidth;wino_tile_col_idx++)
+		// for(int omini_base_idx=0;omini_base_idx<loop_omini_base_reset_cycle ;omini_base_idx++)
+
+		#pragma HLS dependence variable=out_buffer0 inter false
+		#pragma HLS dependence variable=out_buffer1 inter false
+		#pragma HLS dependence variable=out_buffer2 inter false
+		#pragma HLS dependence variable=out_buffer3 inter false
+		#pragma HLS dependence variable=out_buffer0 intra false
+		#pragma HLS dependence variable=out_buffer1 intra false
+		#pragma HLS dependence variable=out_buffer2 intra false
+		#pragma HLS dependence variable=out_buffer3 intra false
+
+		ap_uint<1> load_input_flag_reg = (load_input_flag  && loaded_input_stream_tile_number !=  total_input_stream_tile);
+
+		if(stream_pingpong_flag)
+			load_input_tile_cell(input_tile,stream_temp_reg0);
+		else
+			load_input_tile_cell(input_tile,stream_temp_reg1);
+
+		
+
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr = outbuffer_oload_offset + loop_wino_tile_rowcol_cnt +  outbuffer_omini_offset;
+
+		// #if DEBUG_FILE_PRINT
+		// int rowtile_idx=loop_wino_tile_rowcol_cnt/conv_desc.wino_tile_number_in_outwidth;
+		// int coltile_idx=loop_wino_tile_rowcol_cnt%conv_desc.wino_tile_number_in_outwidth;
+		// int outdepth_minitile_idx= (outbuffer_oload_offset+outbuffer_omini_offset)/(conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth);
+		// if((outbuffer_oload_offset+outbuffer_omini_offset)%(conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth))
+		// {
+		// 	printf("outdepth_minitile_idx not valid\n");
+		// 	exit(-3);
+		// }
+		// #endif
+
+
+		if(stream_pingpong_flag && load_input_flag_reg)
+		{
+
+			for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+			{
+				#pragma HLS unroll
+				stream_temp_reg1[imini_idx]=stream_temp_reg1[imini_idx+1];
+			}
+	
+			
+			top_stream_in>>stream_temp_reg1[INDEPTH_MINITILE_SIZE-1];
+			bottom_stream_out<< stream_temp_reg1[INDEPTH_MINITILE_SIZE-1];
+		}
+		else if(load_input_flag_reg)
+		{
+
+			for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+			{
+				#pragma HLS unroll
+				stream_temp_reg0[imini_idx]=stream_temp_reg0[imini_idx+1];
+			}
+		
+			top_stream_in>>stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+			bottom_stream_out<< stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		}
+
+
+
+		ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> weight_value_temp; 
+
+		if(loop_omini_base_cnt <= weightbuffer_outdepth_minitile_number)
+		{
+
+			
+			left_stream_in>>weight_value_temp;
+			#if 0
+				printf("wino_row_idx: %2d --", i*WEIGHT_FEED_NUMBER_PER_PORT+j);
+				for(int k=0;k<WINO_DOMAIN_SIZE_SQUARE;k++)
+				{
+					printf("[%08x]", (unsigned int) weight_value_temp[i*WEIGHT_FEED_NUMBER_PER_PORT+j].range(k*32+31,k*32) );
+				}
+				printf("\n");
+			#endif
+
+		}
+
+		ap_int<W_WIDTH> weight_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
+		#pragma HLS array_partition variable = weight_tile complete dim=3
+		#pragma HLS array_partition variable = weight_tile complete dim=2
+		#pragma HLS array_partition variable = weight_tile complete dim=1
+
+		load_weight_tile_cell(weight_tile,weight_value_temp);
+
+
+
+		ap_int<BTB_WIDTH> input_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable = input_tile_reg complete dim=4
+		#pragma HLS array_partition variable = input_tile_reg complete dim=3
+		#pragma HLS array_partition variable = input_tile_reg complete dim=2
+		#pragma HLS array_partition variable = input_tile_reg complete dim=1
+
+
+		ap_int<W_WIDTH> weight_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
+
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=3
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=2
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=1
+
+
+		ap_int<UV_MUL_WIDTH> UV_MUL_TILE[INDEPTH_MINITILE_SIZE/2][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=1
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=2
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=3
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=4
+
+		load_reg_tile4<ap_int<BTB_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE,BATCH_SIZE>(input_tile_reg, input_tile);
+
+
+		#if WINO_DOMAIN_SIZE==6
+		load_reg_tile3<ap_int<W_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE>(weight_tile_reg, weight_tile[wino_array_idx%WINO_HEIGHT]);
+		#else
+		load_reg_tile3<ap_int<W_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE>(weight_tile_reg, weight_tile);
+		#endif
+
+
+			
+		#if WINO_DOMAIN_SIZE==6
+		element_wise_mult_6x6<0>(UV_MUL_TILE,input_tile_reg,weight_tile_reg, ap_clk_div2 );
+		#else
+		// element_wise_mult_6x6<0>(UV_MUL_TILE[0],input_tile_reg,weight_tile_reg[0], ap_clk_div2 );
+		// element_wise_mult_6x6<0>(UV_MUL_TILE[1],input_tile_reg,weight_tile_reg[1], ap_clk_div2 );
+		element_wise_mult_4x4_cell<0>(UV_MUL_TILE,input_tile_reg,weight_tile_reg, ap_clk_div2 );
+		#endif
+		
+
+
+			
+
+		ap_int<UV_WIDTH> UV[WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=UV complete dim=1
+		#pragma HLS array_partition variable=UV complete dim=2
+		#pragma HLS array_partition variable=UV complete dim=3
+
+		for(int wino_row=0;wino_row<WINO_DOMAIN_SIZE;wino_row++)
+		{
+			#pragma HLS unroll
+			for(int wino_col=0;wino_col<WINO_DOMAIN_SIZE;wino_col++)
+			{
+				#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+					#pragma HLS unroll
+					#if WINO_DOMAIN_SIZE==6
+					ap_int<UV_MUL_WIDTH> temp=0;
+					for(int id2=0;id2<INDEPTH_MINITILE_SIZE/2;id2++)
+					{
+						#pragma HLS unroll
+						temp+=UV_MUL_TILE[id2][wino_row][wino_col][b];
+					}
+					UV[wino_row][wino_col][b]=temp>>UV_QUANT_BIT;
+					#else
+					ap_int<UV_MUL_WIDTH> temp0=0;
+					for(int id2=0;id2<INDEPTH_MINITILE_SIZE/2;id2++)
+					{
+						#pragma HLS unroll
+						temp0+=UV_MUL_TILE[id2][wino_row][wino_col][b];
+					}
+					UV[wino_row][wino_col][b]=temp0>>UV_QUANT_BIT;
+					#endif
+				}
+			}
+		}
+
+
+		#if DEBUG_FILE_PRINT
+			char uvfilename[100];
+			#if WINO_DOMAIN_SIZE==6
+			
+			if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+			{
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV,write_idx,uvfilename);
+			}
+			#else
+			
+			if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+			{
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV[0],write_idx,uvfilename);
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT+1,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV[1],write_idx,uvfilename);
+			}
+			#endif
+		#endif
+
+
+		ap_int<UVA_WIDTH> UVA[WINO_DOMAIN_SIZE][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=UVA complete dim=1
+		#pragma HLS array_partition variable=UVA complete dim=2
+		#pragma HLS array_partition variable=UVA complete dim=3
+
+		
+		for(int ridx=0;ridx<WINO_DOMAIN_SIZE;ridx++)
+		{
+			#pragma HLS unroll
+			for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+			{
+				#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE==6
+				UVA_row(UVA,UV,ridx,bidx,wino3x3_flag);
+				#else
+				UVA_row(UVA,UV,ridx,bidx,wino3x3_flag);
+				#endif
+			}
+		}
+
+
+		ap_int<ATA_WIDTH> ATA[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=ATA complete dim=1
+		#pragma HLS array_partition variable=ATA complete dim=2
+		#pragma HLS array_partition variable=ATA complete dim=3
+
+		#if WINO_OUT_SIZE_CELL == 4 && WINO_OUT_SIZE==2
+		if(wino3x3_flag)
+		{
+		#endif
+			for(int cidx=0;cidx<WINO_OUT_SIZE_CELL;cidx++)
+			{
+				#pragma HLS unroll
+
+				for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+				{
+					#pragma HLS unroll
+					
+	
+					#if WINO_DOMAIN_SIZE==6
+					ATA_col(ATA,UVA,cidx,bidx,wino3x3_flag);
+					#else
+
+						ATA_col(ATA,UVA,cidx,bidx,wino3x3_flag);
+					#endif
+				}
+			}
+		
+		#if WINO_OUT_SIZE_CELL == 4 && WINO_OUT_SIZE==2
+		}
+		else
+		{
+			for(int cidx=0;cidx<WINO_OUT_SIZE_CELL;cidx++)
+			{
+				#pragma HLS unroll
+				for(int ridx=0;ridx<WINO_OUT_SIZE_CELL;ridx++)
+				{
+					#pragma HLS unroll
+					for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+					{
+						#pragma HLS unroll
+						ATA[ridx][cidx][bidx]=UV[ridx][cidx][bidx]*4;
+					}
+
+				}
+			}
+		}
+		#endif
+
+
+			
+
+
+		ap_int<OUT_WIDTH> out_value[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=out_value complete dim=1
+		#pragma HLS array_partition variable=out_value complete dim=2
+		#pragma HLS array_partition variable=out_value complete dim=3
+
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr_reg;
+		load_reg< ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> >(outbuffer_addr_reg,outbuffer_addr);
+
+
+		for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+		{
+			#pragma HLS unroll
+
+			ap_uint<OUT_WIDTH*BATCH_SIZE> data0[4];
+			#pragma HLS array_partition variable=data0 complete
+
+			if(idepth_minitile_idx==0 && clear_flag)
+			{
+				data0[0]=0;
+				data0[1]=0;
+				data0[2]=0;
+				data0[3]=0;
+			}
+			else
+			{
+				data0[0]=out_buffer0[c][outbuffer_addr_reg];
+				data0[1]=out_buffer1[c][outbuffer_addr_reg];
+				data0[2]=out_buffer2[c][outbuffer_addr_reg];
+				data0[3]=out_buffer3[c][outbuffer_addr_reg];
+			}
+			(out_value[0][c][1],out_value[0][c][0])=data0[0];
+			(out_value[1][c][1],out_value[1][c][0])=data0[1];
+			(out_value[2][c][1],out_value[2][c][0])=data0[2];
+			(out_value[3][c][1],out_value[3][c][0])=data0[3];
+
+		}
+	
+
+
+		ap_int<OUT_WIDTH> out_value_back[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=out_value_back complete dim=1
+		#pragma HLS array_partition variable=out_value_back complete dim=2
+		#pragma HLS array_partition variable=out_value_back complete dim=3
+
+		for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
+		{
+			#pragma HLS unroll
+			for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+			{
+				#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+
+					#pragma HLS unroll
+					ap_int<ATA_WIDTH+1> sum_sat0;
+					
+					sum_sat0=ATA[r][c][b]+out_value[r][c][b];
+
+					#if ATA_WIDTH+1 > OUT_WIDTH
+						ap_int<ATA_WIDTH+2-OUT_WIDTH> judgebit0=sum_sat0.range(ATA_WIDTH,OUT_WIDTH-1);
+						if(judgebit0 == 0 ||  judgebit0 == -1)
+							out_value_back[r][c][b]=sum_sat0;
+						else if (sum_sat0[ATA_WIDTH]==1 )
+						{
+							// std::cout<<"Encountering MIN"<<std::endl;
+							out_value_back[r][c][b]=OUT_SAT_MIN;
+						}
+						else
+						{
+							// std::cout<<"Encountering MAX"<<std::endl;
+							out_value_back[r][c][b]=OUT_SAT_MAX;
+						}
+					#else
+						out_value_back[0][r][c][b]=sum_sat0;
+						out_value_back[1][r][c][b]=sum_sat1;
+					#endif 
+
+
+				}
+			}
+		}
+
+		if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+		{
+
+			for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+			{
+				#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE == 6
+				out_buffer[r][c][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg]=(out_value_back[r][c][1],out_value_back[r][c][0]);
+				#else
+				out_buffer0[c][outbuffer_addr_reg]=(out_value_back[0][c][1],out_value_back[0][c][0]);
+				out_buffer1[c][outbuffer_addr_reg]=(out_value_back[1][c][1],out_value_back[1][c][0]);
+				out_buffer2[c][outbuffer_addr_reg]=(out_value_back[2][c][1],out_value_back[2][c][0]);
+				out_buffer3[c][outbuffer_addr_reg]=(out_value_back[3][c][1],out_value_back[3][c][0]);
+				#endif
+			}
+
+		}
+	
+
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle && loop_wino_tile_rowcol_cnt==loop_wino_tile_rowcol_self_reset_cycle_min1)
+		{
+			idepth_minitile_idx++;
+		}
+		else if(loop_iload_cnt==loop_iload_reset_cycle)
+		{
+			idepth_minitile_idx=0;
+		}
+		
+		
+	
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle && loop_wino_tile_rowcol_cnt==loop_wino_tile_rowcol_self_reset_cycle_min1)
+		{
+			loop_wino_tile_rowcol_cnt=0;
+		}
+		else if(loop_omini_base_cnt==loop_omini_base_reset_cycle)
+		{
+			loop_wino_tile_rowcol_cnt++;
+		}
+
+
+
+		if(loop_iload_cnt==loop_iload_reset_cycle)
+		{
+			loop_iload_cnt=1;
+			outbuffer_oload_offset+=outbuffer_oload_increment_step;
+		}
+		else
+		{
+			loop_iload_cnt++;
+		}
+		
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle ) 
+		{
+			load_input_flag = 1;
+		}
+		else if(loop_omini_base_cnt==INDEPTH_MINITILE_SIZE)
+		{
+			load_input_flag = 0;
+		}
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle)
+		{
+			loop_omini_base_cnt=1;
+			loaded_input_stream_tile_number++;
+			stream_pingpong_flag=~stream_pingpong_flag;
+			outbuffer_omini_offset=0;
+		}
+		else
+		{
+			loop_omini_base_cnt++;
+			outbuffer_omini_offset+=outbuffer_omini_increment_step;
+		}	
+	}
+
+}
+
+
+
+void wino_stream_cell_bottom(
+		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &top_stream_in,
+		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &left_stream_in,
+		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &right_stream_out,
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer0[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer1[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer2[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer3[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<16> weightbuffer_outdepth_minitile_number,
+		ap_uint<24> total_input_stream_tile,
+		ap_uint<16> loop_omini_base_reset_cycle,
+		ap_uint<10> loop_wino_tile_rowcol_self_reset_cycle_min1,
+		ap_uint<32> loop_iload_reset_cycle,
+		ap_uint<32> loop_wino_cell_bound,
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_oload_increment_step,
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_omini_increment_step,
+		ap_uint<1> wino3x3_flag,
+		bool clear_flag
+		#if DEBUG_CONV_DESC
+		,ConvDesc_t conv_desc
+		#endif
+		,ap_uint<1> ap_clk_div2
+		)
+{
+
+	#if DEBUG_FILE_PRINT
+	printf("---wino_stream_block---\n");fflush(stdout);
+	#endif
+
+
+
+
+	#pragma HLS interface ap_stable port=weightbuffer_outdepth_minitile_number
+	#pragma HLS interface ap_stable port=total_input_stream_tile
+	#pragma HLS interface ap_stable port=loop_omini_base_reset_cycle
+	#pragma HLS interface ap_stable port=loop_wino_tile_rowcol_self_reset_cycle_min1
+	#pragma HLS interface ap_stable port=loop_iload_reset_cycle
+	#pragma HLS interface ap_stable port=loop_wino_cell_bound
+	#pragma HLS interface ap_stable port=outbuffer_oload_increment_step
+	#pragma HLS interface ap_stable port=outbuffer_omini_increment_step
+	#pragma HLS interface ap_stable port=wino3x3_flag
+
+
+	#pragma HLS array_partition variable = out_buffer0 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer1 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer2 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer3 dim=1 complete
+
+
+	
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg0[INDEPTH_MINITILE_SIZE];
+	#pragma HLS array_partition variable = stream_temp_reg0 complete dim=1
+	
+
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg1[INDEPTH_MINITILE_SIZE];
+	#pragma HLS array_partition variable = stream_temp_reg1 complete dim=1
+
+
+
+	#if DEBUG_FILE_PRINT
+	for(int i=0;i<WINO_WIDTH;i++)
+	{
+		memset(stream_temp_reg0[i],0xAB,INDEPTH_MINITILE_SIZE*sizeof(ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE>));
+		memset(stream_temp_reg1[i],0xAB,INDEPTH_MINITILE_SIZE*sizeof(ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE>));
+	}
+	#endif
+
+	ap_int<BTB_WIDTH> input_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+
+	ap_int<BTB_WIDTH> input_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+
+
+	#if 0
+	memset(stream_temp_reg0,0xAA,2*2*36*2);
+	memset(stream_temp_reg1,0xAA,2*2*36*2);
+	#endif
+
+
+
+	for(int i=0;i<INDEPTH_MINITILE_SIZE;i++)
+	{
+		#pragma HLS unroll
+		for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+		{
+			#pragma HLS unroll
+			stream_temp_reg0[imini_idx]=stream_temp_reg0[imini_idx+1];
+		}
+		
+		top_stream_in>>stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		
+	}
+
+
+
+
+
+
+	ap_uint<1> load_input_flag=1;
+	ap_uint<1> stream_pingpong_flag=1;
+	ap_uint<24> loaded_input_stream_tile_number=1;
+	ap_uint<16> loop_omini_base_cnt=1;
+	ap_uint<10> loop_wino_tile_rowcol_cnt=0;
+	ap_uint<32>	loop_iload_cnt=1;
+
+
+	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_oload_offset=0;
+	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_omini_offset=0;
+
+
+	ap_uint<10> idepth_minitile_idx=0;
+
+
+
+
+	#if DEBUG_FILE_PRINT
+	int write_idx=0;
+	#endif
+	LOOP_MAIN:for(int cycle=0;cycle < loop_wino_cell_bound; cycle++)
+	{
+		#pragma HLS PIPELINE 
+
+		// for(int oload_idx=0;oload_idx<conv_desc.weightbuffer_load_outdepth_number;oload_idx++)
+		// for(int iload_idx=0;iload_idx<conv_desc.weightbuffer_load_indepth_number;iload_idx++)
+		// for(int imini_base_idx=0;imini_base_idx<conv_desc.weightbuffer_indepth_minitile_number;imini_base_idx++)
+		// for(int wino_tile_row_idx=0;wino_tile_row_idx<conv_desc.wino_tile_number_in_out_rowstep;wino_tile_row_idx++)
+		// for(int wino_tile_col_idx=0;wino_tile_col_idx<conv_desc.wino_tile_number_in_outwidth;wino_tile_col_idx++)
+		// for(int omini_base_idx=0;omini_base_idx<loop_omini_base_reset_cycle ;omini_base_idx++)
+
+		#pragma HLS dependence variable=out_buffer0 inter false
+		#pragma HLS dependence variable=out_buffer1 inter false
+		#pragma HLS dependence variable=out_buffer2 inter false
+		#pragma HLS dependence variable=out_buffer3 inter false
+		#pragma HLS dependence variable=out_buffer0 intra false
+		#pragma HLS dependence variable=out_buffer1 intra false
+		#pragma HLS dependence variable=out_buffer2 intra false
+		#pragma HLS dependence variable=out_buffer3 intra false
+
+		ap_uint<1> load_input_flag_reg = (load_input_flag  && loaded_input_stream_tile_number !=  total_input_stream_tile);
+
+		if(stream_pingpong_flag)
+			load_input_tile_cell(input_tile,stream_temp_reg0);
+		else
+			load_input_tile_cell(input_tile,stream_temp_reg1);
+
+		
+
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr = outbuffer_oload_offset + loop_wino_tile_rowcol_cnt +  outbuffer_omini_offset;
+
+		// #if DEBUG_FILE_PRINT
+		// int rowtile_idx=loop_wino_tile_rowcol_cnt/conv_desc.wino_tile_number_in_outwidth;
+		// int coltile_idx=loop_wino_tile_rowcol_cnt%conv_desc.wino_tile_number_in_outwidth;
+		// int outdepth_minitile_idx= (outbuffer_oload_offset+outbuffer_omini_offset)/(conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth);
+		// if((outbuffer_oload_offset+outbuffer_omini_offset)%(conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth))
+		// {
+		// 	printf("outdepth_minitile_idx not valid\n");
+		// 	exit(-3);
+		// }
+		// #endif
+
+
+		if(stream_pingpong_flag && load_input_flag_reg)
+		{
+
+			for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+			{
+				#pragma HLS unroll
+				stream_temp_reg1[imini_idx]=stream_temp_reg1[imini_idx+1];
+			}
+	
+			
+			top_stream_in>>stream_temp_reg1[INDEPTH_MINITILE_SIZE-1];
+		}
+		else if(load_input_flag_reg)
+		{
+
+			for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+			{
+				#pragma HLS unroll
+				stream_temp_reg0[imini_idx]=stream_temp_reg0[imini_idx+1];
+			}
+		
+			top_stream_in>>stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		}
+
+
+
+		ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> weight_value_temp; 
+
+		if(loop_omini_base_cnt <= weightbuffer_outdepth_minitile_number)
+		{
+
+			
+			left_stream_in>>weight_value_temp;
+			right_stream_out<<weight_value_temp;
+			#if 0
+				printf("wino_row_idx: %2d --", i*WEIGHT_FEED_NUMBER_PER_PORT+j);
+				for(int k=0;k<WINO_DOMAIN_SIZE_SQUARE;k++)
+				{
+					printf("[%08x]", (unsigned int) weight_value_temp[i*WEIGHT_FEED_NUMBER_PER_PORT+j].range(k*32+31,k*32) );
+				}
+				printf("\n");
+			#endif
+
+		}
+
+		ap_int<W_WIDTH> weight_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
+		#pragma HLS array_partition variable = weight_tile complete dim=3
+		#pragma HLS array_partition variable = weight_tile complete dim=2
+		#pragma HLS array_partition variable = weight_tile complete dim=1
+
+		load_weight_tile_cell(weight_tile,weight_value_temp);
+
+
+
+		ap_int<BTB_WIDTH> input_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable = input_tile_reg complete dim=4
+		#pragma HLS array_partition variable = input_tile_reg complete dim=3
+		#pragma HLS array_partition variable = input_tile_reg complete dim=2
+		#pragma HLS array_partition variable = input_tile_reg complete dim=1
+
+
+		ap_int<W_WIDTH> weight_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
+
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=3
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=2
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=1
+
+
+		ap_int<UV_MUL_WIDTH> UV_MUL_TILE[INDEPTH_MINITILE_SIZE/2][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=1
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=2
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=3
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=4
+
+		load_reg_tile4<ap_int<BTB_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE,BATCH_SIZE>(input_tile_reg, input_tile);
+
+
+		#if WINO_DOMAIN_SIZE==6
+		load_reg_tile3<ap_int<W_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE>(weight_tile_reg, weight_tile[wino_array_idx%WINO_HEIGHT]);
+		#else
+		load_reg_tile3<ap_int<W_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE>(weight_tile_reg, weight_tile);
+		#endif
+
+
+			
+		#if WINO_DOMAIN_SIZE==6
+		element_wise_mult_6x6<0>(UV_MUL_TILE,input_tile_reg,weight_tile_reg, ap_clk_div2 );
+		#else
+		// element_wise_mult_6x6<0>(UV_MUL_TILE[0],input_tile_reg,weight_tile_reg[0], ap_clk_div2 );
+		// element_wise_mult_6x6<0>(UV_MUL_TILE[1],input_tile_reg,weight_tile_reg[1], ap_clk_div2 );
+		element_wise_mult_4x4_cell<0>(UV_MUL_TILE,input_tile_reg,weight_tile_reg, ap_clk_div2 );
+		#endif
+		
+
+
+			
+
+		ap_int<UV_WIDTH> UV[WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=UV complete dim=1
+		#pragma HLS array_partition variable=UV complete dim=2
+		#pragma HLS array_partition variable=UV complete dim=3
+
+		for(int wino_row=0;wino_row<WINO_DOMAIN_SIZE;wino_row++)
+		{
+			#pragma HLS unroll
+			for(int wino_col=0;wino_col<WINO_DOMAIN_SIZE;wino_col++)
+			{
+				#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+					#pragma HLS unroll
+					#if WINO_DOMAIN_SIZE==6
+					ap_int<UV_MUL_WIDTH> temp=0;
+					for(int id2=0;id2<INDEPTH_MINITILE_SIZE/2;id2++)
+					{
+						#pragma HLS unroll
+						temp+=UV_MUL_TILE[id2][wino_row][wino_col][b];
+					}
+					UV[wino_row][wino_col][b]=temp>>UV_QUANT_BIT;
+					#else
+					ap_int<UV_MUL_WIDTH> temp0=0;
+					for(int id2=0;id2<INDEPTH_MINITILE_SIZE/2;id2++)
+					{
+						#pragma HLS unroll
+						temp0+=UV_MUL_TILE[id2][wino_row][wino_col][b];
+					}
+					UV[wino_row][wino_col][b]=temp0>>UV_QUANT_BIT;
+					#endif
+				}
+			}
+		}
+
+
+		#if DEBUG_FILE_PRINT
+			char uvfilename[100];
+			#if WINO_DOMAIN_SIZE==6
+			
+			if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+			{
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV,write_idx,uvfilename);
+			}
+			#else
+			
+			if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+			{
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV[0],write_idx,uvfilename);
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT+1,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV[1],write_idx,uvfilename);
+			}
+			#endif
+		#endif
+
+
+		ap_int<UVA_WIDTH> UVA[WINO_DOMAIN_SIZE][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=UVA complete dim=1
+		#pragma HLS array_partition variable=UVA complete dim=2
+		#pragma HLS array_partition variable=UVA complete dim=3
+
+		
+		for(int ridx=0;ridx<WINO_DOMAIN_SIZE;ridx++)
+		{
+			#pragma HLS unroll
+			for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+			{
+				#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE==6
+				UVA_row(UVA,UV,ridx,bidx,wino3x3_flag);
+				#else
+				UVA_row(UVA,UV,ridx,bidx,wino3x3_flag);
+				#endif
+			}
+		}
+
+
+		ap_int<ATA_WIDTH> ATA[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=ATA complete dim=1
+		#pragma HLS array_partition variable=ATA complete dim=2
+		#pragma HLS array_partition variable=ATA complete dim=3
+
+		#if WINO_OUT_SIZE_CELL == 4 && WINO_OUT_SIZE==2
+		if(wino3x3_flag)
+		{
+		#endif
+			for(int cidx=0;cidx<WINO_OUT_SIZE_CELL;cidx++)
+			{
+				#pragma HLS unroll
+
+				for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+				{
+					#pragma HLS unroll
+					
+	
+					#if WINO_DOMAIN_SIZE==6
+					ATA_col(ATA,UVA,cidx,bidx,wino3x3_flag);
+					#else
+
+						ATA_col(ATA,UVA,cidx,bidx,wino3x3_flag);
+					#endif
+				}
+			}
+		
+		#if WINO_OUT_SIZE_CELL == 4 && WINO_OUT_SIZE==2
+		}
+		else
+		{
+			for(int cidx=0;cidx<WINO_OUT_SIZE_CELL;cidx++)
+			{
+				#pragma HLS unroll
+				for(int ridx=0;ridx<WINO_OUT_SIZE_CELL;ridx++)
+				{
+					#pragma HLS unroll
+					for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+					{
+						#pragma HLS unroll
+						ATA[ridx][cidx][bidx]=UV[ridx][cidx][bidx]*4;
+					}
+
+				}
+			}
+		}
+		#endif
+
+
+			
+
+
+		ap_int<OUT_WIDTH> out_value[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=out_value complete dim=1
+		#pragma HLS array_partition variable=out_value complete dim=2
+		#pragma HLS array_partition variable=out_value complete dim=3
+
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr_reg;
+		load_reg< ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> >(outbuffer_addr_reg,outbuffer_addr);
+
+
+		for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+		{
+			#pragma HLS unroll
+
+			ap_uint<OUT_WIDTH*BATCH_SIZE> data0[4];
+			#pragma HLS array_partition variable=data0 complete
+
+			if(idepth_minitile_idx==0 && clear_flag)
+			{
+				data0[0]=0;
+				data0[1]=0;
+				data0[2]=0;
+				data0[3]=0;
+			}
+			else
+			{
+				data0[0]=out_buffer0[c][outbuffer_addr_reg];
+				data0[1]=out_buffer1[c][outbuffer_addr_reg];
+				data0[2]=out_buffer2[c][outbuffer_addr_reg];
+				data0[3]=out_buffer3[c][outbuffer_addr_reg];
+			}
+			(out_value[0][c][1],out_value[0][c][0])=data0[0];
+			(out_value[1][c][1],out_value[1][c][0])=data0[1];
+			(out_value[2][c][1],out_value[2][c][0])=data0[2];
+			(out_value[3][c][1],out_value[3][c][0])=data0[3];
+
+		}
+	
+
+
+		ap_int<OUT_WIDTH> out_value_back[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=out_value_back complete dim=1
+		#pragma HLS array_partition variable=out_value_back complete dim=2
+		#pragma HLS array_partition variable=out_value_back complete dim=3
+
+		for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
+		{
+			#pragma HLS unroll
+			for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+			{
+				#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+
+					#pragma HLS unroll
+					ap_int<ATA_WIDTH+1> sum_sat0;
+					
+					sum_sat0=ATA[r][c][b]+out_value[r][c][b];
+
+					#if ATA_WIDTH+1 > OUT_WIDTH
+						ap_int<ATA_WIDTH+2-OUT_WIDTH> judgebit0=sum_sat0.range(ATA_WIDTH,OUT_WIDTH-1);
+						if(judgebit0 == 0 ||  judgebit0 == -1)
+							out_value_back[r][c][b]=sum_sat0;
+						else if (sum_sat0[ATA_WIDTH]==1 )
+						{
+							// std::cout<<"Encountering MIN"<<std::endl;
+							out_value_back[r][c][b]=OUT_SAT_MIN;
+						}
+						else
+						{
+							// std::cout<<"Encountering MAX"<<std::endl;
+							out_value_back[r][c][b]=OUT_SAT_MAX;
+						}
+					#else
+						out_value_back[0][r][c][b]=sum_sat0;
+						out_value_back[1][r][c][b]=sum_sat1;
+					#endif 
+
+
+				}
+			}
+		}
+
+		if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+		{
+			for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+			{
+				#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE == 6
+				out_buffer[r][c][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg]=(out_value_back[r][c][1],out_value_back[r][c][0]);
+				#else
+				out_buffer0[c][outbuffer_addr_reg]=(out_value_back[0][c][1],out_value_back[0][c][0]);
+				out_buffer1[c][outbuffer_addr_reg]=(out_value_back[1][c][1],out_value_back[1][c][0]);
+				out_buffer2[c][outbuffer_addr_reg]=(out_value_back[2][c][1],out_value_back[2][c][0]);
+				out_buffer3[c][outbuffer_addr_reg]=(out_value_back[3][c][1],out_value_back[3][c][0]);
+				#endif
+			}
+		}
+	
+
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle && loop_wino_tile_rowcol_cnt==loop_wino_tile_rowcol_self_reset_cycle_min1)
+		{
+			idepth_minitile_idx++;
+		}
+		else if(loop_iload_cnt==loop_iload_reset_cycle)
+		{
+			idepth_minitile_idx=0;
+		}
+		
+		
+	
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle && loop_wino_tile_rowcol_cnt==loop_wino_tile_rowcol_self_reset_cycle_min1)
+		{
+			loop_wino_tile_rowcol_cnt=0;
+		}
+		else if(loop_omini_base_cnt==loop_omini_base_reset_cycle)
+		{
+			loop_wino_tile_rowcol_cnt++;
+		}
+
+
+
+		if(loop_iload_cnt==loop_iload_reset_cycle)
+		{
+			loop_iload_cnt=1;
+			outbuffer_oload_offset+=outbuffer_oload_increment_step;
+		}
+		else
+		{
+			loop_iload_cnt++;
+		}
+		
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle ) 
+		{
+			load_input_flag = 1;
+		}
+		else if(loop_omini_base_cnt==INDEPTH_MINITILE_SIZE)
+		{
+			load_input_flag = 0;
+		}
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle)
+		{
+			loop_omini_base_cnt=1;
+			loaded_input_stream_tile_number++;
+			stream_pingpong_flag=~stream_pingpong_flag;
+			outbuffer_omini_offset=0;
+		}
+		else
+		{
+			loop_omini_base_cnt++;
+			outbuffer_omini_offset+=outbuffer_omini_increment_step;
+		}	
+	}
+
+}
+
+
+
+
+void wino_stream_cell_corner(
+		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &top_stream_in,
+		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &left_stream_in,
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer0[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer1[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer2[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer3[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<16> weightbuffer_outdepth_minitile_number,
+		ap_uint<24> total_input_stream_tile,
+		ap_uint<16> loop_omini_base_reset_cycle,
+		ap_uint<10> loop_wino_tile_rowcol_self_reset_cycle_min1,
+		ap_uint<32> loop_iload_reset_cycle,
+		ap_uint<32> loop_wino_cell_bound,
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_oload_increment_step,
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_omini_increment_step,
+		ap_uint<1> wino3x3_flag,
+		bool clear_flag
+		#if DEBUG_CONV_DESC
+		,ConvDesc_t conv_desc
+		#endif
+		,ap_uint<1> ap_clk_div2
+		)
+{
+	#if DEBUG_FILE_PRINT
+	printf("---wino_stream_block---\n");fflush(stdout);
+	#endif
+
+
+
+
+	#pragma HLS interface ap_stable port=weightbuffer_outdepth_minitile_number
+	#pragma HLS interface ap_stable port=total_input_stream_tile
+	#pragma HLS interface ap_stable port=loop_omini_base_reset_cycle
+	#pragma HLS interface ap_stable port=loop_wino_tile_rowcol_self_reset_cycle_min1
+	#pragma HLS interface ap_stable port=loop_iload_reset_cycle
+	#pragma HLS interface ap_stable port=loop_wino_cell_bound
+	#pragma HLS interface ap_stable port=outbuffer_oload_increment_step
+	#pragma HLS interface ap_stable port=outbuffer_omini_increment_step
+	#pragma HLS interface ap_stable port=wino3x3_flag
+
+
+	#pragma HLS array_partition variable = out_buffer0 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer1 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer2 dim=1 complete
+	#pragma HLS array_partition variable = out_buffer3 dim=1 complete
+
+
+	
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg0[INDEPTH_MINITILE_SIZE];
+	#pragma HLS array_partition variable = stream_temp_reg0 complete dim=1
+	
+
+	ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> stream_temp_reg1[INDEPTH_MINITILE_SIZE];
+	#pragma HLS array_partition variable = stream_temp_reg1 complete dim=1
+
+
+
+	#if DEBUG_FILE_PRINT
+	for(int i=0;i<WINO_WIDTH;i++)
+	{
+		memset(stream_temp_reg0[i],0xAB,INDEPTH_MINITILE_SIZE*sizeof(ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE>));
+		memset(stream_temp_reg1[i],0xAB,INDEPTH_MINITILE_SIZE*sizeof(ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE>));
+	}
+	#endif
+
+	ap_int<BTB_WIDTH> input_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+
+	ap_int<BTB_WIDTH> input_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+	#pragma HLS array_partition variable = input_tile complete dim=4
+	#pragma HLS array_partition variable = input_tile complete dim=3
+	#pragma HLS array_partition variable = input_tile complete dim=2
+	#pragma HLS array_partition variable = input_tile complete dim=1
+
+
+
+	#if 0
+	memset(stream_temp_reg0,0xAA,2*2*36*2);
+	memset(stream_temp_reg1,0xAA,2*2*36*2);
+	#endif
+
+
+
+	for(int i=0;i<INDEPTH_MINITILE_SIZE;i++)
+	{
+		#pragma HLS unroll
+		for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+		{
+			#pragma HLS unroll
+			stream_temp_reg0[imini_idx]=stream_temp_reg0[imini_idx+1];
+		}
+		
+		top_stream_in>>stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		
+	}
+
+
+
+
+
+
+	ap_uint<1> load_input_flag=1;
+	ap_uint<1> stream_pingpong_flag=1;
+	ap_uint<24> loaded_input_stream_tile_number=1;
+	ap_uint<16> loop_omini_base_cnt=1;
+	ap_uint<10> loop_wino_tile_rowcol_cnt=0;
+	ap_uint<32>	loop_iload_cnt=1;
+
+
+	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_oload_offset=0;
+	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_omini_offset=0;
+
+
+	ap_uint<10> idepth_minitile_idx=0;
+
+
+
+
+	#if DEBUG_FILE_PRINT
+	int write_idx=0;
+	#endif
+	LOOP_MAIN:for(int cycle=0;cycle < loop_wino_cell_bound; cycle++)
+	{
+		#pragma HLS PIPELINE 
+
+		// for(int oload_idx=0;oload_idx<conv_desc.weightbuffer_load_outdepth_number;oload_idx++)
+		// for(int iload_idx=0;iload_idx<conv_desc.weightbuffer_load_indepth_number;iload_idx++)
+		// for(int imini_base_idx=0;imini_base_idx<conv_desc.weightbuffer_indepth_minitile_number;imini_base_idx++)
+		// for(int wino_tile_row_idx=0;wino_tile_row_idx<conv_desc.wino_tile_number_in_out_rowstep;wino_tile_row_idx++)
+		// for(int wino_tile_col_idx=0;wino_tile_col_idx<conv_desc.wino_tile_number_in_outwidth;wino_tile_col_idx++)
+		// for(int omini_base_idx=0;omini_base_idx<loop_omini_base_reset_cycle ;omini_base_idx++)
+
+		#pragma HLS dependence variable=out_buffer0 inter false
+		#pragma HLS dependence variable=out_buffer1 inter false
+		#pragma HLS dependence variable=out_buffer2 inter false
+		#pragma HLS dependence variable=out_buffer3 inter false
+		#pragma HLS dependence variable=out_buffer0 intra false
+		#pragma HLS dependence variable=out_buffer1 intra false
+		#pragma HLS dependence variable=out_buffer2 intra false
+		#pragma HLS dependence variable=out_buffer3 intra false
+
+		ap_uint<1> load_input_flag_reg = (load_input_flag  && loaded_input_stream_tile_number !=  total_input_stream_tile);
+
+		if(stream_pingpong_flag)
+			load_input_tile_cell(input_tile,stream_temp_reg0);
+		else
+			load_input_tile_cell(input_tile,stream_temp_reg1);
+
+		
+
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr = outbuffer_oload_offset + loop_wino_tile_rowcol_cnt +  outbuffer_omini_offset;
+
+		// #if DEBUG_FILE_PRINT
+		// int rowtile_idx=loop_wino_tile_rowcol_cnt/conv_desc.wino_tile_number_in_outwidth;
+		// int coltile_idx=loop_wino_tile_rowcol_cnt%conv_desc.wino_tile_number_in_outwidth;
+		// int outdepth_minitile_idx= (outbuffer_oload_offset+outbuffer_omini_offset)/(conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth);
+		// if((outbuffer_oload_offset+outbuffer_omini_offset)%(conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth))
+		// {
+		// 	printf("outdepth_minitile_idx not valid\n");
+		// 	exit(-3);
+		// }
+		// #endif
+
+
+		if(stream_pingpong_flag && load_input_flag_reg)
+		{
+
+			for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+			{
+				#pragma HLS unroll
+				stream_temp_reg1[imini_idx]=stream_temp_reg1[imini_idx+1];
+			}
+	
+			
+			top_stream_in>>stream_temp_reg1[INDEPTH_MINITILE_SIZE-1];
+		}
+		else if(load_input_flag_reg)
+		{
+
+			for(int imini_idx=0;imini_idx<INDEPTH_MINITILE_SIZE-1;imini_idx++)
+			{
+				#pragma HLS unroll
+				stream_temp_reg0[imini_idx]=stream_temp_reg0[imini_idx+1];
+			}
+		
+			top_stream_in>>stream_temp_reg0[INDEPTH_MINITILE_SIZE-1];
+		}
+
+
+
+		ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> weight_value_temp; 
+
+		if(loop_omini_base_cnt <= weightbuffer_outdepth_minitile_number)
+		{
+
+			
+			left_stream_in>>weight_value_temp;
+			#if 0
+				printf("wino_row_idx: %2d --", i*WEIGHT_FEED_NUMBER_PER_PORT+j);
+				for(int k=0;k<WINO_DOMAIN_SIZE_SQUARE;k++)
+				{
+					printf("[%08x]", (unsigned int) weight_value_temp[i*WEIGHT_FEED_NUMBER_PER_PORT+j].range(k*32+31,k*32) );
+				}
+				printf("\n");
+			#endif
+
+		}
+
+		ap_int<W_WIDTH> weight_tile[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
+		#pragma HLS array_partition variable = weight_tile complete dim=3
+		#pragma HLS array_partition variable = weight_tile complete dim=2
+		#pragma HLS array_partition variable = weight_tile complete dim=1
+
+		load_weight_tile_cell(weight_tile,weight_value_temp);
+
+
+
+		ap_int<BTB_WIDTH> input_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable = input_tile_reg complete dim=4
+		#pragma HLS array_partition variable = input_tile_reg complete dim=3
+		#pragma HLS array_partition variable = input_tile_reg complete dim=2
+		#pragma HLS array_partition variable = input_tile_reg complete dim=1
+
+
+		ap_int<W_WIDTH> weight_tile_reg[INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
+
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=3
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=2
+		#pragma HLS array_partition variable = weight_tile_reg complete dim=1
+
+
+		ap_int<UV_MUL_WIDTH> UV_MUL_TILE[INDEPTH_MINITILE_SIZE/2][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=1
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=2
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=3
+		#pragma HLS array_partition variable=UV_MUL_TILE complete dim=4
+
+		load_reg_tile4<ap_int<BTB_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE,BATCH_SIZE>(input_tile_reg, input_tile);
+
+
+		#if WINO_DOMAIN_SIZE==6
+		load_reg_tile3<ap_int<W_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE>(weight_tile_reg, weight_tile[wino_array_idx%WINO_HEIGHT]);
+		#else
+		load_reg_tile3<ap_int<W_WIDTH>,INDEPTH_MINITILE_SIZE,WINO_DOMAIN_SIZE,WINO_DOMAIN_SIZE>(weight_tile_reg, weight_tile);
+		#endif
+
+
+			
+		#if WINO_DOMAIN_SIZE==6
+		element_wise_mult_6x6<0>(UV_MUL_TILE,input_tile_reg,weight_tile_reg, ap_clk_div2 );
+		#else
+		// element_wise_mult_6x6<0>(UV_MUL_TILE[0],input_tile_reg,weight_tile_reg[0], ap_clk_div2 );
+		// element_wise_mult_6x6<0>(UV_MUL_TILE[1],input_tile_reg,weight_tile_reg[1], ap_clk_div2 );
+		element_wise_mult_4x4_cell<0>(UV_MUL_TILE,input_tile_reg,weight_tile_reg, ap_clk_div2 );
+		#endif
+		
+
+
+			
+
+		ap_int<UV_WIDTH> UV[WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=UV complete dim=1
+		#pragma HLS array_partition variable=UV complete dim=2
+		#pragma HLS array_partition variable=UV complete dim=3
+
+		for(int wino_row=0;wino_row<WINO_DOMAIN_SIZE;wino_row++)
+		{
+			#pragma HLS unroll
+			for(int wino_col=0;wino_col<WINO_DOMAIN_SIZE;wino_col++)
+			{
+				#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+					#pragma HLS unroll
+					#if WINO_DOMAIN_SIZE==6
+					ap_int<UV_MUL_WIDTH> temp=0;
+					for(int id2=0;id2<INDEPTH_MINITILE_SIZE/2;id2++)
+					{
+						#pragma HLS unroll
+						temp+=UV_MUL_TILE[id2][wino_row][wino_col][b];
+					}
+					UV[wino_row][wino_col][b]=temp>>UV_QUANT_BIT;
+					#else
+					ap_int<UV_MUL_WIDTH> temp0=0;
+					for(int id2=0;id2<INDEPTH_MINITILE_SIZE/2;id2++)
+					{
+						#pragma HLS unroll
+						temp0+=UV_MUL_TILE[id2][wino_row][wino_col][b];
+					}
+					UV[wino_row][wino_col][b]=temp0>>UV_QUANT_BIT;
+					#endif
+				}
+			}
+		}
+
+
+		#if DEBUG_FILE_PRINT
+			char uvfilename[100];
+			#if WINO_DOMAIN_SIZE==6
+			
+			if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+			{
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV,write_idx,uvfilename);
+			}
+			#else
+			
+			if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+			{
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV[0],write_idx,uvfilename);
+				sprintf(uvfilename,"uvvector_%d_%d.txt",wino_array_idx%WINO_HEIGHT+1,wino_array_idx/WINO_HEIGHT);
+				attach_output_vector<UV_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(UV[1],write_idx,uvfilename);
+			}
+			#endif
+		#endif
+
+
+		ap_int<UVA_WIDTH> UVA[WINO_DOMAIN_SIZE][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=UVA complete dim=1
+		#pragma HLS array_partition variable=UVA complete dim=2
+		#pragma HLS array_partition variable=UVA complete dim=3
+
+		
+		for(int ridx=0;ridx<WINO_DOMAIN_SIZE;ridx++)
+		{
+			#pragma HLS unroll
+			for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+			{
+				#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE==6
+				UVA_row(UVA,UV,ridx,bidx,wino3x3_flag);
+				#else
+				UVA_row(UVA,UV,ridx,bidx,wino3x3_flag);
+				#endif
+			}
+		}
+
+
+		ap_int<ATA_WIDTH> ATA[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=ATA complete dim=1
+		#pragma HLS array_partition variable=ATA complete dim=2
+		#pragma HLS array_partition variable=ATA complete dim=3
+
+		#if WINO_OUT_SIZE_CELL == 4 && WINO_OUT_SIZE==2
+		if(wino3x3_flag)
+		{
+		#endif
+			for(int cidx=0;cidx<WINO_OUT_SIZE_CELL;cidx++)
+			{
+				#pragma HLS unroll
+
+				for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+				{
+					#pragma HLS unroll
+					
+	
+					#if WINO_DOMAIN_SIZE==6
+					ATA_col(ATA,UVA,cidx,bidx,wino3x3_flag);
+					#else
+
+						ATA_col(ATA,UVA,cidx,bidx,wino3x3_flag);
+					#endif
+				}
+			}
+		
+		#if WINO_OUT_SIZE_CELL == 4 && WINO_OUT_SIZE==2
+		}
+		else
+		{
+			for(int cidx=0;cidx<WINO_OUT_SIZE_CELL;cidx++)
+			{
+				#pragma HLS unroll
+				for(int ridx=0;ridx<WINO_OUT_SIZE_CELL;ridx++)
+				{
+					#pragma HLS unroll
+					for(int bidx=0;bidx<BATCH_SIZE;bidx++)
+					{
+						#pragma HLS unroll
+						ATA[ridx][cidx][bidx]=UV[ridx][cidx][bidx]*4;
+					}
+
+				}
+			}
+		}
+		#endif
+
+
+			
+
+
+		ap_int<OUT_WIDTH> out_value[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=out_value complete dim=1
+		#pragma HLS array_partition variable=out_value complete dim=2
+		#pragma HLS array_partition variable=out_value complete dim=3
+
+		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr_reg;
+		load_reg< ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> >(outbuffer_addr_reg,outbuffer_addr);
+
+
+		for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+		{
+			#pragma HLS unroll
+
+			ap_uint<OUT_WIDTH*BATCH_SIZE> data0[4];
+			#pragma HLS array_partition variable=data0 complete
+
+			if(idepth_minitile_idx==0 && clear_flag)
+			{
+				data0[0]=0;
+				data0[1]=0;
+				data0[2]=0;
+				data0[3]=0;
+			}
+			else
+			{
+				data0[0]=out_buffer0[c][outbuffer_addr_reg];
+				data0[1]=out_buffer1[c][outbuffer_addr_reg];
+				data0[2]=out_buffer2[c][outbuffer_addr_reg];
+				data0[3]=out_buffer3[c][outbuffer_addr_reg];
+			}
+			(out_value[0][c][1],out_value[0][c][0])=data0[0];
+			(out_value[1][c][1],out_value[1][c][0])=data0[1];
+			(out_value[2][c][1],out_value[2][c][0])=data0[2];
+			(out_value[3][c][1],out_value[3][c][0])=data0[3];
+
+		}
+	
+
+
+		ap_int<OUT_WIDTH> out_value_back[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][BATCH_SIZE];
+		#pragma HLS array_partition variable=out_value_back complete dim=1
+		#pragma HLS array_partition variable=out_value_back complete dim=2
+		#pragma HLS array_partition variable=out_value_back complete dim=3
+
+		for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
+		{
+			#pragma HLS unroll
+			for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+			{
+				#pragma HLS unroll
+				for(int b=0;b<BATCH_SIZE;b++)
+				{
+
+					#pragma HLS unroll
+					ap_int<ATA_WIDTH+1> sum_sat0;
+					
+					sum_sat0=ATA[r][c][b]+out_value[r][c][b];
+
+					#if ATA_WIDTH+1 > OUT_WIDTH
+						ap_int<ATA_WIDTH+2-OUT_WIDTH> judgebit0=sum_sat0.range(ATA_WIDTH,OUT_WIDTH-1);
+						if(judgebit0 == 0 ||  judgebit0 == -1)
+							out_value_back[r][c][b]=sum_sat0;
+						else if (sum_sat0[ATA_WIDTH]==1 )
+						{
+							// std::cout<<"Encountering MIN"<<std::endl;
+							out_value_back[r][c][b]=OUT_SAT_MIN;
+						}
+						else
+						{
+							// std::cout<<"Encountering MAX"<<std::endl;
+							out_value_back[r][c][b]=OUT_SAT_MAX;
+						}
+					#else
+						out_value_back[0][r][c][b]=sum_sat0;
+						out_value_back[1][r][c][b]=sum_sat1;
+					#endif 
+
+
+				}
+			}
+		}
+
+		if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
+		{
+			for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+			{
+				#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE == 6
+				out_buffer[r][c][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg]=(out_value_back[r][c][1],out_value_back[r][c][0]);
+				#else
+				out_buffer0[c][outbuffer_addr_reg]=(out_value_back[0][c][1],out_value_back[0][c][0]);
+				out_buffer1[c][outbuffer_addr_reg]=(out_value_back[1][c][1],out_value_back[1][c][0]);
+				out_buffer2[c][outbuffer_addr_reg]=(out_value_back[2][c][1],out_value_back[2][c][0]);
+				out_buffer3[c][outbuffer_addr_reg]=(out_value_back[3][c][1],out_value_back[3][c][0]);
+				#endif
+			}
+		}
+	
+
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle && loop_wino_tile_rowcol_cnt==loop_wino_tile_rowcol_self_reset_cycle_min1)
+		{
+			idepth_minitile_idx++;
+		}
+		else if(loop_iload_cnt==loop_iload_reset_cycle)
+		{
+			idepth_minitile_idx=0;
+		}
+		
+		
+	
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle && loop_wino_tile_rowcol_cnt==loop_wino_tile_rowcol_self_reset_cycle_min1)
+		{
+			loop_wino_tile_rowcol_cnt=0;
+		}
+		else if(loop_omini_base_cnt==loop_omini_base_reset_cycle)
+		{
+			loop_wino_tile_rowcol_cnt++;
+		}
+
+
+
+		if(loop_iload_cnt==loop_iload_reset_cycle)
+		{
+			loop_iload_cnt=1;
+			outbuffer_oload_offset+=outbuffer_oload_increment_step;
+		}
+		else
+		{
+			loop_iload_cnt++;
+		}
+		
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle ) 
+		{
+			load_input_flag = 1;
+		}
+		else if(loop_omini_base_cnt==INDEPTH_MINITILE_SIZE)
+		{
+			load_input_flag = 0;
+		}
+
+		if(loop_omini_base_cnt==loop_omini_base_reset_cycle)
+		{
+			loop_omini_base_cnt=1;
+			loaded_input_stream_tile_number++;
+			stream_pingpong_flag=~stream_pingpong_flag;
+			outbuffer_omini_offset=0;
+		}
+		else
+		{
+			loop_omini_base_cnt++;
+			outbuffer_omini_offset+=outbuffer_omini_increment_step;
+		}	
+	}
+
+}
+
+
+
+
+
+
+
 
 
 
@@ -441,8 +2802,8 @@ void DSP_LOADER(ap_int<32> &rst, ap_int<16> a0, ap_int<16> a1, ap_int<16> b0, ap
 
 void wino_stream_block(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > top_stream_in[WINO_WIDTH],
-		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[4][WEIGHT_FEED_NUMBER_PER_PORT],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WEIGHT_PORT_NUM][WEIGHT_FEED_NUMBER_PER_PORT],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_uint<16> weightbuffer_outdepth_minitile_number,
 		ap_uint<24> total_input_stream_tile,
 		ap_uint<16> loop_omini_base_reset_cycle,
@@ -999,8 +3360,8 @@ void wino_stream_block(
 						}
 						else
 						{
-							data0=out_buffer[r][c][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg];
-							data1=out_buffer[r][c][wino_array_idx%WINO_HEIGHT+1][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg];
+							data0=out_buffer[r][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][c][outbuffer_addr_reg];
+							data1=out_buffer[r][wino_array_idx%WINO_HEIGHT+1][wino_array_idx/WINO_HEIGHT][c][outbuffer_addr_reg];
 						
 						}
 						(out_value[0][r][c][1],out_value[0][r][c][0])=data0;
@@ -1132,8 +3493,8 @@ void wino_stream_block(
 							#if WINO_DOMAIN_SIZE == 6
 							out_buffer[r][c][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg]=(out_value_back[r][c][1],out_value_back[r][c][0]);
 							#else
-							out_buffer[r][c][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg]=(out_value_back[0][r][c][1],out_value_back[0][r][c][0]);
-							out_buffer[r][c][wino_array_idx%WINO_HEIGHT+1][wino_array_idx/WINO_HEIGHT][outbuffer_addr_reg]=(out_value_back[1][r][c][1],out_value_back[1][r][c][0]);
+							out_buffer[r][wino_array_idx%WINO_HEIGHT][wino_array_idx/WINO_HEIGHT][c][outbuffer_addr_reg]=(out_value_back[0][r][c][1],out_value_back[0][r][c][0]);
+							out_buffer[r][wino_array_idx%WINO_HEIGHT+1][wino_array_idx/WINO_HEIGHT][c][outbuffer_addr_reg]=(out_value_back[1][r][c][1],out_value_back[1][r][c][0]);
 							#endif
 						}
 					}

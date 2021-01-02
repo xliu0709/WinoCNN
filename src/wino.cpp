@@ -219,10 +219,14 @@ void write_params(
 
 
 
-void wino_systolic_kernel(
+#include "wino_systolic_kernel.cpp"
+
+
+
+void wino_flatten_kernel(
     WEIGHT_PORTS_DECLARE(weight_DDR),
     ap_uint<16> input_buffer[INBUFFER_HEIGHT][INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],
-    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
     ap_uint<16> start_output_row,
     ap_int<16> start_row_idx_minus_pad_size,
     ap_int<16> start_col_idx_minus_pad_size,
@@ -250,6 +254,11 @@ void wino_systolic_kernel(
     #pragma HLS stream variable=input_tile_transformed_stream depth=2
     hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream[WEIGHT_PORT_NUM][WEIGHT_FEED_NUMBER_PER_PORT];
     #pragma HLS stream variable=weight_stream depth=2
+
+
+
+
+
 
     input_feed_underconstruction(
         input_buffer,
@@ -381,14 +390,25 @@ void wino_systolic_kernel(
         ,ap_clk_div2
     );
 
+
+
+    for(int i=0;i<WINO_WIDTH-1; i++)
+    for(int j=0;j<WINO_HEIGHT-1; j++)
+    {
+
+    }
+    
+
+
 }
+
 
 
 
 void wino_kernel_merge_row(
     WEIGHT_PORTS_DECLARE(weight_DDR),
     ap_uint<16> input_buffer[INBUFFER_HEIGHT][INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],
-    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
     ap_uint<16> start_output_row,
     ap_int<16> start_row_idx_minus_pad_size,
     bool first_flag,
@@ -414,7 +434,7 @@ void wino_kernel_merge_row(
             reset_merge_weight_offset=merge_weight_offset;
         }
 
-        wino_systolic_kernel(
+        wino_systolic_kernel_wrapper(
         WEIGHT_PORTS_CALL(weight_DDR),
         input_buffer,
         out_buffer,
@@ -438,7 +458,7 @@ void wino_input_compute(
     ap_uint<128>* DDR_port2,
     ap_uint<128>* DDR_port3,
     WEIGHT_PORTS_DECLARE(weight_DDR),
-    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
     ap_uint<16> start_output_row,
     ap_uint<16> next_start_row,
     ap_int<16> start_row_idx_minus_pad_size,
@@ -658,11 +678,11 @@ void wino_systolic_top(
     #pragma HLS array_partition variable=input_buffer complete dim=1 
     #pragma HLS array_partition variable=input_buffer complete dim=2 
     #pragma HLS resource variable=input_buffer core=RAM_S2P_BRAM 
-    ap_uint<OUT_WIDTH*2> output_buffer0[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH];
+    ap_uint<OUT_WIDTH*2> output_buffer0[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH];
     #pragma HLS array_partition variable=output_buffer0 complete dim=1 
     #pragma HLS array_partition variable=output_buffer0 complete dim=2
     #pragma HLS resource variable=output_buffer0 core=RAM_T2P_BRAM  
-    ap_uint<OUT_WIDTH*2> output_buffer1[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH];
+    ap_uint<OUT_WIDTH*2> output_buffer1[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH];
     #pragma HLS array_partition variable=output_buffer1 complete dim=1 
     #pragma HLS array_partition variable=output_buffer1 complete dim=2 
     #pragma HLS resource variable=output_buffer1 core=RAM_T2P_BRAM 
