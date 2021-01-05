@@ -406,27 +406,106 @@ void load_input_row_from_ddr(
 			if(bufferflag)
 			{
 			#endif
-				input_buffer[bank_split_idx*8+0][buffer_addr]=bank_data[0];
-				input_buffer[bank_split_idx*8+1][buffer_addr]=bank_data[1];
-				input_buffer[bank_split_idx*8+2][buffer_addr]=bank_data[2];
-				input_buffer[bank_split_idx*8+3][buffer_addr]=bank_data[3];
-				input_buffer[bank_split_idx*8+4][buffer_addr]=bank_data[4];
-				input_buffer[bank_split_idx*8+5][buffer_addr]=bank_data[5];
-				input_buffer[bank_split_idx*8+6][buffer_addr]=bank_data[6];
-				input_buffer[bank_split_idx*8+7][buffer_addr]=bank_data[7];
+
+
+
+				switch( bank_split_idx)
+				{
+					case 0:
+						input_buffer[0][buffer_addr]=bank_data[0];
+						input_buffer[1][buffer_addr]=bank_data[1];
+						input_buffer[2][buffer_addr]=bank_data[2];
+						input_buffer[3][buffer_addr]=bank_data[3];
+						input_buffer[4][buffer_addr]=bank_data[4];
+						input_buffer[5][buffer_addr]=bank_data[5];
+						input_buffer[6][buffer_addr]=bank_data[6];
+						input_buffer[7][buffer_addr]=bank_data[7];
+						break;
+					#if INBUFFER_WIDTH>=16
+					case 1:
+						input_buffer[8][buffer_addr]=bank_data[0];
+						input_buffer[9][buffer_addr]=bank_data[1];
+						input_buffer[10][buffer_addr]=bank_data[2];
+						input_buffer[11][buffer_addr]=bank_data[3];
+						input_buffer[12][buffer_addr]=bank_data[4];
+						input_buffer[13][buffer_addr]=bank_data[5];
+						input_buffer[14][buffer_addr]=bank_data[6];
+						input_buffer[15][buffer_addr]=bank_data[7];
+						break;
+					#endif
+					#if INBUFFER_WIDTH>=32
+					case 2:
+						input_buffer[16][buffer_addr]=bank_data[0];
+						input_buffer[17][buffer_addr]=bank_data[1];
+						input_buffer[18][buffer_addr]=bank_data[2];
+						input_buffer[19][buffer_addr]=bank_data[3];
+						input_buffer[20][buffer_addr]=bank_data[4];
+						input_buffer[21][buffer_addr]=bank_data[5];
+						input_buffer[22][buffer_addr]=bank_data[6];
+						input_buffer[23][buffer_addr]=bank_data[7];
+						break;
+					case 3:
+						input_buffer[24][buffer_addr]=bank_data[0];
+						input_buffer[25][buffer_addr]=bank_data[1];
+						input_buffer[26][buffer_addr]=bank_data[2];
+						input_buffer[27][buffer_addr]=bank_data[3];
+						input_buffer[28][buffer_addr]=bank_data[4];
+						input_buffer[29][buffer_addr]=bank_data[5];
+						input_buffer[30][buffer_addr]=bank_data[6];
+						input_buffer[31][buffer_addr]=bank_data[7];
+						break;
+					#endif					
+				}
+
 
 			#if INBUFFER_HEIGHT == 8
 			}
 			else
 			{
-				input_buffer1[bank_split_idx*8+0][buffer_addr]=bank_data[0];
-				input_buffer1[bank_split_idx*8+1][buffer_addr]=bank_data[1];
-				input_buffer1[bank_split_idx*8+2][buffer_addr]=bank_data[2];
-				input_buffer1[bank_split_idx*8+3][buffer_addr]=bank_data[3];
-				input_buffer1[bank_split_idx*8+4][buffer_addr]=bank_data[4];
-				input_buffer1[bank_split_idx*8+5][buffer_addr]=bank_data[5];
-				input_buffer1[bank_split_idx*8+6][buffer_addr]=bank_data[6];
-				input_buffer1[bank_split_idx*8+7][buffer_addr]=bank_data[7];
+					case 0:
+						input_buffer1[0][buffer_addr]=bank_data[0];
+						input_buffer1[1][buffer_addr]=bank_data[1];
+						input_buffer1[2][buffer_addr]=bank_data[2];
+						input_buffer1[3][buffer_addr]=bank_data[3];
+						input_buffer1[4][buffer_addr]=bank_data[4];
+						input_buffer1[5][buffer_addr]=bank_data[5];
+						input_buffer1[6][buffer_addr]=bank_data[6];
+						input_buffer1[7][buffer_addr]=bank_data[7];
+						break;
+					#if INBUFFER_WIDTH>=16
+					case 1:
+						input_buffer1[8][buffer_addr]=bank_data[0];
+						input_buffer1[9][buffer_addr]=bank_data[1];
+						input_buffer1[10][buffer_addr]=bank_data[2];
+						input_buffer1[11][buffer_addr]=bank_data[3];
+						input_buffer1[12][buffer_addr]=bank_data[4];
+						input_buffer1[13][buffer_addr]=bank_data[5];
+						input_buffer1[14][buffer_addr]=bank_data[6];
+						input_buffer1[15][buffer_addr]=bank_data[7];
+						break;
+					#endif
+					#if INBUFFER_WIDTH>=32
+					case 2:
+						input_buffer1[16][buffer_addr]=bank_data[0];
+						input_buffer1[17][buffer_addr]=bank_data[1];
+						input_buffer1[18][buffer_addr]=bank_data[2];
+						input_buffer1[19][buffer_addr]=bank_data[3];
+						input_buffer1[20][buffer_addr]=bank_data[4];
+						input_buffer1[21][buffer_addr]=bank_data[5];
+						input_buffer1[22][buffer_addr]=bank_data[6];
+						input_buffer1[23][buffer_addr]=bank_data[7];
+						break;
+					case 3:
+						input_buffer1[24][buffer_addr]=bank_data[0];
+						input_buffer1[25][buffer_addr]=bank_data[1];
+						input_buffer1[26][buffer_addr]=bank_data[2];
+						input_buffer1[27][buffer_addr]=bank_data[3];
+						input_buffer1[28][buffer_addr]=bank_data[4];
+						input_buffer1[29][buffer_addr]=bank_data[5];
+						input_buffer1[30][buffer_addr]=bank_data[6];
+						input_buffer1[31][buffer_addr]=bank_data[7];
+						break;
+					#endif	
 			}
 			#endif
 
@@ -530,33 +609,112 @@ void load_input_row_from_ddr(
 		{
 			buffer_addr=(row_pingpong_bit2,buffer_address_mid_rowbit2_offset,buffer_address_mini_tile);
 		}
-			#if INBUFFER_HEIGHT == 8
-			if(bufferflag)
-			{
-			#endif
-				input_buffer[bank_split_idx*8+0][buffer_addr]=bank_data[0];
-				input_buffer[bank_split_idx*8+1][buffer_addr]=bank_data[1];
-				input_buffer[bank_split_idx*8+2][buffer_addr]=bank_data[2];
-				input_buffer[bank_split_idx*8+3][buffer_addr]=bank_data[3];
-				input_buffer[bank_split_idx*8+4][buffer_addr]=bank_data[4];
-				input_buffer[bank_split_idx*8+5][buffer_addr]=bank_data[5];
-				input_buffer[bank_split_idx*8+6][buffer_addr]=bank_data[6];
-				input_buffer[bank_split_idx*8+7][buffer_addr]=bank_data[7];
+		#if INBUFFER_HEIGHT == 8
+		if(bufferflag)
+		{
+		#endif
 
-			#if INBUFFER_HEIGHT == 8
-			}
-			else
+
+
+			switch( bank_split_idx)
 			{
-				input_buffer1[bank_split_idx*8+0][buffer_addr]=bank_data[0];
-				input_buffer1[bank_split_idx*8+1][buffer_addr]=bank_data[1];
-				input_buffer1[bank_split_idx*8+2][buffer_addr]=bank_data[2];
-				input_buffer1[bank_split_idx*8+3][buffer_addr]=bank_data[3];
-				input_buffer1[bank_split_idx*8+4][buffer_addr]=bank_data[4];
-				input_buffer1[bank_split_idx*8+5][buffer_addr]=bank_data[5];
-				input_buffer1[bank_split_idx*8+6][buffer_addr]=bank_data[6];
-				input_buffer1[bank_split_idx*8+7][buffer_addr]=bank_data[7];
+				case 0:
+					input_buffer[0][buffer_addr]=bank_data[0];
+					input_buffer[1][buffer_addr]=bank_data[1];
+					input_buffer[2][buffer_addr]=bank_data[2];
+					input_buffer[3][buffer_addr]=bank_data[3];
+					input_buffer[4][buffer_addr]=bank_data[4];
+					input_buffer[5][buffer_addr]=bank_data[5];
+					input_buffer[6][buffer_addr]=bank_data[6];
+					input_buffer[7][buffer_addr]=bank_data[7];
+					break;
+				#if INBUFFER_WIDTH>=16
+				case 1:
+					input_buffer[8][buffer_addr]=bank_data[0];
+					input_buffer[9][buffer_addr]=bank_data[1];
+					input_buffer[10][buffer_addr]=bank_data[2];
+					input_buffer[11][buffer_addr]=bank_data[3];
+					input_buffer[12][buffer_addr]=bank_data[4];
+					input_buffer[13][buffer_addr]=bank_data[5];
+					input_buffer[14][buffer_addr]=bank_data[6];
+					input_buffer[15][buffer_addr]=bank_data[7];
+					break;
+				#endif
+				#if INBUFFER_WIDTH>=32
+				case 2:
+					input_buffer[16][buffer_addr]=bank_data[0];
+					input_buffer[17][buffer_addr]=bank_data[1];
+					input_buffer[18][buffer_addr]=bank_data[2];
+					input_buffer[19][buffer_addr]=bank_data[3];
+					input_buffer[20][buffer_addr]=bank_data[4];
+					input_buffer[21][buffer_addr]=bank_data[5];
+					input_buffer[22][buffer_addr]=bank_data[6];
+					input_buffer[23][buffer_addr]=bank_data[7];
+					break;
+				case 3:
+					input_buffer[24][buffer_addr]=bank_data[0];
+					input_buffer[25][buffer_addr]=bank_data[1];
+					input_buffer[26][buffer_addr]=bank_data[2];
+					input_buffer[27][buffer_addr]=bank_data[3];
+					input_buffer[28][buffer_addr]=bank_data[4];
+					input_buffer[29][buffer_addr]=bank_data[5];
+					input_buffer[30][buffer_addr]=bank_data[6];
+					input_buffer[31][buffer_addr]=bank_data[7];
+					break;
+				#endif					
 			}
-			#endif
+
+
+		#if INBUFFER_HEIGHT == 8
+		}
+		else
+		{
+				case 0:
+					input_buffer1[0][buffer_addr]=bank_data[0];
+					input_buffer1[1][buffer_addr]=bank_data[1];
+					input_buffer1[2][buffer_addr]=bank_data[2];
+					input_buffer1[3][buffer_addr]=bank_data[3];
+					input_buffer1[4][buffer_addr]=bank_data[4];
+					input_buffer1[5][buffer_addr]=bank_data[5];
+					input_buffer1[6][buffer_addr]=bank_data[6];
+					input_buffer1[7][buffer_addr]=bank_data[7];
+					break;
+				#if INBUFFER_WIDTH>=16
+				case 1:
+					input_buffer1[8][buffer_addr]=bank_data[0];
+					input_buffer1[9][buffer_addr]=bank_data[1];
+					input_buffer1[10][buffer_addr]=bank_data[2];
+					input_buffer1[11][buffer_addr]=bank_data[3];
+					input_buffer1[12][buffer_addr]=bank_data[4];
+					input_buffer1[13][buffer_addr]=bank_data[5];
+					input_buffer1[14][buffer_addr]=bank_data[6];
+					input_buffer1[15][buffer_addr]=bank_data[7];
+					break;
+				#endif
+				#if INBUFFER_WIDTH>=32
+				case 2:
+					input_buffer1[16][buffer_addr]=bank_data[0];
+					input_buffer1[17][buffer_addr]=bank_data[1];
+					input_buffer1[18][buffer_addr]=bank_data[2];
+					input_buffer1[19][buffer_addr]=bank_data[3];
+					input_buffer1[20][buffer_addr]=bank_data[4];
+					input_buffer1[21][buffer_addr]=bank_data[5];
+					input_buffer1[22][buffer_addr]=bank_data[6];
+					input_buffer1[23][buffer_addr]=bank_data[7];
+					break;
+				case 3:
+					input_buffer1[24][buffer_addr]=bank_data[0];
+					input_buffer1[25][buffer_addr]=bank_data[1];
+					input_buffer1[26][buffer_addr]=bank_data[2];
+					input_buffer1[27][buffer_addr]=bank_data[3];
+					input_buffer1[28][buffer_addr]=bank_data[4];
+					input_buffer1[29][buffer_addr]=bank_data[5];
+					input_buffer1[30][buffer_addr]=bank_data[6];
+					input_buffer1[31][buffer_addr]=bank_data[7];
+					break;
+				#endif	
+		}
+		#endif
 		
 
  		if(buffer_address_mini_tile == INDEPTH_MINITILE_SIZE-1)
