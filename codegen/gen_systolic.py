@@ -46,7 +46,7 @@ def generate_wino_systolic_kernel_wrapper( config: Config_t):
     ret_string+="void wino_systolic_kernel_wrapper(\n\
     WEIGHT_PORTS_DECLARE(weight_DDR),\n\
     ap_uint<16> input_buffer[INBUFFER_HEIGHT][INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],\n\
-    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],\n\
+    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],\n\
     ap_uint<16> start_output_row,\n\
     ap_int<16> start_row_idx_minus_pad_size,\n\
     ap_int<16> start_col_idx_minus_pad_size,\n\
@@ -67,8 +67,8 @@ def generate_wino_systolic_kernel_wrapper( config: Config_t):
         input_buffer,\n"
 
     for i in range(config.WINO_OUT_SIZE_CELL):
-        for j in range(config.OUTDEPTH_MINITILE_SIZE):
-            for k in range(config.WINO_WIDTH):
+        for j in range(config.OUTDEPTH_MINITILE_SIZE//2):
+            for k in range(config.WINO_WIDTH//2):
                 ret_string+="\t\tout_buffer[{}][{}][{}],\n".format(i,j,k)
     ret_string+="\t\tstart_output_row,\n\
         start_row_idx_minus_pad_size,\n\
@@ -94,9 +94,9 @@ def generate_wino_systolic(config:Config_t):
     WEIGHT_PORTS_DECLARE(weight_DDR),\n\
     ap_uint<16> input_buffer[INBUFFER_HEIGHT][INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],\n"
     for i in range(config.WINO_OUT_SIZE_CELL):
-        for j in range(config.OUTDEPTH_MINITILE_SIZE):
-            for k in range(config.WINO_WIDTH):
-                ret_string+="\tap_uint<OUT_WIDTH*2> out_buffer{}_{}_{}[WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],\n".format(i,j,k)
+        for j in range(config.OUTDEPTH_MINITILE_SIZE//2):
+            for k in range(config.WINO_WIDTH//2):
+                ret_string+="\tap_uint<OUT_WIDTH*2> out_buffer{}_{}_{}[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],\n".format(i,j,k)
     ret_string+="\tap_uint<16> start_output_row,\n\
     ap_int<16> start_row_idx_minus_pad_size,\n\
     ap_int<16> start_col_idx_minus_pad_size,\n\
@@ -109,11 +109,11 @@ def generate_wino_systolic(config:Config_t):
     ){\n"
 
     for i in range(config.WINO_OUT_SIZE_CELL):
-        for j in range(config.OUTDEPTH_MINITILE_SIZE):
-            for k in range(config.WINO_WIDTH):
+        for j in range(config.OUTDEPTH_MINITILE_SIZE//2):
+            for k in range(config.WINO_WIDTH//2):
                 ret_string+="\t#pragma HLS array_partition variable=out_buffer{}_{}_{} dim=1 complete\n".format(i,j,k)
-
-
+                ret_string+="\t#pragma HLS array_partition variable=out_buffer{}_{}_{} dim=2 complete\n".format(i,j,k)
+                ret_string+="\t#pragma HLS array_partition variable=out_buffer{}_{}_{} dim=2 complete\n".format(i,j,k)
 
     ret_string+="\n\t#pragma HLS dataflow\n\
     #pragma HLS interface ap_stable port=conv_desc\n\
@@ -121,9 +121,9 @@ def generate_wino_systolic(config:Config_t):
 	#pragma HLS array_partition variable =input_buffer dim=2 complete\n\
     static hls::stream< ap_uint<8*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_stream[WINO_WIDTH];\n\
     #pragma HLS stream variable=input_tile_stream depth=16\n\
-    static hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_transformed_stream[WINO_HEIGHT][WINO_WIDTH];\n\
+    static hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_transformed_stream[WINO_HEIGHT/2][WINO_WIDTH/2][2];\n\
     #pragma HLS stream variable=input_tile_transformed_stream depth=2\n\
-    static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream[WINO_HEIGHT][WINO_WIDTH-1];\n\
+    static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream[WINO_HEIGHT/2][WINO_WIDTH/2-1][2];\n\
     #pragma HLS stream variable=weight_stream depth=2\n\
     static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream_out[WEIGHT_PORT_NUM][WEIGHT_FEED_NUMBER_PER_PORT];\n\
     #pragma HLS stream variable=weight_stream_out depth=16\n\n"
@@ -154,7 +154,7 @@ def generate_wino_systolic(config:Config_t):
         #pragma HLS unroll\n\
         input_transform(\n\
             input_tile_stream[i],\n\
-            input_tile_transformed_stream[0][i],\n\
+            input_tile_transformed_stream[0][i/2][i%2],\n\
             conv_desc.input_transform_feeding_loop_bound,\n\
             conv_desc.wino3x3_flag,\n\
             i\n\
@@ -246,8 +246,8 @@ def generate_wino_systolic(config:Config_t):
 
 
             
-    for h in range(config.WINO_HEIGHT):
-        for w in range(config.WINO_WIDTH):
+    for h in range(config.WINO_HEIGHT//2):
+        for w in range(config.WINO_WIDTH//2):
             ret_string+=generate_wino_cell_call(config,h,w)
     ret_string+="}\n"
     return ret_string
@@ -273,29 +273,30 @@ def generate_wino_cell_call(config:Config_t, wino_h, wino_w):
 
     inport_t="\t\tinput_tile_transformed_stream[{}][{}],\n".format(wino_h,wino_w)
 
-    if(wino_h==config.WINO_HEIGHT-1):
+    if(wino_h==config.WINO_HEIGHT//2-1):
         inport_b=""
     else:
         inport_b="\t\tinput_tile_transformed_stream[{}][{}],\n".format(wino_h+1,wino_w)
 
+
     if(wino_w==0):
-        wport_l="\t\tweight_stream_out[{}][{}],\n".format(wino_h//config.WEIGHT_FEED_NUMBER_PER_PORT,wino_h%config.WEIGHT_FEED_NUMBER_PER_PORT)
+        wport_l="\t\tweight_stream_out[{}],\n".format(wino_h)
     else:
         wport_l="\t\tweight_stream[{}][{}],\n".format(wino_h,wino_w-1)
 
-    if(wino_w==config.WINO_WIDTH-1):
+    if(wino_w==config.WINO_WIDTH//2-1):
         wport_r=""
     else:
         wport_r="\t\tweight_stream[{}][{}],\n".format(wino_h,wino_w)
         
-    if(wino_w== config.WINO_WIDTH-1 and wino_h== config.WINO_HEIGHT-1):
-        call="\twino_stream_cell_corner(\n"
-    elif(wino_w== config.WINO_WIDTH-1 ):
-        call="\twino_stream_cell_right(\n"
-    elif(wino_h== config.WINO_HEIGHT-1):
-        call="\twino_stream_cell_bottom(\n"
+    if(wino_w== config.WINO_WIDTH//2-1 and wino_h== config.WINO_HEIGHT//2-1):
+        call="\twino_stream_block2x2_corner(\n"
+    elif(wino_w== config.WINO_WIDTH//2-1 ):
+        call="\twino_stream_block2x2_right(\n"
+    elif(wino_h== config.WINO_HEIGHT//2-1):
+        call="\twino_stream_block2x2_bottom(\n"
     else:
-        call="\twino_stream_cell(\n"
+        call="\twino_stream_block2x2(\n"
 
     
     ret_string=""

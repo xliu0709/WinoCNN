@@ -248,7 +248,7 @@ void load_input_row_from_ddr(
 		ap_int<16> row_load_bound)
 {
 	#pragma HLS array_partition variable = input_buffer dim=1 complete
-
+#pragma HLS interface m_axi port = DDR_port
 	if(row_idx >= inheight || row_idx >= row_load_bound) return;
 
 	bool bufferflag= (row_idx%INBUFFER_HEIGHT/4 == 0);
@@ -896,7 +896,7 @@ void load_input_rowtile_from_ddr(
 template<int port_idx>
 void write_output_row(
 	ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR,
-	ap_uint<OUT_WIDTH*2> out_buffer0[OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+	ap_uint<OUT_WIDTH*2> out_buffer0[OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> rowtile_baseaddr0,
 	ap_uint<16> row_idx,
 	// ap_int<16> bias_buffer[8][BIAS_BUFFER_DEPTH],
@@ -972,8 +972,8 @@ void write_output_row(
 		for(int j=0;j<OUTDEPTH_MINITILE_SIZE ;j++)
 		{
 			#pragma HLS unroll
-			outbuffer_data_lo[i][j]=out_buffer0[j][wino_width_idx][i][buffer_address_lo];
-			outbuffer_data_hi[i][j]=out_buffer0[j][wino_width_idx][i][buffer_address_hi];
+			outbuffer_data_lo[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_lo];
+			outbuffer_data_hi[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_hi];
 		}
 
 		
@@ -1817,7 +1817,7 @@ void write_output_to_DDR3(
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR1,
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR2,
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR3,
-		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_int<16> start_row_idx,
 		ap_uint<1> first_flag,
 		ConvDesc_t conv_desc
