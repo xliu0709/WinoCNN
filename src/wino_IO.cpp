@@ -1161,6 +1161,7 @@ void write_output_row(
 		for(int i=0;i<WINO_OUT_SIZE_CELL ;i++)
 		for(int j=0;j<OUTDEPTH_MINITILE_SIZE ;j++)
 		{
+			#pragma HLS unroll
 			outbuffer_data_hi[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_hi];
 			
 		}

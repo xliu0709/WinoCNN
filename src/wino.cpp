@@ -692,9 +692,14 @@ void wino_systolic_top(
 
 
     load_params(mem_params,conv_desc);
-
+    #if WEIGHT_PORT_NUM==1
+    load_bias_value(weight_DDR0, bias_buffer0, bias_buffer1,conv_desc.outdepth_align8);
+    #elif WEIGHT_PORT_NUM==2
+    load_bias_value(weight_DDR1, bias_buffer0, bias_buffer1,conv_desc.outdepth_align8);
+    #else
     load_bias_value(weight_DDR3, bias_buffer0, bias_buffer1,conv_desc.outdepth_align8);
-
+    #endif
+    
     wino_input_compute(
         INPUT_PORTS_CALL(input_DDR),
         WEIGHT_PORTS_CALL(weight_DDR),
