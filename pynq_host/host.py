@@ -447,6 +447,7 @@ def running_test( argv,validate_dict):
     sys_command+=" random"
     sys_command+=" random"
     sys_command+=" dump_bin"
+    sys_command+=" ．"
 
 
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
@@ -511,19 +512,18 @@ def running_test( argv,validate_dict):
         output_FM[i]=0xAAAA
     
     output_FM.tofile("filecontent")
+
+    physical_byte_num= conv_desc.indepth_align8*conv_desc.outdepth_align8*8/4
     
     test.write(0x10,input_FM.physical_address)
     test.write(0x18,input_FM.physical_address)
-    test.write(0x20,input_FM.physical_address)
-    test.write(0x28,input_FM.physical_address)
-    test.write(0x30,weight.physical_address)
-    test.write(0x38,output_FM.physical_address)
+    test.write(0x20,weight.physical_address+physical_byte_num*0)
+    test.write(0x28,weight.physical_address+physical_byte_num*1)
+    test.write(0x30,weight.physical_address+physical_byte_num*2)
+    test.write(0x38,weight.physical_address+physical_byte_num*3)
     test.write(0x40,output_FM.physical_address)
     test.write(0x48,output_FM.physical_address)
-    test.write(0x50,output_FM.physical_address)
     test.write(0x58,params.physical_address)
-    test.write(0x60,bias.physical_address)
-
 
     print("start calling", test.read(0x00))
     start = time.time()
