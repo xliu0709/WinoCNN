@@ -11,33 +11,32 @@
 #define _WINO_IO_HPP_
 
 void load_bias_value(
-	ap_int<32> *bias_mem,
+	ap_uint<128> *bias_mem,
 	ap_int<16> biasbuffer0[8][BIAS_BUFFER_DEPTH],
 	ap_int<16> biasbuffer1[8][BIAS_BUFFER_DEPTH],
 	int outdepth
 )
 {
-	int outdepth_by2=outdepth>>1;
-
-	ap_uint<2> buffer_idx=0;
-	ap_uint<10> buffer_addr=0;
-	for(ap_uint<16> i=0;i<outdepth_by2;i++)
+	for(ap_uint<16> i=0;i<outdepth/8;i++)
 	{
 		#pragma HLS pipeline
-		ap_int<16> temp0,temp1;
+		ap_int<16> temp0[8];
 
-		biasbuffer0[buffer_idx*2+1][buffer_addr]=temp1;
-		biasbuffer1[buffer_idx*2+1][buffer_addr]=temp1;
-		biasbuffer0[buffer_idx*2][buffer_addr]=temp0;
-		biasbuffer1[buffer_idx*2][buffer_addr]=temp0;
-		
-		(temp1,temp0)=bias_mem[i];
-		
-		if(buffer_idx==3)
+		ap_uint<128> data=bias_mem[i];
+
+		#pragma HLS array_partition variable=temp0 complete
+		for( int k=0;k<8;k++)
 		{
-			buffer_addr++;
+			#pragma HLS unroll
+			temp0[k]=data.range(k*16+15,k*16);
 		}
-		buffer_idx++;
+
+		for( int k=0;k<8;k++)
+		{
+			#pragma HLS unroll
+			biasbuffer0[k][i]=temp0[k];
+			biasbuffer1[k][i]=temp0[k];
+		}
 	}
 
 }
@@ -303,9 +302,9 @@ void load_input_row_from_ddr(
 	ap_uint<128>* DDR_offset = DDR_port + ddr_address_offset;
 	
 	ap_uint<1> left_down_flag=1;
-	
+	#if INBUFFER_WIDTH_BITWIDTH>3
 	ap_uint<INBUFFER_WIDTH_BITWIDTH-3> bank_split_idx=0;
-
+	#endif
 	for(ap_uint<16> cycle=0;cycle<input_load_burst_length;cycle++)
 	{
 		#pragma HLS pipeline
@@ -407,11 +406,12 @@ void load_input_row_from_ddr(
 			{
 			#endif
 
-
-
+				#if INBUFFER_WIDTH_BITWIDTH>3
 				switch( bank_split_idx)
 				{
 					case 0:
+				#endif
+		
 						input_buffer[0][buffer_addr]=bank_data[0];
 						input_buffer[1][buffer_addr]=bank_data[1];
 						input_buffer[2][buffer_addr]=bank_data[2];
@@ -420,7 +420,9 @@ void load_input_row_from_ddr(
 						input_buffer[5][buffer_addr]=bank_data[5];
 						input_buffer[6][buffer_addr]=bank_data[6];
 						input_buffer[7][buffer_addr]=bank_data[7];
-						break;
+						
+				#if INBUFFER_WIDTH_BITWIDTH>3
+					break;
 					#if INBUFFER_WIDTH>=16
 					case 1:
 						input_buffer[8][buffer_addr]=bank_data[0];
@@ -456,13 +458,18 @@ void load_input_row_from_ddr(
 						break;
 					#endif					
 				}
-
+				#endif
 
 			#if INBUFFER_HEIGHT == 8
 			}
 			else
 			{
+				#if INBUFFER_WIDTH_BITWIDTH>3
+				switch( bank_split_idx)
+				{
 					case 0:
+				#endif
+				
 						input_buffer1[0][buffer_addr]=bank_data[0];
 						input_buffer1[1][buffer_addr]=bank_data[1];
 						input_buffer1[2][buffer_addr]=bank_data[2];
@@ -471,8 +478,10 @@ void load_input_row_from_ddr(
 						input_buffer1[5][buffer_addr]=bank_data[5];
 						input_buffer1[6][buffer_addr]=bank_data[6];
 						input_buffer1[7][buffer_addr]=bank_data[7];
-						break;
+						
+				#if INBUFFER_WIDTH_BITWIDTH>3
 					#if INBUFFER_WIDTH>=16
+					break;
 					case 1:
 						input_buffer1[8][buffer_addr]=bank_data[0];
 						input_buffer1[9][buffer_addr]=bank_data[1];
@@ -505,7 +514,9 @@ void load_input_row_from_ddr(
 						input_buffer1[30][buffer_addr]=bank_data[6];
 						input_buffer1[31][buffer_addr]=bank_data[7];
 						break;
-					#endif	
+					#endif
+				}	
+				#endif	
 			}
 			#endif
 
@@ -609,16 +620,18 @@ void load_input_row_from_ddr(
 		{
 			buffer_addr=(row_pingpong_bit2,buffer_address_mid_rowbit2_offset,buffer_address_mini_tile);
 		}
+
 		#if INBUFFER_HEIGHT == 8
 		if(bufferflag)
 		{
 		#endif
 
-
-
+			#if INBUFFER_WIDTH_BITWIDTH>3
 			switch( bank_split_idx)
 			{
 				case 0:
+			#endif
+	
 					input_buffer[0][buffer_addr]=bank_data[0];
 					input_buffer[1][buffer_addr]=bank_data[1];
 					input_buffer[2][buffer_addr]=bank_data[2];
@@ -627,7 +640,9 @@ void load_input_row_from_ddr(
 					input_buffer[5][buffer_addr]=bank_data[5];
 					input_buffer[6][buffer_addr]=bank_data[6];
 					input_buffer[7][buffer_addr]=bank_data[7];
-					break;
+					
+			#if INBUFFER_WIDTH_BITWIDTH>3
+				break;
 				#if INBUFFER_WIDTH>=16
 				case 1:
 					input_buffer[8][buffer_addr]=bank_data[0];
@@ -663,13 +678,18 @@ void load_input_row_from_ddr(
 					break;
 				#endif					
 			}
-
+			#endif
 
 		#if INBUFFER_HEIGHT == 8
 		}
 		else
 		{
+			#if INBUFFER_WIDTH_BITWIDTH>3
+			switch( bank_split_idx)
+			{
 				case 0:
+			#endif
+			
 					input_buffer1[0][buffer_addr]=bank_data[0];
 					input_buffer1[1][buffer_addr]=bank_data[1];
 					input_buffer1[2][buffer_addr]=bank_data[2];
@@ -678,8 +698,10 @@ void load_input_row_from_ddr(
 					input_buffer1[5][buffer_addr]=bank_data[5];
 					input_buffer1[6][buffer_addr]=bank_data[6];
 					input_buffer1[7][buffer_addr]=bank_data[7];
-					break;
+					
+			#if INBUFFER_WIDTH_BITWIDTH>3
 				#if INBUFFER_WIDTH>=16
+				break;
 				case 1:
 					input_buffer1[8][buffer_addr]=bank_data[0];
 					input_buffer1[9][buffer_addr]=bank_data[1];
@@ -712,7 +734,9 @@ void load_input_row_from_ddr(
 					input_buffer1[30][buffer_addr]=bank_data[6];
 					input_buffer1[31][buffer_addr]=bank_data[7];
 					break;
-				#endif	
+				#endif
+			}	
+			#endif	
 		}
 		#endif
 		
@@ -762,8 +786,8 @@ void load_input_rowtile_from_ddr(
 	printf("****load_input_rowtile_from_ddr****\n");
 	#pragma HLS interface m_axi port = DDR_port0
 	#pragma HLS interface m_axi port = DDR_port1
-	#pragma HLS interface m_axi port = DDR_port2
-	#pragma HLS interface m_axi port = DDR_port3
+	// #pragma HLS interface m_axi port = DDR_port2
+	// #pragma HLS interface m_axi port = DDR_port3
 
 
 
@@ -1002,8 +1026,8 @@ void load_input_rowtile_from_ddr(
 			required_loaded_input_row_number
 			);
 
-			load_input_row_from_ddr<2>(
-			DDR_port2,
+			load_input_row_from_ddr<0>(
+			DDR_port0,
 			input_buffer[2],
 			inheight,
 			inwidth,
@@ -1019,8 +1043,8 @@ void load_input_rowtile_from_ddr(
 			required_loaded_input_row_number
 			);
 
-			load_input_row_from_ddr<3>(
-			DDR_port3,
+			load_input_row_from_ddr<1>(
+			DDR_port1,
 			input_buffer[3],
 			inheight,
 			inwidth,
@@ -1099,54 +1123,92 @@ void write_output_row(
 	{	
 		#pragma HLS pipeline
 		ap_uint<OUT_WIDTH*BATCH_SIZE> outbuffer_data_lo[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE];
-		ap_uint<OUT_WIDTH*BATCH_SIZE> outbuffer_data_hi[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE];
-
 		#pragma HLS array_partition variable=outbuffer_data_lo complete dim=1 
 		#pragma HLS array_partition variable=outbuffer_data_lo complete dim=2 
 
+
+		#if WINO_HEIGHT==2 ||  WINO_HEIGHT==4	
+		ap_uint<OUT_WIDTH*BATCH_SIZE> outbuffer_data_hi[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE];
 		#pragma HLS array_partition variable=outbuffer_data_hi complete dim=1 
 		#pragma HLS array_partition variable=outbuffer_data_hi complete dim=2 
+		#endif
 
 
+
+
+		#if WINO_HEIGHT==2 ||  WINO_HEIGHT==4
 		int depth_address_lo=(o8+o4)*2*conv_desc.outbuffer_omini_increment_step;
 		int depth_address_hi=((o8+o4)*2+1)*conv_desc.outbuffer_omini_increment_step;
+		#else
+		int depth_address_lo=o8*conv_desc.outbuffer_omini_increment_step;
+		#endif
+		
+
+
+
+
+		int buffer_address_lo=depth_address_lo+row_address+col_address;
+		for(int i=0;i<WINO_OUT_SIZE_CELL ;i++)
+		for(int j=0;j<OUTDEPTH_MINITILE_SIZE ;j++)
+		{
+			#pragma HLS unroll
+			outbuffer_data_lo[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_lo];
+		}
+
+
+		#if WINO_HEIGHT==2 ||  WINO_HEIGHT==4
+		int buffer_address_hi=depth_address_hi+row_address+col_address;
+		for(int i=0;i<WINO_OUT_SIZE_CELL ;i++)
+		for(int j=0;j<OUTDEPTH_MINITILE_SIZE ;j++)
+		{
+			outbuffer_data_hi[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_hi];
+			
+		}
+
+		#endif
+
+
+
+
+
+
+
+
 		// int row_address=rowtile_baseaddr0;
 		// int col_address=col*conv_desc.stride/conv_desc.wino_out_size_by_wino_width;
 		// int wino_width_idx=col*conv_desc.stride% ( conv_desc.wino_out_size_by_wino_width) /conv_desc.wino_output_tile_size;
 		// int wino_cell_inneridx=col*conv_desc.stride%conv_desc.wino_output_tile_size;
 
-		int buffer_address_lo=depth_address_lo+row_address+col_address;
-		int buffer_address_hi=depth_address_hi+row_address+col_address;
-
+		
 		// std::cout<<"col_address "<<col_address<<std::endl;
 		// std::cout<<"wino_width_idx "<<wino_width_idx<<std::endl;
 		// std::cout<<"wino_cell_inneridx "<<wino_cell_inneridx<<std::endl;
 		// std::cout<<"conv_desc.wino_out_size_by_wino_width "<<conv_desc.wino_out_size_by_wino_width<<std::endl;
 		// std::cout<<"buffer_address_lo "<<buffer_address_lo<<std::endl;
 		// std::cout<<"buffer_address_hi "<<buffer_address_hi<<std::endl;
+		
 
-	
-		for(int i=0;i<WINO_OUT_SIZE_CELL ;i++)
-		for(int j=0;j<OUTDEPTH_MINITILE_SIZE ;j++)
-		{
-			#pragma HLS unroll
-			outbuffer_data_lo[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_lo];
-			outbuffer_data_hi[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_hi];
-		}
 
 		
-		ap_int<OUT_WIDTH> outdata_vect[4][2];
+		ap_int<OUT_WIDTH> outdata_vect[OUT_PORT_BATCH_NUM][2];
 
 		#pragma HLS array_partition variable=outdata_vect complete dim=1 
 		#pragma HLS array_partition variable=outdata_vect complete dim=2 
 
-
+		#if WINO_HEIGHT==2 || WINO_HEIGHT==4
 		for(int i=0;i<2 ;i++)
 		{
 			#pragma HLS unroll
 			(outdata_vect[i][1],outdata_vect[i][0])=outbuffer_data_lo[wino_cell_inneridx][i];
 			(outdata_vect[2+i][1],outdata_vect[2+i][0])=outbuffer_data_hi[wino_cell_inneridx][i];
 		}
+		#else
+		for(int i=0;i<OUT_PORT_BATCH_NUM ;i++)
+		{
+			#pragma HLS unroll
+			(outdata_vect[i][1],outdata_vect[i][0])=outbuffer_data_lo[wino_cell_inneridx][i];
+		}
+		#endif
 
 		// for(int j=0;j<4 ;j++)
 		// {
@@ -1160,7 +1222,7 @@ void write_output_row(
 		// }
 		// getchar();
 
-		ap_int<OUT_WIDTH> outmem_data_scale[4][2];
+		ap_int<OUT_WIDTH> outmem_data_scale[OUT_PORT_BATCH_NUM][2];
 
 		#pragma HLS array_partition variable=outmem_data_scale complete dim=1 
 		#pragma HLS array_partition variable=outmem_data_scale complete dim=2 
@@ -1174,12 +1236,12 @@ void write_output_row(
 				outmem_data_scale[i][b]=(( ((int)outdata_vect[i][b])*(int)scale_oback)>>OBACK_QUANT_BIT);//+bias_vect[i];		
 			}
 		}
-		ap_int<OUT_WIDTH> outmem_data_sat[4][2];
+		ap_int<OUT_WIDTH> outmem_data_sat[OUT_PORT_BATCH_NUM][2];
 		
 		#pragma HLS array_partition variable =outmem_data_sat complete dim=2
 		#pragma HLS array_partition variable =outmem_data_sat complete dim=1
 
-		for(int i=0;i<4;i++)
+		for(int i=0;i<OUT_PORT_BATCH_NUM;i++)
 		{
 			#pragma HLS unroll
 			for(int b=0;b<BATCH_SIZE;b++)
@@ -1202,7 +1264,7 @@ void write_output_row(
 			}
 		}
 
-		ap_int<ODDR_WIDTH>  outmem_data[4][BATCH_SIZE];
+		ap_int<ODDR_WIDTH>  outmem_data[OUT_PORT_BATCH_NUM][BATCH_SIZE];
 		
 
 		#pragma HLS array_partition variable =outmem_data complete dim=2
@@ -1238,7 +1300,7 @@ void write_output_row(
 	
 
 
-
+		#if WINO_HEIHGT==2 || WINO_HEIGHT==4
 		if(o4==1)
 		{
 			if (wino_cell_inneridx+stride == conv_desc.wino_output_tile_size)
@@ -1277,16 +1339,40 @@ void write_output_row(
 		}		
 
 		o4++;
+		#else
+		if (wino_cell_inneridx+stride == conv_desc.wino_output_tile_size)
+		{
+			if(wino_width_idx+1==WINO_WIDTH )
+			{
+				col_address++;
+				wino_width_idx=0;
+			}
+			else
+			{
+				wino_width_idx++;
+			}
+			wino_cell_inneridx=0;
+		}
+		else
+		{
+			wino_cell_inneridx+=stride;
+		}
+
+		if(col==conv_desc.outwidth_align8)
+		{
+			col=1;
+			wino_width_idx=0;
+			col_address=0;
+			wino_cell_inneridx=0;
+			o8++;
+		}
+		else
+		{
+			col++;
+		}
+		#endif
+
 	}
-
-
-
-
-		
-
-
-
-
 }
 
 
@@ -1508,13 +1594,15 @@ void write_output_to_DDR_onerow(
 
 
 
-
+#if 0
 template<int port_idx>
 void write_output_to_DDR_two_row_two_port(
 	ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR_row0,
 	ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR_row1,
-	ap_uint<OUT_WIDTH*2> out_buffer0[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
-	ap_uint<OUT_WIDTH*2> out_buffer1[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+	ap_uint<OUT_WIDTH*2> out_buffer0[OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+	ap_uint<OUT_WIDTH*2> out_buffer1[OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		
+	// ap_uint<OUT_WIDTH*2> out_buffer1[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> rowtile_baseaddr0,
 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> rowtile_baseaddr1,
 	ap_uint<16> start_row_idx,
@@ -1604,15 +1692,19 @@ void write_output_to_DDR_two_row_two_port(
 			for(int od=0;od<OUTDEPTH_MINITILE_SIZE;od++)
 			{
 				#pragma HLS unroll
-				outbuffer_data_row0[od]=out_buffer0[wino_col_pix_idx][od][wino_widthtile_idx][buffer_address0];
+				outbuffer_data_row0[od]=out_buffer0[od/2][wino_widthtile_idx/2][od%2][wino_widthtile_idx%2][wino_col_pix_idx][buffer_address0];
+
+			// ap_uint<OUT_WIDTH*2> out_buffer0[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+	// [WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+
 
 				if(conv_desc.wino3x3_flag)
 				{
-					outbuffer_data_row1[od]=out_buffer0[wino_col_pix_idx][od][wino_widthtile_idx][buffer_address1];
+					outbuffer_data_row1[od]=out_buffer0[od/2][wino_widthtile_idx/2][od%2][wino_widthtile_idx%2][wino_col_pix_idx][buffer_address1];
 				}
 				else
 				{
-					outbuffer_data_row1[od]=out_buffer1[wino_col_pix_idx][od][wino_widthtile_idx][buffer_address1];
+					outbuffer_data_row1[od]=out_buffer1[od/2][wino_widthtile_idx/2][od%2][wino_widthtile_idx%2][wino_col_pix_idx][buffer_address1];
 				}
 			
 			}
@@ -1687,12 +1779,12 @@ void write_output_to_DDR_two_row_two_port(
 			for(int b=0;b<BATCH_SIZE;b++)
 			{	
 				#pragma HLS unroll
-				outmem_data_scale_row0[i][b]=(( ((int)obuffer_data_row0[i][b])*(int)scale_oback)>>OBACK_QUANT_BIT)+bias_vect[i];
-				outmem_data_scale_row1[i][b]=(( ((int)obuffer_data_row1[i][b])*(int)scale_oback)>>OBACK_QUANT_BIT)+bias_vect[i];				
+				outmem_data_scale_row0[i][b]=(( ((int)obuffer_data_row0[i][b])*(int)scale_oback)>>OBACK_QUANT_BIT);//+bias_vect[i];
+				outmem_data_scale_row1[i][b]=(( ((int)obuffer_data_row1[i][b])*(int)scale_oback)>>OBACK_QUANT_BIT);//+bias_vect[i];				
 			}
 		}
 
-		// printf("Addr:%7d", (int) scale_oback);
+	
 		// printf("Addr:%7d", (int) cycle);
 		// for(int i=0;i<8;i++)
 		// {
@@ -1706,6 +1798,7 @@ void write_output_to_DDR_two_row_two_port(
 		// }
 		// printf("\n");
 		// getchar();
+
 		ap_int<18>  outmem_data_sat_row0[8][BATCH_SIZE];
 		ap_int<18>  outmem_data_sat_row1[8][BATCH_SIZE];
 
@@ -1752,6 +1845,24 @@ void write_output_to_DDR_two_row_two_port(
 				}				
 			}
 		}
+
+
+
+
+		// printf("Addr:%7d", (int) cycle);
+		// for(int i=0;i<8;i++)
+		// {
+		// 	printf("[%6d %6d]",(int) outmem_data_sat_row0[i][0],(int) outmem_data_sat_row0[i][1] );
+		// }
+		// printf("\n");
+		// printf("Addr:%7d", (int) cycle);
+		// for(int i=0;i<8;i++)
+		// {
+		// 	printf("[%6d %6d]",(int) outmem_data_sat_row1[i][0],(int) outmem_data_sat_row1[i][1] );
+		// }
+		// printf("\n");
+		// getchar();
+
 
 		ap_int<ODDR_WIDTH>  outmem_data_row0[8][BATCH_SIZE];
 		ap_int<ODDR_WIDTH>  outmem_data_row1[8][BATCH_SIZE];
@@ -1802,9 +1913,19 @@ void write_output_to_DDR_two_row_two_port(
 		// for(int i=0;i<16;i++)
 		// {
 
-		// 	printf("%3d ",(int) write_back_value.range(i*8+7,i*8));
+		// 	printf("%3d ",(int) write_back_value0.range(i*8+7,i*8));
+			
 		// }
 		// printf("\n");
+		// printf("Addr:%7d ", (int) cycle);
+		// for(int i=0;i<16;i++)
+		// {
+
+		// 	printf("%3d ",(int) write_back_value1.range(i*8+7,i*8));
+			
+		// }
+		// printf("\n");
+		// getchar();
 		// getchar();
 
 		out_DDR_row0[cycle]=write_back_value0;
@@ -1876,7 +1997,7 @@ void write_output_to_DDR2(
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR1,
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR2,
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR3,
-		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_int<16> start_row_idx,
 		ap_uint<1> first_flag,
 		ap_int<16> bias_buffer0[8][BIAS_BUFFER_DEPTH],
@@ -1968,13 +2089,13 @@ void write_output_to_DDR2(
 	}
 }
 
-
+#endif
 
 void write_output_to_DDR3(
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR0,
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR1,
-		ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR2,
-		ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR3,
+		// ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR2,
+		// ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR3,
 		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_int<16> start_row_idx,
 		ap_uint<1> first_flag,
@@ -2012,39 +2133,44 @@ void write_output_to_DDR3(
 
 	ap_uint<16> rowtile_baseaddr1;
 
-	for(ap_uint<8> row_idx=0; row_idx<conv_desc.out_rowstep;row_idx+=conv_desc.wino_output_tile_size)
+	for(ap_uint<8> row_idx=0; row_idx<conv_desc.out_rowstep;row_idx+=2)
 	{
 
 
-		
-		write_output_row<0>(
-		out_DDR0+out_ddr_offset0,
-		out_buffer[0],
-		rowtile_baseaddr0,
-		outrow_idx,
-		conv_desc);
+		if(conv_desc.wino3x3_flag)
+		{
+			write_output_row<0>(
+			out_DDR0+out_ddr_offset0,
+			out_buffer[0],
+			rowtile_baseaddr0,
+			outrow_idx,
+			conv_desc);
 
-		write_output_row<1>(
-		out_DDR1+out_ddr_offset1,
-		out_buffer[1],
-		rowtile_baseaddr0,
-		outrow_idx+1,
-		conv_desc);
+			write_output_row<1>(
+			out_DDR1+out_ddr_offset1,
+			out_buffer[1],
+			rowtile_baseaddr0,
+			outrow_idx+1,
+			conv_desc);
+		}
+		else
+		{
+			write_output_row<0>(
+			out_DDR0+out_ddr_offset2,
+			out_buffer[2],
+			rowtile_baseaddr0,
+			outrow_idx+2,
+			conv_desc);
 
-		write_output_row<2>(
-		out_DDR2+out_ddr_offset2,
-		out_buffer[2],
-		rowtile_baseaddr0,
-		outrow_idx+2,
-		conv_desc);
+			write_output_row<1>(
+			out_DDR1+out_ddr_offset3,
+			out_buffer[3],
+			rowtile_baseaddr0,
+			outrow_idx+3,
+			conv_desc);
+		}
 
 
-		write_output_row<3>(
-		out_DDR3+out_ddr_offset3,
-		out_buffer[3],
-		rowtile_baseaddr0,
-		outrow_idx+3,
-		conv_desc);
 
 		out_ddr_offset0+=conv_desc.out_ddr_increment_step;
 		out_ddr_offset1+=conv_desc.out_ddr_increment_step;

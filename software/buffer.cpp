@@ -1658,7 +1658,7 @@ void del_weight_buffer_pointer(
             free_buffer<float>(layerinfo_vect[i].bias_float_scaled);
             free_buffer<char>(layerinfo_vect[i].weightbuffer_quant);
             free_buffer<short>(layerinfo_vect[i].biasbuffer_quant);
-            free_buffer_hw<char>(layerinfo_vect[i].weightbuffers_hw);
+            FREE(layerinfo_vect[i].weightbuffers_hw[0]);
             free_buffer_hw<char>(layerinfo_vect[i].biasbuffers_hw);
             free_buffer_hw<char>(layerinfo_vect[i].conv_desc_buffer);
             // delete[] layerinfo_vect[i].weightbuffers_noreorder[0];

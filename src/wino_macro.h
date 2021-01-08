@@ -207,18 +207,18 @@
 #endif
 
 #define INPUT_PORTS_DECLARE(x)  ap_uint<128>* x##0,\
-                                ap_uint<128>* x##1,\
-                                ap_uint<128>* x##2,\
-                                ap_uint<128>* x##3
+                                ap_uint<128>* x##1
+                                // ap_uint<128>* x##2,\
+                                // ap_uint<128>* x##3
 
 #define INPUT_PORTS_CALL(x)     x##0,\
-                                x##1,\
-                                x##2,\
-                                x##3
+                                x##1
+                                // x##2,\
+                                // x##3
 
 
 
-#if WINO_HEIGHT >4 
+#if WINO_HEIGHT >=4 
 #define WEIGHT_PORT_NUM 4
 #define WEIGHT_PORTS_DECLARE(x)  ap_uint<128>* x##0,\
                                 ap_uint<128>* x##1,\
@@ -229,14 +229,6 @@
                                 x##1,\
                                 x##2,\
                                 x##3
-
-#elif WINO_HEIGHT ==4
-#define WEIGHT_PORT_NUM 2
-#define WEIGHT_PORTS_DECLARE(x)  ap_uint<128>* x##0,\
-                                ap_uint<128>* x##1
-
-#define WEIGHT_PORTS_CALL(x)     x##0,\
-                                x##1
 
 #elif WINO_HEIGHT ==2
 #define WEIGHT_PORT_NUM 1

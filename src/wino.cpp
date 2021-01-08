@@ -423,6 +423,7 @@ void wino_kernel_merge_row(
             reset_merge_weight_offset=merge_weight_offset;
         }
 
+        // wino_flatten_kernel(
         wino_systolic_kernel_wrapper(
         WEIGHT_PORTS_CALL(weight_DDR),
         input_buffer,
@@ -442,10 +443,7 @@ void wino_kernel_merge_row(
 }
 
 void wino_input_compute(
-    ap_uint<128>* DDR_port0,
-    ap_uint<128>* DDR_port1,
-    ap_uint<128>* DDR_port2,
-    ap_uint<128>* DDR_port3,
+    INPUT_PORTS_DECLARE(DDR_port),
     WEIGHT_PORTS_DECLARE(weight_DDR),
     ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
     ap_uint<16> start_output_row,
@@ -623,18 +621,15 @@ int idx=0;
 
 
 void wino_systolic_top(
-    ap_uint<128> *input_DDR0,
-    ap_uint<128> *input_DDR1,
-    ap_uint<128> *input_DDR2,
-    ap_uint<128> *input_DDR3,
+    INPUT_PORTS_DECLARE(input_DDR),
     WEIGHT_PORTS_DECLARE(weight_DDR),
     ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *output_DDR0,
     ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *output_DDR1,
-    ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *output_DDR2,
-    ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *output_DDR3,
+    // ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *output_DDR2,
+    // ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *output_DDR3,
     // ConvDesc_t conv_desc,
-    ap_int<32> *mem_params,
-    ap_int<32> *bias_mem
+    ap_int<32> *mem_params
+    // ap_int<32> *bias_mem
     // #ifdef __SDSVHLS__
     // ,ap_uint<1> ap_clk_div2
     // #endif
@@ -645,13 +640,16 @@ void wino_systolic_top(
     ap_uint<1> ap_clk_div2=0;
     // #endif
 
-    #pragma HLS interface m_axi port= input_DDR3 offset=slave   bundle=input_DDR3 depth=65535
-    #pragma HLS interface m_axi port= input_DDR2 offset=slave   bundle=input_DDR2 depth=65535
+    // #pragma HLS interface m_axi port= input_DDR3 offset=slave   bundle=input_DDR3 depth=65535
+    // #pragma HLS interface m_axi port= input_DDR2 offset=slave   bundle=input_DDR2 depth=65535
     #pragma HLS interface m_axi port= input_DDR1 offset=slave   bundle=input_DDR1 depth=65535
     #pragma HLS interface m_axi port= input_DDR0 offset=slave   bundle=input_DDR0 depth=65535
     #pragma HLS interface m_axi port= weight_DDR0 offset=slave  bundle=weight_DDR0 depth=65535
-    #pragma HLS interface m_axi port= output_DDR3 offset=slave  bundle=output_DDR3 depth=65535
-    #pragma HLS interface m_axi port= output_DDR2 offset=slave  bundle=output_DDR2 depth=65535
+    #pragma HLS interface m_axi port= weight_DDR1 offset=slave  bundle=weight_DDR1 depth=65535
+    #pragma HLS interface m_axi port= weight_DDR2 offset=slave  bundle=weight_DDR2 depth=65535
+    #pragma HLS interface m_axi port= weight_DDR3 offset=slave  bundle=weight_DDR3 depth=65535
+    // #pragma HLS interface m_axi port= output_DDR3 offset=slave  bundle=output_DDR3 depth=65535
+    // #pragma HLS interface m_axi port= output_DDR2 offset=slave  bundle=output_DDR2 depth=65535
     #pragma HLS interface m_axi port= output_DDR1 offset=slave  bundle=output_DDR1 depth=65535
     #pragma HLS interface m_axi port= output_DDR0 offset=slave  bundle=output_DDR0 depth=65535
     // #pragma HLS interface m_axi port= weight_DDR3 offset=slave depth=65535
@@ -659,7 +657,7 @@ void wino_systolic_top(
     // #pragma HLS interface m_axi port= weight_DDR1 offset=slave depth=65535
 
     #pragma HLS interface m_axi port= mem_params offset=slave  bundle=mem_params depth=65535
-    #pragma HLS interface m_axi port= bias_mem offset=slave  bundle=bias_mem depth=65535
+    // #pragma HLS interface m_axi port= bias_mem offset=slave  bundle=bias_mem depth=65535
 	#pragma HLS INTERFACE s_axilite register port=return
 
     //input buffer declaration
@@ -695,13 +693,10 @@ void wino_systolic_top(
 
     load_params(mem_params,conv_desc);
 
-    load_bias_value(bias_mem, bias_buffer0, bias_buffer1,conv_desc.outdepth_align8);
+    load_bias_value(weight_DDR3, bias_buffer0, bias_buffer1,conv_desc.outdepth_align8);
 
     wino_input_compute(
-        input_DDR0,
-        input_DDR1,
-        input_DDR2,
-        input_DDR3,
+        INPUT_PORTS_CALL(input_DDR),
         WEIGHT_PORTS_CALL(weight_DDR),
         output_buffer1,
         0, //ap_uint<16> start_output_row,
@@ -742,22 +737,37 @@ void wino_systolic_top(
         if(pingpong )
         {
 
+            // #if WINO_HEIGHT==2
+
             write_output_to_DDR3(
             output_DDR0,
             output_DDR1,
-            output_DDR2,
-            output_DDR3,
+            // output_DDR2,
+            // output_DDR3,
             output_buffer1,
             write_start_row,
             write_start_row==0,
             conv_desc
             );
+            // #else
+
+            // write_output_to_DDR2(
+            // output_DDR0,
+            // output_DDR1,
+            // output_DDR2,
+            // output_DDR3,
+            // output_buffer1,
+            // write_start_row,
+            // write_start_row==0,
+            // bias_buffer0,
+            // bias_buffer1,
+            // conv_desc
+            // );
+
+            // #endif
 
             wino_input_compute(
-                input_DDR0,
-                input_DDR1,
-                input_DDR2,
-                input_DDR3,
+                INPUT_PORTS_CALL(input_DDR),
                 WEIGHT_PORTS_CALL(weight_DDR),
                 output_buffer0,
                 compute_start_row,
@@ -783,25 +793,37 @@ void wino_systolic_top(
         }
         else
         {
-
+            // #if WINO_HEIGHT==2
             write_output_to_DDR3(
             output_DDR0,
             output_DDR1,
-            output_DDR2,
-            output_DDR3,
+            // output_DDR2,
+            // output_DDR3,
             output_buffer0,
             write_start_row,
             write_start_row==0,
             conv_desc
             );
+            // #else
 
+            // write_output_to_DDR2(
+            // output_DDR0,
+            // output_DDR1,
+            // output_DDR2,
+            // output_DDR3,
+            // output_buffer0,
+            // write_start_row,
+            // write_start_row==0,
+            // bias_buffer0,
+            // bias_buffer1,
+            // conv_desc
+            // );
+
+            // #endif
 
 
             wino_input_compute(
-                input_DDR0,
-                input_DDR1,
-                input_DDR2,
-                input_DDR3,
+                INPUT_PORTS_CALL(input_DDR),
                 WEIGHT_PORTS_CALL(weight_DDR),
                 output_buffer1,
                 compute_start_row,
@@ -839,30 +861,60 @@ void wino_systolic_top(
 
     if(pingpong )
     {
+        // #if WINO_HEIGHT==2
         write_output_to_DDR3(
         output_DDR0,
         output_DDR1,
-        output_DDR2,
-        output_DDR3,
+        // output_DDR2,
+        // output_DDR3,
         output_buffer1,
         write_start_row,
         write_start_row==0,
         conv_desc
         );
+        // #else
+        // write_output_to_DDR2(
+        // output_DDR0,
+        // output_DDR1,
+        // output_DDR2,
+        // output_DDR3,
+        // output_buffer1,
+        // write_start_row,
+        // write_start_row==0,
+        // bias_buffer0,
+        // bias_buffer1,
+        // conv_desc
+        // );
+        // #endif
 
     }
     else
     {
+        // #if WINO_HEIGHT==2
         write_output_to_DDR3(
         output_DDR0,
         output_DDR1,
-        output_DDR2,
-        output_DDR3,
+        // output_DDR2,
+        // output_DDR3,
         output_buffer0,
         write_start_row,
         write_start_row==0,
         conv_desc
         );
+        // #else
+        // write_output_to_DDR2(
+        // output_DDR0,
+        // output_DDR1,
+        // output_DDR2,
+        // output_DDR3,
+        // output_buffer0,
+        // write_start_row,
+        // write_start_row==0,
+        // bias_buffer0,
+        // bias_buffer1,
+        // conv_desc
+        // );
+        // #endif
 
     }
 }

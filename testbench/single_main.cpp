@@ -268,15 +268,15 @@ int main(int argc, char** argv)
         wino_systolic_top(
             (ap_uint<128> *) inputddr,
             (ap_uint<128> *) inputddr,
-            (ap_uint<128> *) inputddr,
-            (ap_uint<128> *) inputddr,
+            // (ap_uint<128> *) inputddr,
+            // (ap_uint<128> *) inputddr,
             WEIGHT_PORTS_CALL((ap_uint<128>*) weightddr),
             (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
             (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-            (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-            (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
-            (ap_int<32>*) & (linfo_vect[0].conv_desc),
-            (ap_int<32>*) bias
+            // (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+            // (ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM> *) outputddr,
+            (ap_int<32>*) & (linfo_vect[0].conv_desc)
+            // (ap_int<32>*) bias
             // (linfo_vect[0].biasbuffer_quant[0])
             );
     }
