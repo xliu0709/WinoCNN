@@ -293,7 +293,7 @@ class ConvDesc_t():
             row_step=expected_row_step if(expected_row_step<self.output_height*self.stride_size) else self.output_height*self.stride_size;
         
         elif(input_buffer_row_capacity >= self.input_height ):
-            row_step=ALIGN(output_height*stride_size,4);
+            row_step=ALIGN(self.output_height*stride_size,4);
         else:
             row_step=maximum_row_step//self.wino_output_tile_size*self.wino_output_tile_size;
         
