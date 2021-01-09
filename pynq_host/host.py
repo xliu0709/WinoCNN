@@ -509,7 +509,7 @@ def running_test( argv,validate_dict):
     
     output_FM.tofile("filecontent")
 
-    physical_byte_num= conv_desc.indepth_align8*conv_desc.outdepth_align8*8/4
+    physical_byte_num= conv_desc.indepth_align8*conv_desc.outdepth_align8*8//4
     
     test.write(0x10,input_FM.physical_address)
     test.write(0x18,input_FM.physical_address)
