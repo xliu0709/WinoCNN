@@ -559,7 +559,7 @@ def running_test( argv,validate_dict):
     weight.close()
     output_FM.close()
     params.close()
-    bias.close()
+
 
 
 
