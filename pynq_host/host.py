@@ -474,7 +474,6 @@ def running_test( argv,validate_dict):
     weight = xlnk.cma_array(shape=(3*3*512*512), dtype=np.int32)
     output_FM = xlnk.cma_array(shape=(conv_desc.outwidth_align8*conv_desc.outdepth_align8*conv_desc.output_height), dtype=np.int16)
     params = xlnk.cma_array(shape=(128), dtype=np.int32)
-    bias = xlnk.cma_array(shape=(1024*16), dtype=np.int32)
 
     output_FM.fill(0)
     conv_desc.to_array(params)
@@ -519,7 +518,7 @@ def running_test( argv,validate_dict):
     test.write(0x38,weight.physical_address+physical_byte_num*3)
     test.write(0x40,output_FM.physical_address)
     test.write(0x48,output_FM.physical_address)
-    test.write(0x58,params.physical_address)
+    test.write(0x50,params.physical_address)
 
     print("start calling", test.read(0x00))
     start = time.time()
