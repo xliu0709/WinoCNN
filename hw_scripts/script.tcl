@@ -35,6 +35,7 @@ config_export -format ip_catalog -rtl verilog -vivado_optimization_level 2 -viva
 set_clock_uncertainty 12.5%
 csynth_design
 # cosim_design -trace_level all -argv {14 14 8 14 14 8 3 1 1 1 227 random random random dump_txt /home/xliu79/Research/2020/WinoCNN}
+cosim_design -O -trace_level all -argv {224 224 64 224 224 64 3 1 1 1 128 random random random compare .}
 
 
 #source "./winocnn/solution1/directives.tcl"

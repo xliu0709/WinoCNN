@@ -642,16 +642,16 @@ void wino_systolic_top(
 
     // #pragma HLS interface m_axi port= input_DDR3 offset=slave   bundle=input_DDR3 depth=65535
     // #pragma HLS interface m_axi port= input_DDR2 offset=slave   bundle=input_DDR2 depth=65535
-    #pragma HLS interface m_axi port= input_DDR1 offset=slave   bundle=input_DDR1 depth=65535
-    #pragma HLS interface m_axi port= input_DDR0 offset=slave   bundle=input_DDR0 depth=65535
-    #pragma HLS interface m_axi port= weight_DDR0 offset=slave  bundle=weight_DDR0 depth=65535
-    #pragma HLS interface m_axi port= weight_DDR1 offset=slave  bundle=weight_DDR1 depth=65535
-    #pragma HLS interface m_axi port= weight_DDR2 offset=slave  bundle=weight_DDR2 depth=65535
-    #pragma HLS interface m_axi port= weight_DDR3 offset=slave  bundle=weight_DDR3 depth=65535
+    #pragma HLS interface m_axi port= input_DDR1 offset=slave   bundle=input_DDR1 depth=524288
+    #pragma HLS interface m_axi port= input_DDR0 offset=slave   bundle=input_DDR0 depth=524288
+    #pragma HLS interface m_axi port= weight_DDR0 offset=slave  bundle=weight_DDR0 depth=1179648
+    #pragma HLS interface m_axi port= weight_DDR1 offset=slave  bundle=weight_DDR1 depth=1179648
+    #pragma HLS interface m_axi port= weight_DDR2 offset=slave  bundle=weight_DDR2 depth=1179648
+    #pragma HLS interface m_axi port= weight_DDR3 offset=slave  bundle=weight_DDR3 depth=1179648
     // #pragma HLS interface m_axi port= output_DDR3 offset=slave  bundle=output_DDR3 depth=65535
     // #pragma HLS interface m_axi port= output_DDR2 offset=slave  bundle=output_DDR2 depth=65535
-    #pragma HLS interface m_axi port= output_DDR1 offset=slave  bundle=output_DDR1 depth=65535
-    #pragma HLS interface m_axi port= output_DDR0 offset=slave  bundle=output_DDR0 depth=65535
+    #pragma HLS interface m_axi port= output_DDR1 offset=slave  bundle=output_DDR1 depth=524288
+    #pragma HLS interface m_axi port= output_DDR0 offset=slave  bundle=output_DDR0 depth=524288
     // #pragma HLS interface m_axi port= weight_DDR3 offset=slave depth=65535
     // #pragma HLS interface m_axi port= weight_DDR2 offset=slave depth=65535
     // #pragma HLS interface m_axi port= weight_DDR1 offset=slave depth=65535
