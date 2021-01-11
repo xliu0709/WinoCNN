@@ -567,7 +567,7 @@ if __name__ == "__main__":
 
 
     if(len(sys.argv)==1 ):
-        output_depth_test_case[64, 64, 128, 128,256,256,512,512,512]
+        output_depth_test_case=[64, 64, 128, 128,256,256,512,512,512]
         input_depth_test_case=[8,  64, 64,  128,128,256,256,512,512]
         input_dim_test_cases= [224,224,112, 112,56, 56, 28, 28, 14]
     else:
