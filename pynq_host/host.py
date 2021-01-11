@@ -472,7 +472,7 @@ def running_test( argv,validate_dict):
     test = overlay.wino_systolic_top_0
     input_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
     weight = xlnk.cma_array(shape=(3*3*512*512), dtype=np.int32)
-    output_FM = xlnk.cma_array(shape=(conv_desc.outwidth_align8*conv_desc.outdepth_align8*conv_desc.output_height), dtype=np.int16)
+    output_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
     params = xlnk.cma_array(shape=(128), dtype=np.int32)
 
     output_FM.fill(0)
