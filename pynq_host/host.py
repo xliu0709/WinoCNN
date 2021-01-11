@@ -567,18 +567,21 @@ if __name__ == "__main__":
 
 
     if(len(sys.argv)==1 ):
-        depth_test_case=[8,16,32,48,64]
-        input_dim_test_cases=[14,18,20,28,32]
+        output_depth_test_case[64, 64, 128, 128,256,256,512,512,512]
+        input_depth_test_case=[8,  64, 64,  128,128,256,256,512,512]
+        input_dim_test_cases= [224,224,112, 112,56, 56, 28, 28, 14]
     else:
         depth_test_case=[int(sys.argv[2])]
         input_dim_test_cases=[int(sys.argv[1])]
 
     result_dict={}
-    for i in input_dim_test_cases:
-        for j in depth_test_case:
-            scale_fact=(1<<14)//j//9;
-            argv=[0,i,i,j,i,i,j,3,1,1,1,scale_fact,"src/wino_hw_config.h"]
-            running_test(argv, result_dict)
+    for i in range(len(input_dim_test_cases)):
+        id=input_depth_test_case[i]
+        od=output_depth_test_case[i]
+        ih=input_dim_test_cases[i]
+        scale_fact=(1<<14)//id//9;
+        argv=[0,ih,ih,id,ih,ih,od,3,1,1,1,scale_fact,"src/wino_hw_config.h"]
+        running_test(argv, result_dict)
     
 
     for key, val in result_dict.items():
