@@ -324,7 +324,7 @@ int main(int argc, char** argv)
 
 
         fptr=fopen("output.bin","w");
-        fwrite(fmap_dict["out"].buffers_hw[0], 16, CEIL_DIV(input_depth,8)*output_height*ALIGN(output_height,8),fptr);
+        fwrite(fmap_dict["out"].buffers_hw[0], 16, CEIL_DIV(output_depth,8)*output_height*ALIGN(output_height,8),fptr);
         fclose(fptr);
         del_featuremap_mem(fmap_dict);
         del_weight_buffer_pointer(linfo_vect);

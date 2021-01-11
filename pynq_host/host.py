@@ -532,12 +532,13 @@ def running_test( argv,validate_dict):
     print( (end - start)*1e9/100 )
  
 
-    validate_dict[ key ].append(output_load)
+    # validate_dict[ key ].append(output_load)
     
     count=0;
-
+    print(conv_desc.outdepth_align8, conv_desc.outwidth_align8, conv_desc.output_height)
     for i in range(conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height):
-        if(output_load[i]!=output_FM[i]):
+        if(output_load[i]!=
+            output_FM[i]):
             # output_load[i]=output_FM[i]
             count+=1
 
