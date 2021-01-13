@@ -526,20 +526,20 @@ void wino_model_int(
     std::cout<<"Scale_oback_int "<<Scale_oback_int<< std::endl;
 
     int wino_output_tile_size;
-    if(kernel_size==5)
+    
+    #if WINO_DOMAIN_SIZE==4
+    if(kernel_size==1)
     {
-       wino_output_tile_size=WINO_DOMAIN_SIZE+1-kernel_size;
-    }
-    else if(kernel_size==1)
-    {
-        wino_output_tile_size=WINO_DOMAIN_SIZE+1-1;
-        std::cout<<"kernel_size equal 1"<<std::endl;
+        wino_output_tile_size=4;
     }
     else
     {
-        wino_output_tile_size=WINO_DOMAIN_SIZE+1-3;
+        wino_output_tile_size=2;
     }
-
+    #else
+    printf(" WINO_DOMAIN_SIZ 6 not implemented");
+    assert(0);
+    #endif
 
     int OH_ALIGNED = CEIL_DIV(output_height*stride,wino_output_tile_size);
     int OW_ALIGNED = CEIL_DIV(output_width*stride,wino_output_tile_size);
@@ -555,11 +555,11 @@ void wino_model_int(
     }
 
     int* output_buffer=new int[output_depth*output_height*stride*output_width*stride];
-   std::cout<<"1"<<std::endl;
+    std::cout<<"1"<<std::endl;
     fflush(stdout);
     for(int start_output_row =0; start_output_row < output_height*stride; start_output_row+=wino_output_tile_size )
     {
-        int merge_kernel_size= (kernel_size==5) ?3:kernel_size;
+        int merge_kernel_size= (kernel_size==1) ?3:kernel_size;
 
         for(int merge_kernel_row_offset=0;merge_kernel_row_offset<merge_kernel_size;merge_kernel_row_offset+=3)
         for(int merge_kernel_col_offset=0;merge_kernel_col_offset<merge_kernel_size;merge_kernel_col_offset+=3)
@@ -609,42 +609,42 @@ void wino_model_int(
                         #endif
                         
                         int wino_weight_tile[WINO_DOMAIN_SIZE_SQUARE];
-                        if(kernel_size!=5)
-                        {
-                            int g[WINO_DOMAIN_SIZE_SQUARE];
-                            get_merge_weight_tile<char,int>(weight,g,input_depth,output_depth,kernel_size,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
-                            
-                            // print_tile<int>(g,9,"weight_tile");
-                            int gGT[3*WINO_DOMAIN_SIZE];
-                            #if WINO_DOMAIN_SIZE==4
-                                if(kernel_size!=1)
-                                {
-                                    weight_right_mul_3to4<int>(g,gGT);
+                        // if(kernel_size!=1)
+                        // {
+                        int g[WINO_DOMAIN_SIZE_SQUARE];
+                        get_merge_weight_tile<char,int>(weight,g,input_depth,output_depth,kernel_size,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
+                        
+                        // print_tile<int>(g,9,"weight_tile");
+                        int gGT[3*WINO_DOMAIN_SIZE];
+                        #if WINO_DOMAIN_SIZE==4
+                            if(kernel_size!=1)
+                            {
+                                weight_right_mul_3to4<int>(g,gGT);
 
-                                    weight_left_mul_3to4<int>(gGT,wino_weight_tile);    
-                                    apply_quant_int<RG_WIDTH-W_WIDTH>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE);
-                                    for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++) wino_weight_tile[ii]=(ap_int<W_WIDTH>)wino_weight_tile[ii];
-                                    // print_tile<int>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE,"wino_weight_tile");
-                                }
-                                else
-                                {
-                                    for(int i=0;i<WINO_DOMAIN_SIZE_SQUARE;i++)
-                                    {
-                                        wino_weight_tile[i]=g[0]*4;
-                                    }
-                                }
-                            #else
-
-                                weight_right_mul_3to6<int>(g,gGT);
-                            
-                                weight_left_mul_3to6<int>(gGT,wino_weight_tile);
+                                weight_left_mul_3to4<int>(gGT,wino_weight_tile);    
                                 apply_quant_int<RG_WIDTH-W_WIDTH>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE);
+                                for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++) wino_weight_tile[ii]=(ap_int<W_WIDTH>)wino_weight_tile[ii];
+                                // print_tile<int>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE,"wino_weight_tile");
+                            }
+                            else
+                            {
+                                for(int i=0;i<WINO_DOMAIN_SIZE_SQUARE;i++)
+                                {
+                                    wino_weight_tile[i]=g[0]*4;
+                                }
+                            }
+                        #else
 
-                                for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++) wino_weight_tile[ii]=wino_weight_tile[ii]/576;
-                            #endif
-                        }
-                        else
-                            get_weight_tile<char,int>(weight,wino_weight_tile,input_depth,output_depth,WINO_DOMAIN_SIZE,input_depth_idx,output_depth_idx);   
+                            weight_right_mul_3to6<int>(g,gGT);
+                        
+                            weight_left_mul_3to6<int>(gGT,wino_weight_tile);
+                            apply_quant_int<RG_WIDTH-W_WIDTH>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE);
+
+                            for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++) wino_weight_tile[ii]=wino_weight_tile[ii]/576;
+                        #endif
+                        // }
+                        // else
+                        //     get_weight_tile<char,int>(weight,wino_weight_tile,input_depth,output_depth,WINO_DOMAIN_SIZE,input_depth_idx,output_depth_idx);   
                         
 
                         int off = (output_depth_idx*OH_ALIGNED*OW_ALIGNED
@@ -688,8 +688,8 @@ void wino_model_int(
                         int output_tile[WINO_OUT_SIZE_SQUARE*4];
 
                         int vA[WINO_OUT_SIZE*WINO_DOMAIN_SIZE];   
-                        if(kernel_size!=5)
-                        {
+                        // if(kernel_size!=5)
+                        // {
                             
                             #if WINO_DOMAIN_SIZE==4
                             if(kernel_size!=1)
@@ -697,7 +697,6 @@ void wino_model_int(
                                 output_right_mul_4to2<int>(wino_output_tile,vA);
                                 apply_quant_int<UVA_QUANT_BIT>(vA,WINO_OUT_SIZE*WINO_DOMAIN_SIZE);
                                 // print_tile<int>(vA,WINO_OUT_SIZE*WINO_DOMAIN_SIZE,"vA");
-
                                 output_left_mul_4to2<int>(vA,output_tile);
                                 apply_quant_int<ATA_QUANT_BIT>(output_tile,WINO_OUT_SIZE_SQUARE);
                             }
@@ -714,14 +713,14 @@ void wino_model_int(
                                 output_left_mul_6to4<int>(vA,output_tile);
                                 apply_quant_int<ATA_QUANT_BIT>(output_tile,WINO_OUT_SIZE_SQUARE);
                             #endif
-                        }
-                        else
-                        {
-                                output_right_mul_6to2<int>(wino_output_tile,vA);
-                                apply_quant_int<UVA_QUANT_BIT>(vA,WINO_OUT_SIZE*WINO_DOMAIN_SIZE);
-                                output_left_mul_6to2<int>(vA,output_tile);    
-                                apply_quant_int<ATA_QUANT_BIT>(output_tile,WINO_OUT_SIZE_SQUARE); 
-                        }
+                        // }
+                        // else
+                        // {
+                        //         output_right_mul_6to2<int>(wino_output_tile,vA);
+                        //         apply_quant_int<UVA_QUANT_BIT>(vA,WINO_OUT_SIZE*WINO_DOMAIN_SIZE);
+                        //         output_left_mul_6to2<int>(vA,output_tile);    
+                        //         apply_quant_int<ATA_QUANT_BIT>(output_tile,WINO_OUT_SIZE_SQUARE); 
+                        // }
 
                         apply_quant_int<OUT_BUFFER_QUANT_BIT>(output_tile,WINO_OUT_SIZE_SQUARE);
                         // print_tile<int>(output_tile,WINO_OUT_SIZE_SQUARE,"output_tile");

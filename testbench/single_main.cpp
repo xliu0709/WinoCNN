@@ -116,8 +116,11 @@ int main(int argc, char** argv)
     
     linfo_vect[0].weightbuffers_sw.push_back(weight_float);
     linfo_vect[0].biasbuffers_sw.push_back(bias_float);
-
+ std::cout<<"1"<<std::endl;
+    fflush(stdout);
     prepare_conv_descriptor(linfo_vect);
+     std::cout<<"2"<<std::endl;
+    fflush(stdout);
     alloc_hw_weight_buffer(linfo_vect);
 
 
@@ -148,8 +151,11 @@ int main(int argc, char** argv)
     alloc_hw_featuremap_mem_single_blob(fmap_dict["in"]);
     alloc_hw_featuremap_mem_single_blob(fmap_dict["out"]);
 
+  std::cout<<"1"<<std::endl;
+    fflush(stdout);
     feature_map_init(fmap_dict["in"],input_gold);
-
+  std::cout<<"2"<<std::endl;
+    fflush(stdout);
     featuremap_int_to_hw_pointers(
         fmap_dict["in"].buffers_int[0],
         fmap_dict["in"].buffers_int[1],
@@ -160,10 +166,13 @@ int main(int argc, char** argv)
         0,
         ALIGN(fmap_dict["in"].blob_info->dim[0],8)
     );
-
+  std::cout<<"3"<<std::endl;
+    fflush(stdout);
 
 
     init_weight<char>(linfo_vect[0].weightbuffer_quant[0],input_depth,output_depth,kernel_size,weight_gold);
+      std::cout<<"4"<<std::endl;
+    fflush(stdout);
     process_hw_weight_buffer_single_layer(linfo_vect[0]);
     // print_weight<0>( (ap_uint<128>*) linfo_vect[0].weightbuffers_hw[0],"idepthweight.txt", linfo_vect[0].port_segment_size[0]*WEIGHT_PORT_NUM*128/8);
 
@@ -196,7 +205,6 @@ int main(int argc, char** argv)
        relu_flag,
        Scale_oback_int
    );
-
 
    wino_model_int(fmap_dict["in"].buffers_int[1],
        input_depth,
@@ -253,7 +261,6 @@ int main(int argc, char** argv)
 
 
 
-
     fptr=fopen("weight.bin","w");
 
     fwrite(linfo_vect[0].weightbuffers_hw[0],1,linfo_vect[0].weightbuffers_hw_size[0],fptr);
@@ -297,15 +304,6 @@ int main(int argc, char** argv)
 
 
  
-
-
-
-
-
-
-
-
-
     delete [] conv_desc_param;
     delete [] bias;
 

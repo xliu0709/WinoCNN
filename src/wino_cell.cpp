@@ -490,6 +490,7 @@ void element_wise_mult_4x4(
 		ap_int<1> ap_clk_div2
 )
 {
+	#pragma HLS inline
 	#pragma HLS pipeline
 
 	#pragma HLS array_partition variable=UV_MUL_TILE complete dim=1

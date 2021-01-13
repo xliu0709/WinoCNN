@@ -247,7 +247,7 @@ void load_input_row_from_ddr(
 		ap_int<16> row_load_bound)
 {
 	#pragma HLS array_partition variable = input_buffer dim=1 complete
-#pragma HLS interface m_axi port = DDR_port
+	#pragma HLS interface m_axi port = DDR_port
 	if(row_idx >= inheight || row_idx >= row_load_bound) return;
 
 	bool bufferflag= (row_idx%INBUFFER_HEIGHT/4 == 0);
@@ -294,8 +294,8 @@ void load_input_row_from_ddr(
 
 	ap_uint<INDEPTH_MINITILE_SIZE_BITWIDTH> buffer_address_mini_tile=0;
 
-	ap_uint<8> read_inwidth_counter=1;
-	ap_uint<8> write_inwidth_counter=1;
+	ap_uint<9> read_inwidth_counter=1;
+	ap_uint<9> write_inwidth_counter=1;
 
 	ap_uint<32> ddr_address_offset = row_idx * group_indepth_x_inwidth_align8_by8 + group_indepth_offset_x_inwidth_align8_by8;
 
@@ -520,7 +520,7 @@ void load_input_row_from_ddr(
 			}
 			#endif
 
-			if(write_inwidth_counter == inwidth_align8)
+			if(write_inwidth_counter == (ap_uint<9>) inwidth_align8)
 			{
 				buffer_address_mid += buffer_address_mid_increment_step;
 			}
@@ -550,7 +550,7 @@ void load_input_row_from_ddr(
 			}
 			#endif
 				
-			if(write_inwidth_counter == inwidth_align8)
+			if(write_inwidth_counter == (ap_uint<9>) inwidth_align8)
 			{
 				write_inwidth_counter=1;
 			}
@@ -1086,12 +1086,11 @@ void write_output_row(
 )
 {
 	if(port_idx%2==1 && conv_desc.stride!=1) return;
-	if(port_idx>= conv_desc.wino_output_tile_size) return;
 	#pragma HLS array_partition variable=out_buffer0 complete dim=1
 	#pragma HLS array_partition variable=out_buffer0 complete dim=2
 	#pragma HLS array_partition variable=out_buffer0 complete dim=3
 
-	if(row_idx >= conv_desc.outheight)
+	if(row_idx >= conv_desc.outheight || row_idx <0)
 	{
 		return;
 	}
@@ -1103,7 +1102,7 @@ void write_output_row(
 	ap_uint<16> row_address=rowtile_baseaddr0;
 	ap_uint<16> col_address=0;
 
-	ap_uint<8> col=1;
+	ap_uint<9> col=1;
 	
 
 	ap_uint<3> wino_cell_inneridx=0;
@@ -1163,7 +1162,6 @@ void write_output_row(
 		{
 			#pragma HLS unroll
 			outbuffer_data_hi[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_hi];
-			
 		}
 
 		#endif
@@ -1359,7 +1357,7 @@ void write_output_row(
 			wino_cell_inneridx+=stride;
 		}
 
-		if(col==conv_desc.outwidth_align8)
+		if(col== (ap_uint<9>) conv_desc.outwidth_align8)
 		{
 			col=1;
 			wino_width_idx=0;
@@ -2114,6 +2112,7 @@ void write_output_to_DDR3(
 	static ap_uint<24> out_ddr_offset1;
 	static ap_uint<24> out_ddr_offset2;
 	static ap_uint<24> out_ddr_offset3;
+
 	
 	
 	printf("---write_output_to_DDR %d---\n",(int) start_row_idx);
@@ -2124,21 +2123,20 @@ void write_output_to_DDR3(
 	{
 		out_ddr_offset0=0;
 		out_ddr_offset1=conv_desc.output_burst_length;
-		out_ddr_offset2= (conv_desc.stride==2)?conv_desc.output_burst_length:((conv_desc.output_burst_length)<<1);
-		out_ddr_offset3=out_ddr_offset1+out_ddr_offset2;
+		out_ddr_offset2=conv_desc.output_burst_length*2;
+		out_ddr_offset3=conv_desc.output_burst_length*3;
 	}
 
 	ap_uint<16> rowtile_baseaddr_increment_step=conv_desc.wino_tile_number_in_outwidth;
 	ap_uint<16> rowtile_baseaddr0=0;
+	ap_uint<16> rowtile_baseaddr1=0;
 
 
-	ap_uint<16> rowtile_baseaddr1;
 
 	for(ap_uint<8> row_idx=0; row_idx<conv_desc.out_rowstep;row_idx+=2)
 	{
 
-
-		if(conv_desc.wino3x3_flag)
+		if(conv_desc.wino3x3_flag || row_idx/2%2==0)
 		{
 			write_output_row<0>(
 			out_DDR0+out_ddr_offset0,
@@ -2153,36 +2151,33 @@ void write_output_to_DDR3(
 			rowtile_baseaddr0,
 			outrow_idx+1,
 			conv_desc);
+
+			rowtile_baseaddr0+=rowtile_baseaddr_increment_step;
+			out_ddr_offset0+=conv_desc.out_ddr_increment_step;
+			out_ddr_offset1+=conv_desc.out_ddr_increment_step;
 		}
 		else
 		{
 			write_output_row<0>(
 			out_DDR0+out_ddr_offset2,
 			out_buffer[2],
-			rowtile_baseaddr0,
-			outrow_idx+2,
+			rowtile_baseaddr1,
+			outrow_idx,
 			conv_desc);
 
 			write_output_row<1>(
 			out_DDR1+out_ddr_offset3,
 			out_buffer[3],
-			rowtile_baseaddr0,
-			outrow_idx+3,
+			rowtile_baseaddr1,
+			outrow_idx+1,
 			conv_desc);
+
+			rowtile_baseaddr1+=rowtile_baseaddr_increment_step;
+			out_ddr_offset2+=conv_desc.out_ddr_increment_step;
+			out_ddr_offset3+=conv_desc.out_ddr_increment_step;
 		}
 
-
-
-		out_ddr_offset0+=conv_desc.out_ddr_increment_step;
-		out_ddr_offset1+=conv_desc.out_ddr_increment_step;
-		out_ddr_offset2+=conv_desc.out_ddr_increment_step;
-		out_ddr_offset3+=conv_desc.out_ddr_increment_step;
-
-
-
-		rowtile_baseaddr0+=rowtile_baseaddr_increment_step;
-		outrow_idx+=conv_desc.wino_output_tile_size;
-
+		outrow_idx+=2;
 	}
 }
 

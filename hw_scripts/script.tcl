@@ -29,13 +29,14 @@ add_files -tb src/wino_struct.h -cflags "-Wno-unknown-pragmas" -csimflags "-Wno-
 
 open_solution "solution1"
 set_part {xczu9eg-ffvb1156-2-e}
-create_clock -period 4 -name default
+create_clock -period 2 -name default
+config_schedule -relax_ii_for_timing=0
 config_sdx -target none
 config_export -format ip_catalog -rtl verilog -vivado_optimization_level 2 -vivado_phys_opt place -vivado_report_level 0
 set_clock_uncertainty 12.5%
 csynth_design
 # cosim_design -trace_level all -argv {14 14 8 14 14 8 3 1 1 1 227 random random random dump_txt /home/xliu79/Research/2020/WinoCNN}
-cosim_design -O -trace_level all -argv {224 224 64 224 224 64 3 1 1 1 128 random random random compare .}
+# cosim_design -O -trace_level all -argv {224 224 64 224 224 64 3 1 1 1 128 random random random compare .}
 
 
 #source "./winocnn/solution1/directives.tcl"

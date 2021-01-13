@@ -346,7 +346,7 @@ void weight_to_ddr(
         }
     }
 
-    printf("weight_to_ddr done");
+    printf("weight_to_ddr done\n");
     fflush(stdout);
 }
 
@@ -364,7 +364,7 @@ void weight_seperation(
     int outdepth
 )
 {
-    std::cout<<" kernel_size"<<kernel_size;
+    std::cout<<"kernel_size "<<kernel_size<<std::endl;
     int addr=0;
     for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size;merge_kernel_row_offset+=merge_kernel_size)
     for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size;merge_kernel_col_offset+=merge_kernel_size)
@@ -378,8 +378,6 @@ void weight_seperation(
                 int kernel_row_idx=merge_kernel_row_offset+merge_kernel_row_idx;
                 int kernel_col_idx=merge_kernel_col_offset+merge_kernel_col_idx;
                 int iaddr= ((od*indepth+id)*kernel_size+kernel_row_idx)*kernel_size+kernel_col_idx;
-
-
                 if(kernel_row_idx<kernel_size && kernel_col_idx<kernel_size)
                 {
                     weight_sep[addr]=weight[iaddr];
@@ -414,9 +412,15 @@ void weight_int_to_merged_DDR(
     int weight_hw_offset=0;
     int weight_sep_offset=0;
 
+    std::cout<<kernel_size<<","<<kernel_size<<std::endl;
+    fflush(stdout);
+
     for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size;merge_kernel_row_offset+=merge_kernel_size)
     for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size;merge_kernel_col_offset+=merge_kernel_size)
     {
+        std::cout<<merge_kernel_row_offset<<","<<merge_kernel_col_offset<<std::endl;
+        fflush(stdout);
+
         weight_to_ddr(
             weight_sep+weight_sep_offset,
             weight_hw+weight_hw_offset,
