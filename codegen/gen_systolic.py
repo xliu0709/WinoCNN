@@ -126,7 +126,7 @@ def generate_wino_systolic(config:Config_t):
     static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream[WINO_HEIGHT/2][WINO_WIDTH/2-1][2];\n\
     #pragma HLS stream variable=weight_stream depth=2\n"
 
-    if(config.WINO_HEIGHT==8):
+    if(config.WINO_HEIGHT==8 or config.WINO_HEIGHT==2):
         ret_string+="\tstatic hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream_out[WEIGHT_PORT_NUM][WEIGHT_FEED_NUMBER_PER_PORT];\n\
     #pragma HLS stream variable=weight_stream_out depth=16\n\n"
     else:
@@ -178,7 +178,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\
@@ -196,7 +196,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\
@@ -214,7 +214,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\
@@ -232,7 +232,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\
@@ -251,7 +251,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\
@@ -269,7 +269,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\
@@ -287,7 +287,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\
@@ -305,7 +305,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\
@@ -315,7 +315,7 @@ def generate_wino_systolic(config:Config_t):
     elif(config.WINO_HEIGHT==2):
         ret_string+="\tweight_feed_one_port<0>(\n\
         weight_DDR0,\n\
-        weight_stream_out[0][0],\n\
+        weight_stream_out[0],\n\
         conv_desc.weightDDR_burst_number,\n\
         conv_desc.weightDDR_buffer_burst_length,\n\
         conv_desc.weightDDR_port_burst_length,\n\
@@ -324,25 +324,7 @@ def generate_wino_systolic(config:Config_t):
         conv_desc.loop_weight_feed_bound,\n\
         conv_desc.weightbuffer_outdepth_minitile_number,\n\
         reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
-        first_flag,\n\
-        last_flag\n\
-        #if DEBUG_CONV_DESC\n\
-        ,conv_desc	\n\
-        #endif\n\
-    );\n\
-    weight_feed_one_port<1>(\n\
-        weight_DDR1,\n\
-        weight_stream_out[0][1],\n\
-        conv_desc.weightDDR_burst_number,\n\
-        conv_desc.weightDDR_buffer_burst_length,\n\
-        conv_desc.weightDDR_port_burst_length,\n\
-        conv_desc.loop_outdepth_minitile_baseidx_reset_cycle_minus1,\n\
-        conv_desc.loop_start_output_baserowcol_reset_cycle,\n\
-        conv_desc.loop_weight_feed_bound,\n\
-        conv_desc.weightbuffer_outdepth_minitile_number,\n\
-        reset_DDR_offset,\n\
-        conv_desc.kernel_size,\n\
+        conv_desc.wino3x3_flag,\n\
         first_flag,\n\
         last_flag\n\
         #if DEBUG_CONV_DESC\n\

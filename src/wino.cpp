@@ -293,7 +293,7 @@ void wino_flatten_kernel(
 
     weight_feed_one_port<0>(
         weight_DDR0,
-        #if WINO_HEIGT==8
+        #if WINO_HEIGHT==8 || WINO_HEIGHT==2
         weight_stream[0],
         #else
         weight_stream[0][0],
@@ -313,10 +313,10 @@ void wino_flatten_kernel(
         ,conv_desc	
         #endif
     );
-    #if WINO_HEIGHT  >=4 
+    #if WINO_HEIGHT  >4 
     weight_feed_one_port<1>(
         weight_DDR1,
-        #if WINO_HEIGT==8
+        #if WINO_HEIGHT==8 || WINO_HEIGHT==2
         weight_stream[1],
         #else
         weight_stream[1][0],
@@ -336,12 +336,9 @@ void wino_flatten_kernel(
         ,conv_desc	
         #endif
     );
-    #endif
-
-    #if WINO_HEIGHT >=4
     weight_feed_one_port<2>(
         weight_DDR2,
-        #if WINO_HEIGT==8
+        #if WINO_HEIGHT==8 || WINO_HEIGHT==2
         weight_stream[2],
         #else
         weight_stream[2][0],
@@ -364,7 +361,7 @@ void wino_flatten_kernel(
     
     weight_feed_one_port<3>(
         weight_DDR3,
-        #if WINO_HEIGT==8
+        #if WINO_HEIGHT==8 || WINO_HEIGHT==2
         weight_stream[3],
         #else
         weight_stream[3][0],
@@ -427,10 +424,11 @@ void wino_kernel_merge_row(
 )
 {
     int merge_weight_offset=merge_weight_row_offset+conv_desc.merge_weight_col_step;
-    for(ap_uint<4> col_offset=0;col_offset<conv_desc.merge_kernel_size;col_offset+=3)
+    ap_uint<2> merge_kernel_step=conv_desc.merge_kernel_step;
+    for(ap_uint<4> col_offset=0;col_offset<conv_desc.merge_kernel_size;col_offset+=merge_kernel_step)
     {
         ap_uint<32> reset_merge_weight_offset;
-        if(last_row_flag && col_offset==conv_desc.merge_kernel_size-3)
+        if(last_row_flag && col_offset==conv_desc.merge_kernel_size-merge_kernel_step)
         {
             reset_merge_weight_offset=0;
         }
@@ -449,7 +447,7 @@ void wino_kernel_merge_row(
         col_offset-conv_desc.pad_size,
         reset_merge_weight_offset,
         first_flag && (col_offset==0),
-        last_flag && (col_offset+3>conv_desc.merge_kernel_size),
+        last_flag && (col_offset+merge_kernel_step>conv_desc.merge_kernel_size),
         clear_flag && ( col_offset==0),
         conv_desc,
         ap_clk_div2);
@@ -510,7 +508,7 @@ void wino_input_compute(
 
 
 
-int idx=0;
+    int idx=0;
     #if DEBUG_FILE_PRINT
         
         attach_input_buffer_content_uniformed<INBUFFER_HEIGHT,INBUFFER_WIDTH, INPUT_BUFFER_DEPTH>(input_buffer,idx,(char*) "input_buffer_content.txt");
@@ -518,7 +516,6 @@ int idx=0;
         getchar();
     #endif
 
-        printf("first_input_flag \n", (int)first_input_flag );
         if(first_input_flag) return;
 
         printf("OK %d \n",(int) conv_desc.merge_kernel_size);
@@ -526,17 +523,18 @@ int idx=0;
 
         ap_uint<1> merge_clear_flag= (conv_desc.merge_kernel_size>3);
         ap_uint<32> merge_weight_row_offset=0;
+        ap_uint<2> merge_kernel_step=conv_desc.merge_kernel_step; 
         bool last_row_flag;
-        for(ap_uint<8> row_offset=0; row_offset<conv_desc.merge_kernel_size; row_offset+=3)
+        for(ap_uint<4> row_offset=0; row_offset<conv_desc.merge_kernel_size; row_offset+= merge_kernel_step)
         {
             #pragma HLS DEPENDENCE variable=input_buffer intra false
             ap_int<16> required_loaded_input_row_number;
             ap_uint<1> skip_flag;
             ap_uint<1> clear_flag;
 
-            if( row_offset+3<conv_desc.merge_kernel_size )
+            if( row_offset+merge_kernel_step<conv_desc.merge_kernel_size )
             {
-                required_loaded_input_row_number=curr_required_loaded_input_row_number+3+row_offset;
+                required_loaded_input_row_number=curr_required_loaded_input_row_number+merge_kernel_step+row_offset;
                 skip_flag=0;
                 clear_flag=0;
                 last_row_flag=0;
@@ -592,7 +590,7 @@ int idx=0;
                 conv_desc,
                 ap_clk_div2);
             merge_weight_row_offset+=conv_desc.merge_weight_row_step;
-            start_row_idx_minus_pad_size+=3;
+            start_row_idx_minus_pad_size+=merge_kernel_step;
             
         }
 

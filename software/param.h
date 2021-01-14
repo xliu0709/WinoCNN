@@ -32,7 +32,7 @@ class LayerInfo_t{
         float Scale_b;
         float Scale_oback;
         int Scale_oback_int;
-
+        int use_kernel_size;
         
 
         std::vector<float *>  weightbuffers_sw;

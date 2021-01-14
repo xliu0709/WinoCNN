@@ -359,33 +359,49 @@ void weight_seperation(
     Tin* weight,
     Tout* weight_sep,
     int kernel_size,
-    int merge_kernel_size,
+    int use_kernel_size,
     int indepth,
     int outdepth
 )
 {
     std::cout<<"kernel_size "<<kernel_size<<std::endl;
     int addr=0;
-    for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size;merge_kernel_row_offset+=merge_kernel_size)
-    for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size;merge_kernel_col_offset+=merge_kernel_size)
+    for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size;merge_kernel_row_offset+=use_kernel_size)
+    for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size;merge_kernel_col_offset+=use_kernel_size)
     {
         for(int od=0;od<outdepth;od++)
         for(int id=0;id<indepth;id++)
         {
-            for(int merge_kernel_row_idx=0;merge_kernel_row_idx<merge_kernel_size;merge_kernel_row_idx++)
-            for(int merge_kernel_col_idx=0;merge_kernel_col_idx<merge_kernel_size;merge_kernel_col_idx++)
+            for(int merge_kernel_row_idx=0;merge_kernel_row_idx<3;merge_kernel_row_idx++)
+            for(int merge_kernel_col_idx=0;merge_kernel_col_idx<3;merge_kernel_col_idx++)
             {
                 int kernel_row_idx=merge_kernel_row_offset+merge_kernel_row_idx;
                 int kernel_col_idx=merge_kernel_col_offset+merge_kernel_col_idx;
                 int iaddr= ((od*indepth+id)*kernel_size+kernel_row_idx)*kernel_size+kernel_col_idx;
-                if(kernel_row_idx<kernel_size && kernel_col_idx<kernel_size)
+
+                if(use_kernel_size==3)
                 {
-                    weight_sep[addr]=weight[iaddr];
+                    if(kernel_row_idx<kernel_size && kernel_col_idx<kernel_size)
+                    {
+                        weight_sep[addr]=weight[iaddr];
+                    }
+                    else
+                    {
+                        weight_sep[addr]=0;
+                    }
                 }
                 else
                 {
-                    weight_sep[addr]=0;
+                    if(merge_kernel_row_idx ==0  && merge_kernel_col_idx==0)
+                    {
+                        weight_sep[addr]=weight[iaddr];
+                    }
+                    else
+                    {
+                        weight_sep[addr]=0;
+                    }          
                 }
+
                 addr++;
             }
         }    
@@ -396,27 +412,27 @@ void weight_int_to_merged_DDR(
     char* weight,
     char* weight_hw,
     int kernel_size, 
-    int merge_kernel_size,
+    int use_kernel_size,
     ConvDesc_t conv_desc
 )
 {
     int indepth=conv_desc.indepth;
     int outdepth=conv_desc.outdepth;
-    char* weight_sep=new char[ALIGN(kernel_size,merge_kernel_size)* ALIGN(kernel_size,merge_kernel_size)*indepth*outdepth];
+    char* weight_sep=new char[CEIL_DIV(kernel_size,use_kernel_size)*3*CEIL_DIV(kernel_size,use_kernel_size)*3*indepth*outdepth];
     
-    weight_seperation<char,char>( weight, weight_sep, kernel_size, merge_kernel_size, indepth,outdepth);
+    weight_seperation<char,char>( weight, weight_sep, kernel_size, use_kernel_size, indepth,outdepth);
 
     // an single 3x3 weight segment length
     int weight_hw_step=16*conv_desc.weightDDR_port_burst_length * conv_desc.weightDDR_burst_number*4;
-    int weight_sep_step= merge_kernel_size*merge_kernel_size*indepth*outdepth;
+    int weight_sep_step= 3*3*indepth*outdepth;
     int weight_hw_offset=0;
     int weight_sep_offset=0;
 
     std::cout<<kernel_size<<","<<kernel_size<<std::endl;
     fflush(stdout);
 
-    for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size;merge_kernel_row_offset+=merge_kernel_size)
-    for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size;merge_kernel_col_offset+=merge_kernel_size)
+    for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size;merge_kernel_row_offset+=use_kernel_size)
+    for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size;merge_kernel_col_offset+=use_kernel_size)
     {
         std::cout<<merge_kernel_row_offset<<","<<merge_kernel_col_offset<<std::endl;
         fflush(stdout);
@@ -1276,7 +1292,7 @@ void alloc_hw_weight_buffer_single_layer(
 
     int segment_number;
     if(WINO_DOMAIN_SIZE==4)
-        segment_number = CEIL_DIV(layerinfo.kernel_size,3)*CEIL_DIV(layerinfo.kernel_size,3);
+        segment_number = CEIL_DIV(layerinfo.kernel_size,layerinfo.use_kernel_size)*CEIL_DIV(layerinfo.kernel_size,layerinfo.use_kernel_size);
     else
         segment_number = 1;
 
@@ -1322,7 +1338,7 @@ void process_hw_weight_buffer_single_layer(
     std::cout<<layerinfo.layer_name<<std::endl;
     fflush(stdout);
     // weight_to_ddr(layerinfo.weightbuffer_quant[0],layerinfo.weightbuffers_hw[0],conv_desc);
-    weight_int_to_merged_DDR(layerinfo.weightbuffer_quant[0], layerinfo.weightbuffers_hw[0],layerinfo.kernel_size,3,conv_desc);
+    weight_int_to_merged_DDR(layerinfo.weightbuffer_quant[0], layerinfo.weightbuffers_hw[0],layerinfo.kernel_size,layerinfo.use_kernel_size,conv_desc);
 }
 
 

@@ -1302,7 +1302,7 @@ void write_output_row(
 	
 
 
-		#if WINO_HEIHGT==2
+		#if WINO_HEIGHT==2
 		if(o4==1)
 		{
 			if (wino_cell_inneridx+stride == conv_desc.wino_output_tile_size)

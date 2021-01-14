@@ -68,6 +68,7 @@ int main(int argc, char** argv)
     std::string weight_gold(argv[14]);
     std::string dump_method(argv[15]);
     std::string folder(argv[16]);
+    int use_kernel_size = atoi(argv[17]);
     int group_indepth_offset=0;
     int group_indepth=ALIGN(input_depth,8);
     int group_outdepth_offset=0;
@@ -95,6 +96,7 @@ int main(int argc, char** argv)
     layer_info.group_outdepth_offset=group_outdepth_offset;
     layer_info.relu_flag=relu_flag;
     layer_info.Scale_oback_int=Scale_oback_int;
+    layer_info.use_kernel_size=use_kernel_size;
     layer_info.bottoms.push_back("in");
     layer_info.tops.push_back("out");
 

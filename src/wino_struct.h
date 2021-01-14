@@ -114,6 +114,7 @@ typedef struct{
 
     //relu and stride
     int relu_flag;
+    // int use_kernel_size;
 
 }ConvDesc_t;
 

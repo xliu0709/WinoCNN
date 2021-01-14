@@ -106,9 +106,17 @@ void process_element6x6_soft(
     int inbuffer_height,
     int inbuffer_width,
     int wino_width,
+    int use_kernel_size,
     ConvDesc_t &conv_desc
 )
 {
+   
+
+    // if(kernel_size==1)
+    //     use_kernel_size=1;
+    // else
+    //     use_kernel_size=3;
+
     memset(&conv_desc,0xAA,sizeof(conv_desc));
     // oringal parameters
     conv_desc.inwidth = input_width;
@@ -120,6 +128,7 @@ void process_element6x6_soft(
     conv_desc.kernel_size = kernel_size;
     conv_desc.stride= stride_size;
     conv_desc.pad_size = pad_size;
+    // conv_desc.use_kernel_size=use_kernel_size;
 
     // wino related parameters
     if(wino_domain_size==6)
@@ -147,37 +156,48 @@ void process_element6x6_soft(
             conv_desc.merge_kernel_flag=1;
             conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
             conv_desc.merge_kernel_step=3;
-            // conv_desc.kernel_size=3;
         }
     }
     else
     {
-        if(kernel_size==3)
+        if( use_kernel_size==3 )
         {
-            conv_desc.wino3x3_flag = 1;
-            conv_desc.wino_output_tile_size = 2;
-            conv_desc.merge_kernel_flag=0;
-            conv_desc.merge_kernel_size=ALIGN(3,3);
-            conv_desc.merge_kernel_step=3;
+            if(kernel_size==3)
+            {
+                conv_desc.wino3x3_flag = 1;
+                conv_desc.wino_output_tile_size = 2;
+                conv_desc.merge_kernel_flag=0;
+                conv_desc.merge_kernel_size=ALIGN(3,3);
+                conv_desc.merge_kernel_step=3;
+            }
+            else
+            {
+                conv_desc.wino3x3_flag = 1;
+                conv_desc.wino_output_tile_size = 2;
+                conv_desc.merge_kernel_flag=1;
+                conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
+                conv_desc.merge_kernel_step=3;
+            }
         }
-        else if(kernel_size==1)
-        {
-            conv_desc.wino3x3_flag = 0;
-            conv_desc.wino_output_tile_size = 4;
-            conv_desc.merge_kernel_flag=1;
-            conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
-            conv_desc.merge_kernel_step=3;
-        }        
         else
         {
-            conv_desc.wino3x3_flag = 1;
-            conv_desc.wino_output_tile_size = 2;
-            conv_desc.merge_kernel_flag=1;
-            conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
-            conv_desc.merge_kernel_step=3;
+            if(kernel_size==1)
+            {
+                conv_desc.wino3x3_flag = 0;
+                conv_desc.wino_output_tile_size = 4;
+                conv_desc.merge_kernel_flag=1;
+                conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
+                conv_desc.merge_kernel_step=3;
+            }
+            else
+            {
+                conv_desc.wino3x3_flag = 0;
+                conv_desc.wino_output_tile_size = 4;
+                conv_desc.merge_kernel_flag=1;
+                conv_desc.merge_kernel_size=kernel_size;
+                conv_desc.merge_kernel_step=1;
+            }
         }
-
-        // conv_desc.kernel_size=3;
     }
     //input buffer related
 
@@ -411,7 +431,7 @@ void process_element6x6_soft(
     conv_desc.scale_oback_int=scale_oback;
     std::cout<<"scale_oback "<< scale_oback<<std::endl;
 
-    conv_desc.merge_weight_row_step=conv_desc.merge_kernel_size/3*conv_desc.weightDDR_port_burst_length*conv_desc.weightDDR_burst_number*4;
+    conv_desc.merge_weight_row_step=conv_desc.merge_kernel_size/conv_desc.merge_kernel_step*conv_desc.weightDDR_port_burst_length*conv_desc.weightDDR_burst_number*4;
     conv_desc.merge_weight_col_step=conv_desc.weightDDR_port_burst_length*conv_desc.weightDDR_burst_number*4;
 
     conv_desc.relu_flag=relu_flag;
@@ -633,6 +653,7 @@ prepare_conv_descriptor(
                 INBUFFER_HEIGHT,
                 INBUFFER_WIDTH,
                 WINO_WIDTH,
+                layerinfo_vect[i].use_kernel_size,
                 layerinfo_vect[i].conv_desc
             );
             std::cout<<"conv_desc.outdepth_align8 "<<layerinfo_vect[i].conv_desc.outdepth_align8<<std::endl; 
