@@ -293,7 +293,11 @@ void wino_flatten_kernel(
 
     weight_feed_one_port<0>(
         weight_DDR0,
+        #if WINO_HEIGT==8
         weight_stream[0],
+        #else
+        weight_stream[0][0],
+        #endif
         conv_desc.weightDDR_burst_number,
         conv_desc.weightDDR_buffer_burst_length,
         conv_desc.weightDDR_port_burst_length,
@@ -312,7 +316,11 @@ void wino_flatten_kernel(
     #if WINO_HEIGHT  >=4 
     weight_feed_one_port<1>(
         weight_DDR1,
+        #if WINO_HEIGT==8
         weight_stream[1],
+        #else
+        weight_stream[1][0],
+        #endif
         conv_desc.weightDDR_burst_number,
         conv_desc.weightDDR_buffer_burst_length,
         conv_desc.weightDDR_port_burst_length,
@@ -330,10 +338,14 @@ void wino_flatten_kernel(
     );
     #endif
 
-    #if WINO_HEIGHT >=8
+    #if WINO_HEIGHT >=4
     weight_feed_one_port<2>(
         weight_DDR2,
+        #if WINO_HEIGT==8
         weight_stream[2],
+        #else
+        weight_stream[2][0],
+        #endif
         conv_desc.weightDDR_burst_number,
         conv_desc.weightDDR_buffer_burst_length,
         conv_desc.weightDDR_port_burst_length,
@@ -352,7 +364,11 @@ void wino_flatten_kernel(
     
     weight_feed_one_port<3>(
         weight_DDR3,
+        #if WINO_HEIGT==8
         weight_stream[3],
+        #else
+        weight_stream[3][0],
+        #endif
         conv_desc.weightDDR_burst_number,
         conv_desc.weightDDR_buffer_burst_length,
         conv_desc.weightDDR_port_burst_length,

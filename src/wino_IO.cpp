@@ -1135,9 +1135,12 @@ void write_output_row(
 
 
 
-		#if WINO_HEIGHT==2 ||  WINO_HEIGHT==4
+		#if WINO_HEIGHT==2 
 		int depth_address_lo=(o8+o4)*2*conv_desc.outbuffer_omini_increment_step;
 		int depth_address_hi=((o8+o4)*2+1)*conv_desc.outbuffer_omini_increment_step;
+		#elif WINO_HEIGHT==4
+		int depth_address_lo=(o8<<1)*conv_desc.outbuffer_omini_increment_step;
+		int depth_address_hi=(o8<<1)*conv_desc.outbuffer_omini_increment_step+conv_desc.outbuffer_omini_increment_step;
 		#else
 		int depth_address_lo=o8*conv_desc.outbuffer_omini_increment_step;
 		#endif
@@ -1195,11 +1198,11 @@ void write_output_row(
 		#pragma HLS array_partition variable=outdata_vect complete dim=2 
 
 		#if WINO_HEIGHT==2 || WINO_HEIGHT==4
-		for(int i=0;i<2 ;i++)
+		for(int i=0;i<OUT_PORT_BATCH_NUM/2 ;i++)
 		{
 			#pragma HLS unroll
 			(outdata_vect[i][1],outdata_vect[i][0])=outbuffer_data_lo[wino_cell_inneridx][i];
-			(outdata_vect[2+i][1],outdata_vect[2+i][0])=outbuffer_data_hi[wino_cell_inneridx][i];
+			(outdata_vect[OUT_PORT_BATCH_NUM/2+i][1],outdata_vect[OUT_PORT_BATCH_NUM/2+i][0])=outbuffer_data_hi[wino_cell_inneridx][i];
 		}
 		#else
 		for(int i=0;i<OUT_PORT_BATCH_NUM ;i++)
@@ -1209,13 +1212,13 @@ void write_output_row(
 		}
 		#endif
 
-		// for(int j=0;j<4 ;j++)
+		// for(int j=0;j<OUT_PORT_BATCH_NUM ;j++)
 		// {
 		// 	printf("%d ",(int) outdata_vect[j][0]);
 		// }
 		// getchar();
 
-		// for(int j=0;j<4 ;j++)
+		// for(int j=0;j<OUT_PORT_BATCH_NUM ;j++)
 		// {
 		// 	printf("%d ",(int) outdata_vect[j][1]);
 		// }
@@ -1299,7 +1302,7 @@ void write_output_row(
 	
 
 
-		#if WINO_HEIHGT==2 || WINO_HEIGHT==4
+		#if WINO_HEIHGT==2
 		if(o4==1)
 		{
 			if (wino_cell_inneridx+stride == conv_desc.wino_output_tile_size)

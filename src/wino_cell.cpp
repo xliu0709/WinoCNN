@@ -146,16 +146,16 @@ void input_transform(
 		#endif
 		// if(cycle == 0)
 		// {
-		// 	for(int i=0;i<WINO_DOMAIN_SIZE;i++)
-		// 	{
-		// 		for(int j=0;j<WINO_DOMAIN_SIZE;j++)
-		// 		{
-		// 			printf("%8d ",(int) BtDB[i][j][0] );
-		// 		}
-		// 		printf("\n");
+			// for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+			// {
+			// 	for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+			// 	{
+			// 		printf("%8d ",(int) BtDB[i][j][0] );
+			// 	}
+			// 	printf("\n");
 
-		// 	}
-		// 	getchar();
+			// }
+			// getchar();
 		// }
 		ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> input_tile_transformed_data;
 
@@ -2865,7 +2865,7 @@ void wino_stream_cell_corner(
 
 
 
-void wino_stream_block2x2_corner(
+void winoPEB_CORN(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > top_stream_in[WINO_W2],
 		// hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > bottom_stream_out[WINO_W2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WINO_H2],
@@ -3076,7 +3076,7 @@ void wino_stream_block2x2_corner(
 		if(loop_omini_base_cnt <= weightbuffer_outdepth_minitile_number)
 		{
 
-			for(int j=0;j<WEIGHT_FEED_NUMBER_PER_PORT;j++)
+			for(int j=0;j<WINO_H2;j++)
 			{
 				#pragma HLS unroll
 				left_stream_in[j]>>weight_value_temp[j];
@@ -3204,7 +3204,15 @@ void wino_stream_block2x2_corner(
 					// 	}
 					// 	printf("\n");
 					// }
-
+					// printf("\n");
+					// for(int nn=0;nn<INDEPTH_MINITILE_SIZE;nn++)
+					// {
+					// 	for(int i=0;i<16;i++)
+					// 	{
+					// 		printf("%4d ",(int) weight_tile_reg[1][nn][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE]);
+					// 	}
+					// 	printf("\n");
+					// }
 					// getchar();
 				// }
 
@@ -3572,13 +3580,15 @@ void wino_stream_block2x2_corner(
 					// 	}
 					// 	printf("\n");
 					// }
+
+
 					
 					// for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
 					// {
 					// 	#pragma HLS unroll
 					// 	for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
 					// 	{
-					// 		printf("[%8d %8d]",(int) out_value_back[0][r][c][0],(int) out_value_back[0][r][c][1] );
+					// 		printf("[%8d %8d]",(int) out_value_back[1][r][c][0],(int) out_value_back[1][r][c][1] );
 						
 					// 	}
 					// 	printf("\n");
@@ -3678,7 +3688,7 @@ void wino_stream_block2x2_corner(
 
 
 
-void wino_stream_block2x2_right(
+void winoPEB_EDG(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > top_stream_in[WINO_W2],
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > bottom_stream_out[WINO_W2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WINO_H2],
@@ -3887,7 +3897,7 @@ void wino_stream_block2x2_right(
 		if(loop_omini_base_cnt <= weightbuffer_outdepth_minitile_number)
 		{
 
-			for(int j=0;j<WEIGHT_FEED_NUMBER_PER_PORT;j++)
+			for(int j=0;j<WINO_H2;j++)
 			{
 				#pragma HLS unroll
 				left_stream_in[j]>>weight_value_temp[j];
@@ -4489,7 +4499,7 @@ void wino_stream_block2x2_right(
 
 
 
-void wino_stream_block2x2_bottom(
+void winoPEB_BOT(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > top_stream_in[WINO_W2],
 		// hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > bottom_stream_out[WINO_W2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WINO_H2],
@@ -4699,7 +4709,7 @@ void wino_stream_block2x2_bottom(
 		if(loop_omini_base_cnt <= weightbuffer_outdepth_minitile_number)
 		{
 
-			for(int j=0;j<WEIGHT_FEED_NUMBER_PER_PORT;j++)
+			for(int j=0;j<WINO_H2;j++)
 			{
 				#pragma HLS unroll
 				left_stream_in[j]>>weight_value_temp[j];
@@ -5301,7 +5311,7 @@ void wino_stream_block2x2_bottom(
 
 
 
-void wino_stream_block2x2(
+void winoPEB_CENT(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > top_stream_in[WINO_W2],
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > bottom_stream_out[WINO_W2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WINO_H2],
@@ -5406,7 +5416,7 @@ void wino_stream_block2x2(
 				stream_temp_reg0[wino_array_col][imini_idx]=stream_temp_reg0[wino_array_col][imini_idx+1];
 			}
 			top_stream_in[wino_array_col]>>stream_temp_reg0[wino_array_col][INDEPTH_MINITILE_SIZE-1];
-			// bottom_stream_out[wino_array_col]<<stream_temp_reg0[wino_array_col][INDEPTH_MINITILE_SIZE-1];
+			bottom_stream_out[wino_array_col]<<stream_temp_reg0[wino_array_col][INDEPTH_MINITILE_SIZE-1];
 		}
 	}
 
@@ -5511,7 +5521,7 @@ void wino_stream_block2x2(
 		if(loop_omini_base_cnt <= weightbuffer_outdepth_minitile_number)
 		{
 
-			for(int j=0;j<WEIGHT_FEED_NUMBER_PER_PORT;j++)
+			for(int j=0;j<WINO_H2;j++)
 			{
 				#pragma HLS unroll
 				left_stream_in[j]>>weight_value_temp[j];
@@ -5525,7 +5535,6 @@ void wino_stream_block2x2(
 					printf("\n");
 				#endif
 			}
-	
 		}
 
 		ap_int<W_WIDTH> weight_tile[WINO_H2][INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE];
@@ -6249,11 +6258,14 @@ void wino_stream_block2(
 		ap_uint<1> load_input_flag_reg = (load_input_flag  && loaded_input_stream_tile_number !=  total_input_stream_tile);
 
 		if(stream_pingpong_flag)
-			load_input_tile_2x2(input_tile,stream_temp_reg0);
+			load_input_tile(input_tile,stream_temp_reg0);
 		else
-			load_input_tile_2x2(input_tile,stream_temp_reg1);
+			load_input_tile(input_tile,stream_temp_reg1);
 
 		
+
+
+
 
 		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> outbuffer_addr = outbuffer_oload_offset + loop_wino_tile_rowcol_cnt +  outbuffer_omini_offset;
 
@@ -6325,14 +6337,14 @@ void wino_stream_block2(
 		#pragma HLS array_partition variable = weight_tile complete dim=2
 		#pragma HLS array_partition variable = weight_tile complete dim=1
 
-		load_weight_tile_2x2(weight_tile,weight_value_temp);
+		load_weight_tile(weight_tile,weight_value_temp);
 
 
 		// if(cycle==0)
 		// {
 		// 	std::cout<<"weight tile in depth" <<std::endl;
 		// 	for(int mm=0;mm<WINO_HEIGHT;mm++)
-		// 	// for(int nn=0;nn<INDEPTH_MINITILE_SIZE;nn++)
+		// 	for(int nn=0;nn<INDEPTH_MINITILE_SIZE;nn++)
 		// 	{
 		// 		for(int i=0;i<4;i++)
 		// 		{
@@ -6345,23 +6357,25 @@ void wino_stream_block2(
 		// 		printf("\n");
 		// 	}
 			
-		// 	// input_tile[WINO_WIDTH][INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		// // 	// input_tile[WINO_WIDTH][INDEPTH_MINITILE_SIZE][WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+			
 		// 	getchar();
+		// 	std::cout<<"input tile in depth" <<std::endl;
 		// 	for(int mm=0;mm<WINO_WIDTH;mm++)
-		// 	// for(int nn=0;nn<INDEPTH_MINITILE_SIZE;nn++)
 		// 	{
-		// 		for(int i=0;i<4;i++)
+		// 		for(int nn=0;nn<INDEPTH_MINITILE_SIZE;nn++)
 		// 		{
-		// 			for(int j=0;j<4;j++)
+		// 			for(int i=0;i<4;i++)
 		// 			{
-		// 				printf("%4d ", (int) input_tile[mm][0][i][j][0]);
+		// 				for(int j=0;j<4;j++)
+		// 				{
+		// 					printf("%4d ", (int) input_tile[mm][nn][i][j][0]);
+		// 				}
+		// 				printf("\n");
 		// 			}
 		// 			printf("\n");
 		// 		}
-		// 		printf("\n");
 		// 	}
-
-
 		// 	getchar();
 		// }
 
@@ -6446,7 +6460,7 @@ void wino_stream_block2(
 				// TODO: print input_tile_reg
 				// if(cycle==0 && wino_array_idx==0)
 				// {
-					// std::cout<<"input tile in depth" <<std::endl;
+					// std::cout<<"input tile with wino_array_idx" <<std::endl;
 					// for(int nn=0;nn<INDEPTH_MINITILE_SIZE;nn++)
 					// {
 					// 	for(int i=0;i<4;i++)
@@ -6458,9 +6472,9 @@ void wino_stream_block2(
 					// 		printf("\n");
 					// 	}
 					// 	printf("\n");
-	
 					// }
-					// std::cout<<"weight tile in depth" <<std::endl;
+					// getchar();
+					// std::cout<<"weight tile with wino_array_idx" <<std::endl;
 					// for(int nn=0;nn<INDEPTH_MINITILE_SIZE;nn++)
 					// {
 					// 	for(int i=0;i<16;i++)
@@ -6487,25 +6501,26 @@ void wino_stream_block2(
 				// TODO: print input_tile_reg
 				// if( wino_array_idx<WINO_HEIGHT)
 				// {
-				// 	for(int nn=0;nn<2;nn++)
-				// 	{
-				// 		for(int i=0;i<16;i++)
-				// 		{
-				// 			printf("%4d ", (int) UV_MUL_TILE[0][nn][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE][0]);
-				// 		}
-				// 		printf("\n");
-				// 	}
-				// 	// TODO: print weight_tile
-				// 	for(int nn=0;nn<2;nn++)
-				// 	{
-				// 		for(int i=0;i<16;i++)
-				// 		{
-				// 			printf("%4d ",(int) UV_MUL_TILE[1][nn][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE][0]);
-				// 		}
-				// 		printf("\n");
-				// 	}
+					// std::cout<<"UV tile" <<std::endl;
+					// for(int nn=0;nn<2;nn++)
+					// {
+					// 	for(int i=0;i<16;i++)
+					// 	{
+					// 		printf("%4d ", (int) UV_MUL_TILE[0][nn][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE][0]);
+					// 	}
+					// 	printf("\n");
+					// }
+					// // TODO: print weight_tile
+					// for(int nn=0;nn<2;nn++)
+					// {
+					// 	for(int i=0;i<16;i++)
+					// 	{
+					// 		printf("%4d ",(int) UV_MUL_TILE[1][nn][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE][0]);
+					// 	}
+					// 	printf("\n");
+					// }
 
-				// 	getchar();
+					// getchar();
 				// }
 
 
@@ -6765,20 +6780,20 @@ void wino_stream_block2(
 
 				// if(wino_array_idx<WINO_HEIGHT and cycle==0)
 				// {
-				// 	printf("out_value\n");
-				// 	for(int i=0;i<16;i++)
-				// 	{
-				// 		printf("%4d ", (int) out_value[0][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE][0]);
-				// 	}
-				// 	printf("\n");
-				// 	// TODO: print weight_tile
-				// 	for(int i=0;i<16;i++)
-				// 	{
-				// 		printf("%4d ",(int) out_value[1][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE][0]);
-				// 	}
-				// 	printf("\n");
+					// printf("out_value\n");
+					// for(int i=0;i<16;i++)
+					// {
+					// 	printf("%4d ", (int) out_value[0][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE][0]);
+					// }
+					// printf("\n");
+					// // TODO: print weight_tile
+					// for(int i=0;i<16;i++)
+					// {
+					// 	printf("%4d ",(int) out_value[1][i/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE][0]);
+					// }
+					// printf("\n");
 
-				// 	getchar();
+					// getchar();
 				// }
 
 				#if WINO_DOMAIN_SIZE==6
@@ -6874,29 +6889,29 @@ void wino_stream_block2(
 
 				// if(wino_array_idx<WINO_HEIGHT and cycle==0)
 				// {
-				// 	printf("out_value_back\n");
-				// 	for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
-				// 	{
-				// 		#pragma HLS unroll
-				// 		for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
-				// 		{
-				// 			printf("[%8d %8d]",(int) out_value_back[0][r][c][0],(int) out_value_back[0][r][c][1] );
+					// printf("out_value_back\n");
+					// for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
+					// {
+					// 	#pragma HLS unroll
+					// 	for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+					// 	{
+					// 		printf("[%8d %8d]",(int) out_value_back[0][r][c][0],(int) out_value_back[0][r][c][1] );
 						
-				// 		}
-				// 		printf("\n");
-				// 	}
-				// 	printf("\n");
-				// 	for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
-				// 	{
-				// 		#pragma HLS unroll
-				// 		for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
-				// 		{
-				// 			printf("[%8d %8d]",(int) out_value_back[1][r][c][0],(int) out_value_back[1][r][c][1] );
+					// 	}
+					// 	printf("\n");
+					// }
+					// printf("\n");
+					// for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
+					// {
+					// 	#pragma HLS unroll
+					// 	for(int c=0;c<WINO_OUT_SIZE_CELL;c++)
+					// 	{
+					// 		printf("[%8d %8d]",(int) out_value_back[1][r][c][0],(int) out_value_back[1][r][c][1] );
 						
-				// 		}
-				// 		printf("\n");
-				// 	}
-				// 	getchar();
+					// 	}
+					// 	printf("\n");
+					// }
+					// getchar();
 				// }
 
 				if(loop_omini_base_cnt<=weightbuffer_outdepth_minitile_number)
