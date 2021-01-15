@@ -444,7 +444,7 @@ def running_test( argv,validate_dict):
     sys_command+=" random"
     sys_command+=" dump_bin"
     sys_command+=" ．"
-
+    sys_command+=" 1 "
 
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
@@ -568,20 +568,22 @@ if __name__ == "__main__":
 
 
     if(len(sys.argv)==1 ):
-        output_depth_test_case=[64, 64, 128, 128,256,256,512,512,512]
-        input_depth_test_case=[8,  64, 64,  128,128,256,256,512,512]
-        input_dim_test_cases= [224,224,112, 112,56, 56, 28, 28, 14]
+        # output_depth_test_case= [8,  8,  8,     8,8, 8,    8, 8, 8]
+        # input_depth_test_case=  [8,  8,  8,     8,8, 8,    8, 8, 8]
+        # input_dim_test_cases=   [224,224,112, 112,56, 56, 28, 28, 14]
+        kernel_dim=             [1,3,5,7,9]
     else:
         depth_test_case=[int(sys.argv[2])]
         input_dim_test_cases=[int(sys.argv[1])]
 
     result_dict={}
-    for i in range(len(input_dim_test_cases)):
-        id=input_depth_test_case[i]
-        od=output_depth_test_case[i]
-        ih=input_dim_test_cases[i]
-        scale_fact=(1<<14)//id//9;
-        argv=[0,ih,ih,id,ih,ih,od,3,1,1,1,scale_fact,"src/wino_hw_config.h"]
+    for i in range(len(kernel_dim)):
+        id=8
+        od=32
+        ih=224
+        ks=kernel_dim[i]
+        scale_fact=(1<<14)//id//ks;
+        argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
         running_test(argv, result_dict)
     
 
