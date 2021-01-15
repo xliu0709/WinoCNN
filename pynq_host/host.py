@@ -442,7 +442,7 @@ def running_test( argv,validate_dict):
     sys_command+=" random"
     sys_command+=" random"
     sys_command+=" random"
-    sys_command+=" dump_bin"
+    sys_command+=" dump_param"
     sys_command+=" ．"
     sys_command+=" 1 "
 
