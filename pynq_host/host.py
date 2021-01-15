@@ -297,7 +297,7 @@ class ConvDesc_t():
         else:
             row_step=maximum_row_step//self.wino_output_tile_size*self.wino_output_tile_size;
         
-        print("row_step",row_step)
+        # print("row_step",row_step)
 
 
         self.out_rowstep=row_step;
@@ -486,7 +486,8 @@ def running_test( argv,validate_dict):
     for i in range(74):
         if( params[i]!=params_load[i] ):
             params[i]=params_load[i]
-
+            
+    print("row_step ", params[54] )
 
 
 
