@@ -444,7 +444,7 @@ def running_test( argv,validate_dict):
     sys_command+=" random"
     sys_command+=" dump_param"
     sys_command+=" ．"
-    sys_command+=" 1 "
+    sys_command+=" 3 "
 
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
