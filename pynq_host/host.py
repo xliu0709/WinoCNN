@@ -140,7 +140,7 @@ class ConvDesc_t():
                 self.wino3x3_flag = 1;
                 self.wino_output_tile_size = 4;
                 self.merge_kernel_flag=1;
-                self.merge_kernel_size=ALIGN(kernel_size,3);
+                self.merge_kernel_size=ALIGN(self.kernel_size,3);
                 self.merge_kernel_step=3;
                 self.kernel_size=3;
             
@@ -160,7 +160,7 @@ class ConvDesc_t():
                 self.wino3x3_flag = 0;
                 self.wino_output_tile_size = 4;
                 self.merge_kernel_flag=1;
-                self.merge_kernel_size=ALIGN(kernel_size,3);
+                self.merge_kernel_size=ALIGN(self.kernel_size,3);
                 self.merge_kernel_step=3;
                     
             else:
@@ -168,7 +168,7 @@ class ConvDesc_t():
                 self.wino3x3_flag = 1;
                 self.wino_output_tile_size = 2;
                 self.merge_kernel_flag=1;
-                self.merge_kernel_size=ALIGN(kernel_size,3);
+                self.merge_kernel_size=ALIGN(self.kernel_size,3);
                 self.merge_kernel_step=3;
             
 
@@ -431,7 +431,7 @@ class ConvDesc_t():
 
 def running_test( argv,validate_dict):
     conv_desc=ConvDesc_t(argv)
-    # conv_desc.gen_conv_desc()
+    conv_desc.gen_conv_desc()
 
   
 
