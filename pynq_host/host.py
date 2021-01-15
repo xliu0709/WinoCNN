@@ -593,7 +593,7 @@ if __name__ == "__main__":
     #     argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
     #     running_test(argv, result_dict)
     for i in range(len(input_dim_test_cases)):
-        id=output_depth_test_case[i]
+        id=input_depth_test_case[i]
         od=output_depth_test_case[i]
         ih=input_dim_test_cases[i]
         ks=3
