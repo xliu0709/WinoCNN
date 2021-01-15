@@ -578,8 +578,10 @@ if __name__ == "__main__":
         input_dim_test_cases=   [224,224,   112, 112,   56, 56,     28, 28,     14]
         # kernel_dim=             [1,3,5,7,9]
     else:
-        depth_test_case=[int(sys.argv[2])]
+        
         input_dim_test_cases=[int(sys.argv[1])]
+        output_depth_test_case=[int(sys.argv[2])]
+        input_depth_test_case=[int(sys.argv[3])]
 
     result_dict={}
     # for i in range(len(kernel_dim)):
