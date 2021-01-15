@@ -587,9 +587,9 @@ if __name__ == "__main__":
     #     argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
     #     running_test(argv, result_dict)
     for i in range(len(kernel_dim)):
-        id=64
+        id=128
         od=32
-        ih=224
+        ih=56
         ks=kernel_dim[i]
         scale_fact=(1<<14)//id//ks;
         argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
