@@ -589,7 +589,7 @@ if __name__ == "__main__":
     for i in range(len(kernel_dim)):
         id=64
         od=32
-        ih=112
+        ih=224
         ks=kernel_dim[i]
         scale_fact=(1<<14)//id//ks;
         argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
