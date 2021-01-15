@@ -476,7 +476,7 @@ def running_test( argv,validate_dict):
     params = xlnk.cma_array(shape=(128), dtype=np.int32)
 
     output_FM.fill(0)
-    conv_desc.to_array(params)
+    # conv_desc.to_array(params)
 
 
 
