@@ -588,7 +588,7 @@ if __name__ == "__main__":
     #     running_test(argv, result_dict)
     for i in range(len(kernel_dim)):
         id=64
-        od=64
+        od=32
         ih=56
         ks=kernel_dim[i]
         scale_fact=(1<<14)//id//ks;
