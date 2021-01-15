@@ -431,7 +431,7 @@ class ConvDesc_t():
 
 def running_test( argv,validate_dict):
     conv_desc=ConvDesc_t(argv)
-    conv_desc.gen_conv_desc()
+    # conv_desc.gen_conv_desc()
 
   
 
