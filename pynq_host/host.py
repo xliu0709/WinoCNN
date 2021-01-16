@@ -13,7 +13,8 @@ import numpy as np
 
 
 
-    
+xlnk = Xlnk()
+xlnk.xlnk_reset()
 overlay = Overlay("design_1_wrapper.bit")
 test = overlay.wino_systolic_top_0
 input_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
@@ -476,8 +477,6 @@ def running_test( argv,validate_dict):
     #     validate_dict[ key ].append("NA")
     #     return
 
-    xlnk = Xlnk()
-    xlnk.xlnk_reset()
 
 
     # output_FM.fill(0)
