@@ -620,7 +620,10 @@ if __name__ == "__main__":
     #     argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
     #     running_test(argv, result_dict)
     for i in Yolo_config:
+        i[3]=ALIGN(i[3],4)
+        i[6]=ALIGN(i[6],8)
         ks=i[7]
+        id=i[3]
         scale_fact=(1<<14)//id//ks;
         i.append(scale_fact)
         i.append("src/wino_hw_config.h")
