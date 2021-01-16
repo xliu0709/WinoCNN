@@ -645,6 +645,7 @@ if __name__ == "__main__":
         ks=i[7]
         id=i[3]
         scale_fact=(1<<14)//id//ks;
+        i.append(1)
         i.append(scale_fact)
         i.append("src/wino_hw_config.h")
         
@@ -662,6 +663,7 @@ if __name__ == "__main__":
         ks=i[7]
         id=i[3]
         scale_fact=(1<<14)//id//ks;
+        i.append(1)
         i.append(scale_fact)
         i.append("src/wino_hw_config.h")
         
