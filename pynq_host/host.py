@@ -435,7 +435,8 @@ def running_test( argv,validate_dict):
 
   
 
-
+    print("")
+    print(argv)
     sys_command=""
     for i in range(1,12):
         sys_command+=" "+str(argv[i])
@@ -472,7 +473,6 @@ def running_test( argv,validate_dict):
 
     
     overlay = Overlay("design_1_wrapper.bit")
-    print("bitstream loaded")
     test = overlay.wino_systolic_top_0
     input_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
     weight = xlnk.cma_array(shape=(3*3*512*512), dtype=np.int32)
@@ -534,7 +534,7 @@ def running_test( argv,validate_dict):
         isready = test.read(0x00)
 
     end = time.time()
-    print( (end - start)*1e9/100 )
+    print( (end - start)*1e9)
  
 
     # validate_dict[ key ].append(output_load)
