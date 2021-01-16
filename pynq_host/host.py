@@ -639,7 +639,7 @@ if __name__ == "__main__":
     #     argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
     #     running_test(argv, result_dict)
     result_dict={}
-    for i in Yolo_config:
+    for i in Yolo_config1:
         i[3]=ALIGN(i[3],4)
         i[6]=ALIGN(i[6],8)
         ks=i[7]
@@ -655,7 +655,21 @@ if __name__ == "__main__":
         print (key , val)
 
 
+    result_dict={}
+    for i in Yolo_config2:
+        i[3]=ALIGN(i[3],4)
+        i[6]=ALIGN(i[6],8)
+        ks=i[7]
+        id=i[3]
+        scale_fact=(1<<14)//id//ks;
+        i.append(scale_fact)
+        i.append("src/wino_hw_config.h")
+        
+        # argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
+        running_test(i, result_dict)
 
+    for key, val in result_dict.items():
+        print (key , val)
 
     input_FM.close()
     weight.close()
