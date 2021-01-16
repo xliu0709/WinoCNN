@@ -13,6 +13,14 @@ import numpy as np
 
 
 
+    
+overlay = Overlay("design_1_wrapper.bit")
+test = overlay.wino_systolic_top_0
+input_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
+weight = xlnk.cma_array(shape=(3*3*512*512), dtype=np.int32)
+output_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
+params = xlnk.cma_array(shape=(128), dtype=np.int32)
+
 
 def CEIL_DIV(x,y):
     return (x+y-1)//y
@@ -471,15 +479,8 @@ def running_test( argv,validate_dict):
     xlnk = Xlnk()
     xlnk.xlnk_reset()
 
-    
-    overlay = Overlay("design_1_wrapper.bit")
-    test = overlay.wino_systolic_top_0
-    input_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
-    weight = xlnk.cma_array(shape=(3*3*512*512), dtype=np.int32)
-    output_FM = xlnk.cma_array(shape=(224*224*64), dtype=np.int16)
-    params = xlnk.cma_array(shape=(128), dtype=np.int32)
 
-    output_FM.fill(0)
+    # output_FM.fill(0)
     # conv_desc.to_array(params)
 
 
@@ -560,36 +561,55 @@ def running_test( argv,validate_dict):
     os.system("cp input.bin bin/"+prefix+"input.bin")
     os.system("cp weight.bin bin/"+prefix+"weight.bin")
 
+Yolo_config1=[
+[layer0-conv,448,448,3,448,448,10,3,1,1],
+[layer2-conv,224,224,10,224,224,46,3,1,1],
+[layer4-conv,112,112,46,112,112,52,3,1,1],
+[layer5-conv,112,112,52,112,112,52,1,1,0],
+[layer6-conv,112,112,52,112,112,104,3,1,1],
+[layer8-conv,56,56,104,56,56,154,3,1,1],
+[layer9-conv,56,56,154,56,56,104,1,1,0],
+[layer10-conv,56,56,104,56,56,206,3,1,1],
+[layer12-conv,28,28,206,28,28,256,3,1,1],
+[layer13-conv,28,28,256,28,28,154,1,1,0],
+[layer14-conv,28,28,154,28,28,308,3,1,1],
+[layer15-conv,28,28,308,28,28,154,1,1,0],
+[layer16-conv,28,28,154,28,28,308,3,1,1],
+[layer18-conv,14,14,308,14,14,616,3,1,1],
+[layer19-conv,14,14,616,14,14,308,1,1,0],
+[layer20-conv,14,14,308,14,14,616,3,1,1],
+[layer21-conv,14,14,616,14,14,154,1,1,0],
+[layer22-conv,14,14,154,14,14,308,3,1,1],
+[layer23-conv,14,14,308,14,14,512,3,1,1],
+[layer24-conv,14,14,512,14,14,616,3,1,1],
+[layer26-conv,28,28,308,28,28,40,1,1,0],
+[layer29-conv,14,14,776,14,14,616,3,1,1],
+[layer30-conv,14,14,616,14,14,125,1,1,0],]
 
-    input_FM.close()
-    weight.close()
-    output_FM.close()
-    params.close()
-
-Yolo_config=[
-["layer0-conv",448,448,3,448,448,32,3,1,1,1],
-["layer2-conv",224,224,32,224,224,64,3,1,1,1],
-["layer4-conv",112,112,64,112,112,128,3,1,1,1],
-["layer5-conv",112,112,128,112,112,64,1,1,0,1],
-["layer6-conv",112,112,64,112,112,128,3,1,1,1],
-["layer8-conv",56,56,128,56,56,256,3,1,1,1],
-["layer9-conv",56,56,256,56,56,128,1,1,0,1],
-["layer10-conv",56,56,128,56,56,256,3,1,1,1],
-["layer12-conv",28,28,256,28,28,512,3,1,1,1],
-["layer13-conv",28,28,512,28,28,256,1,1,0,1],
-["layer14-conv",28,28,256,28,28,512,3,1,1,1],
-["layer15-conv",28,28,512,28,28,256,1,1,0,1],
-["layer16-conv",28,28,256,28,28,512,3,1,1,1],
-["layer18-conv",14,14,512,14,14,1024,3,1,1,1],
-["layer19-conv",14,14,1024,14,14,512,1,1,0,1],
-["layer20-conv",14,14,512,14,14,1024,3,1,1,1],
-["layer21-conv",14,14,1024,14,14,512,1,1,0,1],
-["layer22-conv",14,14,512,14,14,1024,3,1,1,1],
-["layer23-conv",14,14,1024,14,14,1024,3,1,1,1],
-["layer24-conv",14,14,1024,14,14,1024,3,1,1,1],
-["layer26-conv",28,28,512,28,28,64,1,1,0,1],
-["layer29-conv",14,14,1280,14,14,1024,3,1,1,1],
-["layer30-conv",14,14,1024,14,14,125,1,1,0,1]]
+Yolo_config2=[
+[layer0-conv,448,448,3,448,448,10,3,1,1],
+[layer2-conv,224,224,10,224,224,40,3,1,1],
+[layer4-conv,112,112,40,112,112,40,3,1,1],
+[layer5-conv,112,112,40,112,112,46,1,1,0],
+[layer6-conv,112,112,46,112,112,90,3,1,1],
+[layer8-conv,56,56,90,56,56,128,3,1,1],
+[layer9-conv,56,56,128,56,56,90,1,1,0],
+[layer10-conv,56,56,90,56,56,180,3,1,1],
+[layer12-conv,28,28,180,28,28,206,3,1,1],
+[layer13-conv,28,28,206,28,28,104,1,1,0],
+[layer14-conv,28,28,104,28,28,206,3,1,1],
+[layer15-conv,28,28,206,28,28,128,1,1,0],
+[layer16-conv,28,28,128,28,28,256,3,1,1],
+[layer18-conv,14,14,256,14,14,512,3,1,1],
+[layer19-conv,14,14,512,14,14,256,1,1,0],
+[layer20-conv,14,14,256,14,14,512,3,1,1],
+[layer21-conv,14,14,512,14,14,104,1,1,0],
+[layer22-conv,14,14,104,14,14,206,3,1,1],
+[layer23-conv,14,14,206,14,14,410,3,1,1],
+[layer24-conv,14,14,410,14,14,512,3,1,1],
+[layer26-conv,28,28,256,28,28,32,1,1,0],
+[layer29-conv,14,14,640,14,14,512,3,1,1],
+[layer30-conv,14,14,512,14,14,125,1,1,0],]
 
 
 if __name__ == "__main__":
@@ -610,7 +630,7 @@ if __name__ == "__main__":
     #     output_depth_test_case=[int(sys.argv[2])]
     #     input_depth_test_case=[int(sys.argv[3])]
 
-    result_dict={}
+
     # for i in range(len(kernel_dim)):
     #     id=32
     #     od=32
@@ -619,6 +639,7 @@ if __name__ == "__main__":
     #     scale_fact=(1<<14)//id//ks;
     #     argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
     #     running_test(argv, result_dict)
+    result_dict={}
     for i in Yolo_config:
         i[3]=ALIGN(i[3],4)
         i[6]=ALIGN(i[6],8)
@@ -633,6 +654,14 @@ if __name__ == "__main__":
 
     for key, val in result_dict.items():
         print (key , val)
+
+
+
+
+    input_FM.close()
+    weight.close()
+    output_FM.close()
+    params.close()
 
    
 
