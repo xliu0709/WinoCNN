@@ -185,9 +185,9 @@ void process_element6x6_soft(
             {
                 conv_desc.wino3x3_flag = 0;
                 conv_desc.wino_output_tile_size = 4;
-                conv_desc.merge_kernel_flag=1;
-                conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
-                conv_desc.merge_kernel_step=3;
+                conv_desc.merge_kernel_flag=0;
+                conv_desc.merge_kernel_size=1;
+                conv_desc.merge_kernel_step=1;
             }
             else
             {
