@@ -452,7 +452,7 @@ def running_test( argv,validate_dict):
 
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
-    key=int(argv[1]),int(argv[3]),int(argv[7])
+    key=argv[0]
     prefix=""
     for i in key:
         prefix=prefix+str(i)+"_"
@@ -550,7 +550,7 @@ def running_test( argv,validate_dict):
     error_rate=count/(conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
     print(key, conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
     print("error_rate",error_rate)
-    validate_dict[ key ].append((end - start)*1e9/100) 
+    validate_dict[ key ].append((end - start)*1e9) 
     validate_dict[ key ].append(error_rate )
     
     output_FM.tofile("bin/cnm_"+prefix+"output.bin")
@@ -566,22 +566,49 @@ def running_test( argv,validate_dict):
     output_FM.close()
     params.close()
 
-
+Yolo_config=[
+["layer0-conv",448,448,3,448,448,32,3,1,1,1],
+["layer2-conv",224,224,32,224,224,64,3,1,1,1],
+["layer4-conv",112,112,64,112,112,128,3,1,1,1],
+["layer5-conv",112,112,128,112,112,64,1,1,0,1],
+["layer6-conv",112,112,64,112,112,128,3,1,1,1],
+["layer8-conv",56,56,128,56,56,256,3,1,1,1],
+["layer9-conv",56,56,256,56,56,128,1,1,0,1],
+["layer10-conv",56,56,128,56,56,256,3,1,1,1],
+["layer12-conv",28,28,256,28,28,512,3,1,1,1],
+["layer13-conv",28,28,512,28,28,256,1,1,0,1],
+["layer14-conv",28,28,256,28,28,512,3,1,1,1],
+["layer15-conv",28,28,512,28,28,256,1,1,0,1],
+["layer16-conv",28,28,256,28,28,512,3,1,1,1],
+["layer18-conv",14,14,512,14,14,1024,3,1,1,1],
+["layer19-conv",14,14,1024,14,14,512,1,1,0,1],
+["layer20-conv",14,14,512,14,14,1024,3,1,1,1],
+["layer21-conv",14,14,1024,14,14,512,1,1,0,1],
+["layer22-conv",14,14,512,14,14,1024,3,1,1,1],
+["layer23-conv",14,14,1024,14,14,1024,3,1,1,1],
+["layer24-conv",14,14,1024,14,14,1024,3,1,1,1],
+["layer26-conv",28,28,512,28,28,64,1,1,0,1],
+["layer29-conv",14,14,1280,14,14,1024,3,1,1,1],
+["layer30-conv",14,14,1024,14,14,125,1,1,0,1]]
 
 
 if __name__ == "__main__":
 
 
-    if(len(sys.argv)==1 ):
-        output_depth_test_case= [64,  64,   128, 128,   256, 256,    512, 512,  512]
-        input_depth_test_case=  [4,   64,   64,  128,   128, 256,  256, 512,    512]
-        input_dim_test_cases=   [224,224,   112, 112,   56, 56,     28, 28,     14]
-        # kernel_dim=             [1,3,5,7,9]
-    else:
+
+
+
+
+    # if(len(sys.argv)==1 ):
+    #     output_depth_test_case= [64,  64,   128, 128,   256, 256,    512, 512,  512]
+    #     input_depth_test_case=  [4,   64,   64,  128,   128, 256,  256, 512,    512]
+    #     input_dim_test_cases=   [224,224,   112, 112,   56, 56,     28, 28,     14]
+    #     # kernel_dim=             [1,3,5,7,9]
+    # else:
         
-        input_dim_test_cases=[int(sys.argv[1])]
-        output_depth_test_case=[int(sys.argv[2])]
-        input_depth_test_case=[int(sys.argv[3])]
+    #     input_dim_test_cases=[int(sys.argv[1])]
+    #     output_depth_test_case=[int(sys.argv[2])]
+    #     input_depth_test_case=[int(sys.argv[3])]
 
     result_dict={}
     # for i in range(len(kernel_dim)):
@@ -592,14 +619,14 @@ if __name__ == "__main__":
     #     scale_fact=(1<<14)//id//ks;
     #     argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
     #     running_test(argv, result_dict)
-    for i in range(len(input_dim_test_cases)):
-        id=input_depth_test_case[i]
-        od=output_depth_test_case[i]
-        ih=input_dim_test_cases[i]
-        ks=3
+    for i in Yolo_config:
+        ks=i[7]
         scale_fact=(1<<14)//id//ks;
-        argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
-        running_test(argv, result_dict)
+        i.append(scale_fact)
+        i.append("src/wino_hw_config.h")
+        
+        # argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
+        running_test(i, result_dict)
 
     for key, val in result_dict.items():
         print (key , val)
