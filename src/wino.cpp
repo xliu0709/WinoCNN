@@ -33,189 +33,192 @@ void load_params(
     conv_desc.outheight=params[3];
     conv_desc.outwidth=params[4];
     conv_desc.outdepth=params[5];
-    conv_desc.kernel_size=params[6];
-    conv_desc.pad_size=params[7];
-    conv_desc.stride=params[8];
+    conv_desc.kernel_size_h=params[6];
+    conv_desc.kernel_size_w=params[7];
+    conv_desc.pad_size_h=params[8];
+    conv_desc.pad_size_w=params[9];
+    conv_desc.stride=params[10];
 
         //wino related
-    conv_desc.wino3x3_flag=params[9]; 
+    conv_desc.wino3x3_flag=params[11]; 
         // 1: 3x3, 0:5x5
-    conv_desc.wino_output_tile_size=params[10];
+    conv_desc.wino_output_tile_size=params[12];
 
         //input buffer related
-    conv_desc.indepth_align_minitile_size=params[11];
-    conv_desc.indepth_align8=params[12];
-    conv_desc.indepth_ceildiv8=params[13];
-    conv_desc.inwidth_ceildiv_inbufferwidth=params[14];
-    conv_desc.inwidth_align8=params[15];
-    conv_desc.group_indepth_offset=params[16];
-    conv_desc.group_indepth=params[17];
-    conv_desc.input_ddr_bytes=params[18];
-    conv_desc.input_ddr_128bits=params[19];
-    conv_desc.group_indepth_x_inwidth_align8_by8=params[20];
-    conv_desc.group_indepth_offset_x_inwidth_align8_by8=params[21];
-    conv_desc.input_load_burst_length=params[22];
-    conv_desc.buffer_address_mid_increment_step=params[23];
-    conv_desc.row_address_bitnumber_flag=params[24];
+    conv_desc.indepth_align_minitile_size=params[13];
+    conv_desc.indepth_align8=params[14];
+    conv_desc.indepth_ceildiv8=params[15];
+    conv_desc.inwidth_ceildiv_inbufferwidth=params[16];
+    conv_desc.inwidth_align8=params[17];
+    conv_desc.group_indepth_offset=params[18];
+    conv_desc.group_indepth=params[19];
+    conv_desc.input_ddr_bytes=params[20];
+    conv_desc.input_ddr_128bits=params[21];
+    conv_desc.group_indepth_x_inwidth_align8_by8=params[22];
+    conv_desc.group_indepth_offset_x_inwidth_align8_by8=params[23];
+    conv_desc.input_load_burst_length=params[24];
+    conv_desc.buffer_address_mid_increment_step=params[25];
+    conv_desc.row_address_bitnumber_flag=params[26];
         
 
 
         // ouput_buffer_related
-    conv_desc.outwidth_align8=params[25];
-    conv_desc.outdepth_align8=params[26];
-    conv_desc.outheight_align4=params[27];
-    conv_desc.outdepth_align_minitile_size=params[28];
-    conv_desc.group_outdepth_offset=params[29];
-    conv_desc.group_outdepth=params[30];
+    conv_desc.outwidth_align8=params[27];
+    conv_desc.outdepth_align8=params[28];
+    conv_desc.outheight_align4=params[29];
+    conv_desc.outdepth_align_minitile_size=params[30];
+    conv_desc.group_outdepth_offset=params[31];
+    conv_desc.group_outdepth=params[32];
 
-    conv_desc.output_ddr_bytes=params[31];
-    conv_desc.output_ddr_128bits=params[32];
+    conv_desc.output_ddr_bytes=params[33];
+    conv_desc.output_ddr_128bits=params[34];
 
 
         // Weight_related
-    conv_desc.weightbuffer_load_indepth_number=params[33];
-    conv_desc.weightbuffer_load_indepth_step=params[34];
-    conv_desc.weightbuffer_load_outdepth_number=params[35];
-    conv_desc.weightbuffer_load_outdepth_step=params[36];
-    conv_desc.weightbuffer_indepth_minitile_number=params[37];
-    conv_desc.weightbuffer_outdepth_minitile_number=params[38];
-    conv_desc.weightbuffer_total_load_number=params[39];
+    conv_desc.weightbuffer_load_indepth_number=params[35];
+    conv_desc.weightbuffer_load_indepth_step=params[36];
+    conv_desc.weightbuffer_load_outdepth_number=params[37];
+    conv_desc.weightbuffer_load_outdepth_step=params[38];
+    conv_desc.weightbuffer_indepth_minitile_number=params[39];
+    conv_desc.weightbuffer_outdepth_minitile_number=params[40];
+    conv_desc.weightbuffer_total_load_number=params[41];
 
         //weight_load hardware
-    conv_desc.weightDDR_buffer_burst_length=params[40];
-    conv_desc.weightDDR_port_burst_length=params[41];
-    conv_desc.weightDDR_burst_number=params[42];
-    conv_desc.loop_outdepth_minitile_baseidx_reset_cycle_minus1=params[43];
-    conv_desc.loop_start_output_baserowcol_reset_cycle=params[44];
-    conv_desc.loop_weight_feed_bound=params[45];
+    conv_desc.weightDDR_buffer_burst_length=params[42];
+    conv_desc.weightDDR_port_burst_length=params[43];
+    conv_desc.weightDDR_burst_number=params[44];
+    conv_desc.loop_outdepth_minitile_baseidx_reset_cycle_minus1=params[45];
+    conv_desc.loop_start_output_baserowcol_reset_cycle=params[46];
+    conv_desc.loop_weight_feed_bound=params[47];
     
         // input buffer feeding related
-    conv_desc.wino_out_size_by_wino_width=params[46];
-    conv_desc.wino_tile_number_in_outwidth=params[47];
+    conv_desc.wino_out_size_by_wino_width=params[48];
+    conv_desc.wino_tile_number_in_outwidth=params[49];
 
-    conv_desc.loop_outdepth_minitile_baseidx_reset_cycle=params[48];
-    conv_desc.loop_wino_tile_col_reset_cycle=params[49];
-    conv_desc.loop_wino_tile_row_reset_cycle=params[50];
+    conv_desc.loop_outdepth_minitile_baseidx_reset_cycle=params[50];
+    conv_desc.loop_wino_tile_col_reset_cycle=params[51];
+    conv_desc.loop_wino_tile_row_reset_cycle=params[52];
 
-    conv_desc.buffer_address_mid_minitile_depth_step=params[51];
-    conv_desc.input_buffer_feeding_loop_bound=params[52];
+    conv_desc.buffer_address_mid_minitile_depth_step=params[53];
+    conv_desc.input_buffer_feeding_loop_bound=params[54];
     
-    conv_desc.input_transform_feeding_loop_bound=params[53];
+    conv_desc.input_transform_feeding_loop_bound=params[55];
 
         // row_tile calculation , these parameter have to be solved after weight parameters are decided.
-    conv_desc.out_rowstep=params[54];
-    conv_desc.wino_tile_number_in_out_rowstep=params[55];
+    conv_desc.out_rowstep=params[56];
+    conv_desc.wino_tile_number_in_out_rowstep=params[57];
 
 
         // wino computation
-    conv_desc.total_input_stream_tile=params[56];
-    conv_desc.loop_omini_base_reset_cycle=params[57];
-    conv_desc.loop_wino_cell_bound=params[58];
-    conv_desc.loop_wino_tile_rowcol_self_reset_cycle_min1=params[59];
-    conv_desc.loop_iload_reset_cycle=params[60];
-    conv_desc.outbuffer_oload_increment_step=params[61];
-    conv_desc.outbuffer_omini_increment_step=params[62];
+    conv_desc.total_input_stream_tile=params[58];
+    conv_desc.loop_omini_base_reset_cycle=params[59];
+    conv_desc.loop_wino_cell_bound=params[60];
+    conv_desc.loop_wino_tile_rowcol_self_reset_cycle_min1=params[61];
+    conv_desc.loop_iload_reset_cycle=params[62];
+    conv_desc.outbuffer_oload_increment_step=params[63];
+    conv_desc.outbuffer_omini_increment_step=params[64];
         
         //output write back 
-    conv_desc.outdepth_ceildiv8=params[63];
-    conv_desc.output_burst_length=params[64];
-    conv_desc.write_back_flag=params[65];
-    conv_desc.wino_col_pix_upper_bound=params[66];
-    conv_desc.wino_tile_number_rowcol=params[67];
-    conv_desc.out_ddr_increment_step=params[68];
+    conv_desc.outdepth_ceildiv8=params[65];
+    conv_desc.output_burst_length=params[66];
+    conv_desc.write_back_flag=params[67];
+    conv_desc.wino_col_pix_upper_bound=params[68];
+    conv_desc.wino_tile_number_rowcol=params[69];
+    conv_desc.out_ddr_increment_step=params[70];
 
-    conv_desc.merge_kernel_size=params[69];
-    conv_desc.merge_kernel_step=params[70];
-    conv_desc.merge_kernel_flag=params[71];
-    conv_desc.scale_oback_int=params[72];
-    conv_desc.merge_weight_row_step=params[73];
-    conv_desc.merge_weight_col_step=params[74];
-    conv_desc.relu_flag=params[75];
+    conv_desc.merge_kernel_size_h=params[71];
+    conv_desc.merge_kernel_size_w=params[72];
+    conv_desc.merge_kernel_step=params[73];
+    conv_desc.merge_kernel_flag=params[74];
+    conv_desc.scale_oback_int=params[75];
+    conv_desc.merge_weight_row_step=params[76];
+    conv_desc.merge_weight_col_step=params[77];
+    conv_desc.relu_flag=params[78];
 }
 
-void write_params(
-    ap_uint<128>* mem_params,
-    ConvDesc_t &conv_desc
-)
-{
+// void write_params(
+//     ap_uint<128>* mem_params,
+//     ConvDesc_t &conv_desc
+// )
+// {
 
-    mem_params[0]=(ap_uint<128>) conv_desc.inheight;
-    mem_params[1]=(ap_uint<128>) conv_desc.inwidth;
-    mem_params[2]=(ap_uint<128>) conv_desc.indepth;
-    mem_params[3]=(ap_uint<128>) conv_desc.outheight;
-    mem_params[4]=(ap_uint<128>) conv_desc.outwidth;
-    mem_params[5]=(ap_uint<128>) conv_desc.outdepth;
-    mem_params[6]=(ap_uint<128>) conv_desc.kernel_size;
-    mem_params[7]=(ap_uint<128>) conv_desc.pad_size;
-    mem_params[8]=(ap_uint<128>) conv_desc.stride;
-    mem_params[9]=(ap_uint<128>) conv_desc.wino3x3_flag ;
-    mem_params[10]=(ap_uint<128>) conv_desc.wino_output_tile_size;
-    mem_params[11]=(ap_uint<128>) conv_desc.indepth_align_minitile_size;
-    mem_params[12]=(ap_uint<128>) conv_desc.indepth_align8;
-    mem_params[13]=(ap_uint<128>) conv_desc.indepth_ceildiv8;
-    mem_params[14]=(ap_uint<128>) conv_desc.inwidth_ceildiv_inbufferwidth;
-    mem_params[15]=(ap_uint<128>) conv_desc.inwidth_align8;
-    mem_params[16]=(ap_uint<128>) conv_desc.group_indepth_offset;
-    mem_params[17]=(ap_uint<128>) conv_desc.group_indepth;
-    mem_params[18]=(ap_uint<128>) conv_desc.input_ddr_bytes;
-    mem_params[19]=(ap_uint<128>) conv_desc.input_ddr_128bits;
-    mem_params[20]=(ap_uint<128>) conv_desc.group_indepth_x_inwidth_align8_by8;
-    mem_params[21]=(ap_uint<128>) conv_desc.group_indepth_offset_x_inwidth_align8_by8;
-    mem_params[22]=(ap_uint<128>) conv_desc.input_load_burst_length;
-    mem_params[23]=(ap_uint<128>) conv_desc.buffer_address_mid_increment_step;
-    mem_params[24]=(ap_uint<128>) conv_desc.row_address_bitnumber_flag;
-    mem_params[25]=(ap_uint<128>) conv_desc.outwidth_align8;
-    mem_params[26]=(ap_uint<128>) conv_desc.outdepth_align8;
-    mem_params[27]=(ap_uint<128>) conv_desc.outheight_align4;
-    mem_params[28]=(ap_uint<128>) conv_desc.outdepth_align_minitile_size;
-    mem_params[29]=(ap_uint<128>) conv_desc.group_outdepth_offset;
-    mem_params[30]=(ap_uint<128>) conv_desc.group_outdepth;
-    mem_params[31]=(ap_uint<128>) conv_desc.output_ddr_bytes;
-    mem_params[32]=(ap_uint<128>) conv_desc.output_ddr_128bits;
-    mem_params[33]=(ap_uint<128>) conv_desc.weightbuffer_load_indepth_number;
-    mem_params[34]=(ap_uint<128>) conv_desc.weightbuffer_load_indepth_step;
-    mem_params[35]=(ap_uint<128>) conv_desc.weightbuffer_load_outdepth_number;
-    mem_params[36]=(ap_uint<128>) conv_desc.weightbuffer_load_outdepth_step;
-    mem_params[37]=(ap_uint<128>) conv_desc.weightbuffer_indepth_minitile_number;
-    mem_params[38]=(ap_uint<128>) conv_desc.weightbuffer_outdepth_minitile_number;
-    mem_params[39]=(ap_uint<128>) conv_desc.weightbuffer_total_load_number;
-    mem_params[40]=(ap_uint<128>) conv_desc.weightDDR_buffer_burst_length;
-    mem_params[41]=(ap_uint<128>) conv_desc.weightDDR_port_burst_length;
-    mem_params[42]=(ap_uint<128>) conv_desc.weightDDR_burst_number;
-    mem_params[43]=(ap_uint<128>) conv_desc.loop_outdepth_minitile_baseidx_reset_cycle_minus1;
-    mem_params[44]=(ap_uint<128>) conv_desc.loop_start_output_baserowcol_reset_cycle;
-    mem_params[45]=(ap_uint<128>) conv_desc.loop_weight_feed_bound;
-    mem_params[46]=(ap_uint<128>) conv_desc.wino_out_size_by_wino_width;
-    mem_params[47]=(ap_uint<128>) conv_desc.wino_tile_number_in_outwidth;
-    mem_params[48]=(ap_uint<128>) conv_desc.loop_outdepth_minitile_baseidx_reset_cycle;
-    mem_params[49]=(ap_uint<128>) conv_desc.loop_wino_tile_col_reset_cycle;
-    mem_params[50]=(ap_uint<128>) conv_desc.loop_wino_tile_row_reset_cycle;
-    mem_params[51]=(ap_uint<128>) conv_desc.buffer_address_mid_minitile_depth_step;
-    mem_params[52]=(ap_uint<128>) conv_desc.input_buffer_feeding_loop_bound;
-    mem_params[53]=(ap_uint<128>) conv_desc.input_transform_feeding_loop_bound;
-    mem_params[54]=(ap_uint<128>) conv_desc.out_rowstep;
-    mem_params[55]=(ap_uint<128>) conv_desc.wino_tile_number_in_out_rowstep;
-    mem_params[56]=(ap_uint<128>) conv_desc.total_input_stream_tile;
-    mem_params[57]=(ap_uint<128>) conv_desc.loop_omini_base_reset_cycle;
-    mem_params[58]=(ap_uint<128>) conv_desc.loop_wino_cell_bound;
-    mem_params[59]=(ap_uint<128>) conv_desc.loop_wino_tile_rowcol_self_reset_cycle_min1;
-    mem_params[60]=(ap_uint<128>) conv_desc.loop_iload_reset_cycle;
-    mem_params[61]=(ap_uint<128>) conv_desc.outbuffer_oload_increment_step;
-    mem_params[62]=(ap_uint<128>) conv_desc.outbuffer_omini_increment_step;
-    mem_params[63]=(ap_uint<128>) conv_desc.outdepth_ceildiv8;
-    mem_params[64]=(ap_uint<128>) conv_desc.output_burst_length;
-    mem_params[65]=(ap_uint<128>) conv_desc.write_back_flag;
-    mem_params[66]=(ap_uint<128>) conv_desc.wino_col_pix_upper_bound;
-    mem_params[67]=(ap_uint<128>) conv_desc.wino_tile_number_rowcol;
-    mem_params[68]=(ap_uint<128>) conv_desc.out_ddr_increment_step;
-    mem_params[69]=(ap_uint<128>) conv_desc.merge_kernel_size;
-    mem_params[70]=(ap_uint<128>) conv_desc.merge_kernel_step;
-    mem_params[71]=(ap_uint<128>) conv_desc.merge_kernel_flag;
-    mem_params[72]=(ap_uint<128>) conv_desc.scale_oback_int;
-    mem_params[73]=(ap_uint<128>) conv_desc.merge_weight_row_step;
-    mem_params[74]=(ap_uint<128>) conv_desc.merge_weight_col_step;
-    mem_params[75]=(ap_uint<128>) conv_desc.relu_flag;
-}
+//     mem_params[0]=(ap_uint<128>) conv_desc.inheight;
+//     mem_params[1]=(ap_uint<128>) conv_desc.inwidth;
+//     mem_params[2]=(ap_uint<128>) conv_desc.indepth;
+//     mem_params[3]=(ap_uint<128>) conv_desc.outheight;
+//     mem_params[4]=(ap_uint<128>) conv_desc.outwidth;
+//     mem_params[5]=(ap_uint<128>) conv_desc.outdepth;
+//     mem_params[6]=(ap_uint<128>) conv_desc.kernel_size;
+//     mem_params[7]=(ap_uint<128>) conv_desc.pad_size;
+//     mem_params[8]=(ap_uint<128>) conv_desc.stride;
+//     mem_params[9]=(ap_uint<128>) conv_desc.wino3x3_flag ;
+//     mem_params[10]=(ap_uint<128>) conv_desc.wino_output_tile_size;
+//     mem_params[11]=(ap_uint<128>) conv_desc.indepth_align_minitile_size;
+//     mem_params[12]=(ap_uint<128>) conv_desc.indepth_align8;
+//     mem_params[13]=(ap_uint<128>) conv_desc.indepth_ceildiv8;
+//     mem_params[14]=(ap_uint<128>) conv_desc.inwidth_ceildiv_inbufferwidth;
+//     mem_params[15]=(ap_uint<128>) conv_desc.inwidth_align8;
+//     mem_params[16]=(ap_uint<128>) conv_desc.group_indepth_offset;
+//     mem_params[17]=(ap_uint<128>) conv_desc.group_indepth;
+//     mem_params[18]=(ap_uint<128>) conv_desc.input_ddr_bytes;
+//     mem_params[19]=(ap_uint<128>) conv_desc.input_ddr_128bits;
+//     mem_params[20]=(ap_uint<128>) conv_desc.group_indepth_x_inwidth_align8_by8;
+//     mem_params[21]=(ap_uint<128>) conv_desc.group_indepth_offset_x_inwidth_align8_by8;
+//     mem_params[22]=(ap_uint<128>) conv_desc.input_load_burst_length;
+//     mem_params[23]=(ap_uint<128>) conv_desc.buffer_address_mid_increment_step;
+//     mem_params[24]=(ap_uint<128>) conv_desc.row_address_bitnumber_flag;
+//     mem_params[25]=(ap_uint<128>) conv_desc.outwidth_align8;
+//     mem_params[26]=(ap_uint<128>) conv_desc.outdepth_align8;
+//     mem_params[27]=(ap_uint<128>) conv_desc.outheight_align4;
+//     mem_params[28]=(ap_uint<128>) conv_desc.outdepth_align_minitile_size;
+//     mem_params[29]=(ap_uint<128>) conv_desc.group_outdepth_offset;
+//     mem_params[30]=(ap_uint<128>) conv_desc.group_outdepth;
+//     mem_params[31]=(ap_uint<128>) conv_desc.output_ddr_bytes;
+//     mem_params[32]=(ap_uint<128>) conv_desc.output_ddr_128bits;
+//     mem_params[33]=(ap_uint<128>) conv_desc.weightbuffer_load_indepth_number;
+//     mem_params[34]=(ap_uint<128>) conv_desc.weightbuffer_load_indepth_step;
+//     mem_params[35]=(ap_uint<128>) conv_desc.weightbuffer_load_outdepth_number;
+//     mem_params[36]=(ap_uint<128>) conv_desc.weightbuffer_load_outdepth_step;
+//     mem_params[37]=(ap_uint<128>) conv_desc.weightbuffer_indepth_minitile_number;
+//     mem_params[38]=(ap_uint<128>) conv_desc.weightbuffer_outdepth_minitile_number;
+//     mem_params[39]=(ap_uint<128>) conv_desc.weightbuffer_total_load_number;
+//     mem_params[40]=(ap_uint<128>) conv_desc.weightDDR_buffer_burst_length;
+//     mem_params[41]=(ap_uint<128>) conv_desc.weightDDR_port_burst_length;
+//     mem_params[42]=(ap_uint<128>) conv_desc.weightDDR_burst_number;
+//     mem_params[43]=(ap_uint<128>) conv_desc.loop_outdepth_minitile_baseidx_reset_cycle_minus1;
+//     mem_params[44]=(ap_uint<128>) conv_desc.loop_start_output_baserowcol_reset_cycle;
+//     mem_params[45]=(ap_uint<128>) conv_desc.loop_weight_feed_bound;
+//     mem_params[46]=(ap_uint<128>) conv_desc.wino_out_size_by_wino_width;
+//     mem_params[47]=(ap_uint<128>) conv_desc.wino_tile_number_in_outwidth;
+//     mem_params[48]=(ap_uint<128>) conv_desc.loop_outdepth_minitile_baseidx_reset_cycle;
+//     mem_params[49]=(ap_uint<128>) conv_desc.loop_wino_tile_col_reset_cycle;
+//     mem_params[50]=(ap_uint<128>) conv_desc.loop_wino_tile_row_reset_cycle;
+//     mem_params[51]=(ap_uint<128>) conv_desc.buffer_address_mid_minitile_depth_step;
+//     mem_params[52]=(ap_uint<128>) conv_desc.input_buffer_feeding_loop_bound;
+//     mem_params[53]=(ap_uint<128>) conv_desc.input_transform_feeding_loop_bound;
+//     mem_params[54]=(ap_uint<128>) conv_desc.out_rowstep;
+//     mem_params[55]=(ap_uint<128>) conv_desc.wino_tile_number_in_out_rowstep;
+//     mem_params[56]=(ap_uint<128>) conv_desc.total_input_stream_tile;
+//     mem_params[57]=(ap_uint<128>) conv_desc.loop_omini_base_reset_cycle;
+//     mem_params[58]=(ap_uint<128>) conv_desc.loop_wino_cell_bound;
+//     mem_params[59]=(ap_uint<128>) conv_desc.loop_wino_tile_rowcol_self_reset_cycle_min1;
+//     mem_params[60]=(ap_uint<128>) conv_desc.loop_iload_reset_cycle;
+//     mem_params[61]=(ap_uint<128>) conv_desc.outbuffer_oload_increment_step;
+//     mem_params[62]=(ap_uint<128>) conv_desc.outbuffer_omini_increment_step;
+//     mem_params[63]=(ap_uint<128>) conv_desc.outdepth_ceildiv8;
+//     mem_params[64]=(ap_uint<128>) conv_desc.output_burst_length;
+//     mem_params[65]=(ap_uint<128>) conv_desc.write_back_flag;
+//     mem_params[66]=(ap_uint<128>) conv_desc.wino_col_pix_upper_bound;
+//     mem_params[67]=(ap_uint<128>) conv_desc.wino_tile_number_rowcol;
+//     mem_params[68]=(ap_uint<128>) conv_desc.out_ddr_increment_step;
+//     mem_params[69]=(ap_uint<128>) conv_desc.merge_kernel_size;
+//     mem_params[70]=(ap_uint<128>) conv_desc.merge_kernel_step;
+//     mem_params[71]=(ap_uint<128>) conv_desc.merge_kernel_flag;
+//     mem_params[72]=(ap_uint<128>) conv_desc.scale_oback_int;
+//     mem_params[73]=(ap_uint<128>) conv_desc.merge_weight_row_step;
+//     mem_params[74]=(ap_uint<128>) conv_desc.merge_weight_col_step;
+//     mem_params[75]=(ap_uint<128>) conv_desc.relu_flag;
+// }
 
 
 
@@ -266,7 +269,7 @@ void wino_flatten_kernel(
         // hls::stream< ap_uint<16*BATCH_SIZE*36> > &input_tile_stream1, 
         // hls::stream< ap_uint<16*BATCH_SIZE*36> > &input_tile_stream2,
         conv_desc.inwidth,
-        conv_desc.pad_size,
+        // conv_desc.pad_size,
         conv_desc.weightbuffer_load_outdepth_number,
         conv_desc.wino_output_tile_size,
         conv_desc.input_buffer_feeding_loop_bound,
@@ -306,7 +309,7 @@ void wino_flatten_kernel(
         conv_desc.loop_weight_feed_bound,
         conv_desc.weightbuffer_outdepth_minitile_number,
         reset_DDR_offset,
-        conv_desc.kernel_size,
+        conv_desc.wino3x3_flag,
         first_flag,
         last_flag
         #if DEBUG_CONV_DESC
@@ -329,7 +332,7 @@ void wino_flatten_kernel(
         conv_desc.loop_weight_feed_bound,
         conv_desc.weightbuffer_outdepth_minitile_number,
         reset_DDR_offset,
-        conv_desc.kernel_size,
+        conv_desc.wino3x3_flag,
         first_flag,
         last_flag
         #if DEBUG_CONV_DESC
@@ -351,7 +354,7 @@ void wino_flatten_kernel(
         conv_desc.loop_weight_feed_bound,
         conv_desc.weightbuffer_outdepth_minitile_number,
         reset_DDR_offset,
-        conv_desc.kernel_size,
+        conv_desc.wino3x3_flag,
         first_flag,
         last_flag
         #if DEBUG_CONV_DESC
@@ -374,7 +377,7 @@ void wino_flatten_kernel(
         conv_desc.loop_weight_feed_bound,
         conv_desc.weightbuffer_outdepth_minitile_number,
         reset_DDR_offset,
-        conv_desc.kernel_size,
+        conv_desc.wino3x3_flag,
         first_flag,
         last_flag
         #if DEBUG_CONV_DESC
@@ -424,11 +427,13 @@ void wino_kernel_merge_row(
 )
 {
     int merge_weight_offset=merge_weight_row_offset+conv_desc.merge_weight_col_step;
+
     ap_uint<2> merge_kernel_step=conv_desc.merge_kernel_step;
-    for(ap_uint<4> col_offset=0;col_offset<conv_desc.merge_kernel_size;col_offset+=merge_kernel_step)
+    ap_uint<4> merge_kernel_size_w=conv_desc.merge_kernel_size_w;
+    for(ap_uint<4> col_offset=0;col_offset<merge_kernel_size_w;col_offset+=merge_kernel_step)
     {
         ap_uint<32> reset_merge_weight_offset;
-        if(last_row_flag && col_offset==conv_desc.merge_kernel_size-merge_kernel_step)
+        if(last_row_flag && col_offset== merge_kernel_size_w-merge_kernel_step)
         {
             reset_merge_weight_offset=0;
         }
@@ -444,10 +449,10 @@ void wino_kernel_merge_row(
         out_buffer,
         start_output_row,
         start_row_idx_minus_pad_size,
-        col_offset-conv_desc.pad_size,
+        col_offset-conv_desc.pad_size_w,
         reset_merge_weight_offset,
         first_flag && (col_offset==0),
-        last_flag && (col_offset+merge_kernel_step>conv_desc.merge_kernel_size),
+        last_flag && (col_offset+merge_kernel_step>merge_kernel_size_w),
         clear_flag && ( col_offset==0),
         conv_desc,
         ap_clk_div2);
@@ -477,12 +482,12 @@ void wino_input_compute(
     #pragma HLS resource variable=input_buffer core=RAM_S2P_BRAM 
     
     
-    ap_int<16> next_required_loaded_input_row_number = (next_start_row+conv_desc.out_rowstep)- conv_desc.pad_size + conv_desc.merge_kernel_step-1; //TODO
-    ap_int<16> new_start_input_row = next_start_row-conv_desc.pad_size-1;
+    ap_int<16> next_required_loaded_input_row_number = (next_start_row+conv_desc.out_rowstep)- conv_desc.pad_size_h + conv_desc.merge_kernel_step-1; //TODO
+    ap_int<16> new_start_input_row = next_start_row-conv_desc.pad_size_h-1;
     // if(new_start_input_row<0) new_start_input_row=0;
-    ap_int<16> curr_required_loaded_input_row_number = start_output_row+conv_desc.out_rowstep - conv_desc.pad_size + conv_desc.merge_kernel_step-1; //TODO
+    ap_int<16> curr_required_loaded_input_row_number = start_output_row+conv_desc.out_rowstep - conv_desc.pad_size_h + conv_desc.merge_kernel_step-1; //TODO
     std::cout<<"conv_desc.out_rowstep"  <<conv_desc.out_rowstep<<std::endl;
-    std::cout<<"conv_desc.pad_size "  <<conv_desc.pad_size<<std::endl;
+    std::cout<<"conv_desc.pad_size_h "  <<conv_desc.pad_size_h<<std::endl;
     std::cout<<"curr_required_loaded_input_row_number "  <<curr_required_loaded_input_row_number<<std::endl;    
 
         load_input_rowtile_from_ddr(
@@ -491,7 +496,7 @@ void wino_input_compute(
             conv_desc.inheight,
             conv_desc.inwidth,
             conv_desc.stride,
-            conv_desc.pad_size,
+            // conv_desc.pad_size,
             conv_desc.inwidth_align8,
             conv_desc.indepth_align8,
             conv_desc.group_indepth_x_inwidth_align8_by8,
@@ -518,21 +523,22 @@ void wino_input_compute(
 
         if(first_input_flag) return;
 
-        printf("OK %d \n",(int) conv_desc.merge_kernel_size);
+        printf("OK %d \n",(int) conv_desc.merge_kernel_size_w);
        
 
-        ap_uint<1> merge_clear_flag= (conv_desc.merge_kernel_size>3);
+        ap_uint<1> merge_clear_flag= conv_desc.merge_kernel_flag;
         ap_uint<32> merge_weight_row_offset=0;
-        ap_uint<2> merge_kernel_step=conv_desc.merge_kernel_step; 
+        ap_uint<2> merge_kernel_step=conv_desc.merge_kernel_step;
+        ap_uint<4> merge_kernel_size_h= conv_desc.merge_kernel_size_h;
         bool last_row_flag;
-        for(ap_uint<4> row_offset=0; row_offset<conv_desc.merge_kernel_size; row_offset+= merge_kernel_step)
+        for(ap_uint<4> row_offset=0; row_offset< merge_kernel_size_h; row_offset+= merge_kernel_step)
         {
             #pragma HLS DEPENDENCE variable=input_buffer intra false
             ap_int<16> required_loaded_input_row_number;
             ap_uint<1> skip_flag;
             ap_uint<1> clear_flag;
 
-            if( row_offset+merge_kernel_step<conv_desc.merge_kernel_size )
+            if( row_offset+merge_kernel_step<conv_desc.merge_kernel_size_h )
             {
                 required_loaded_input_row_number=curr_required_loaded_input_row_number+merge_kernel_step+row_offset;
                 skip_flag=0;
@@ -546,7 +552,7 @@ void wino_input_compute(
                 clear_flag=merge_clear_flag;  
                 last_row_flag=1;
             }
-            std::cout<<"conv_desc.merge_kernel_size "<<conv_desc.merge_kernel_size<<std::endl;
+            std::cout<<"conv_desc.merge_kernel_size "<<conv_desc.merge_kernel_size_w<<std::endl;
             std::cout<<"merge row_offset "<<row_offset<<std::endl;
   
             load_input_rowtile_from_ddr(
@@ -555,7 +561,7 @@ void wino_input_compute(
                     conv_desc.inheight,
                     conv_desc.inwidth,
                     conv_desc.stride,
-                    conv_desc.pad_size,
+                    // conv_desc.pad_size,
                     conv_desc.inwidth_align8,
                     conv_desc.indepth_align8,
                     conv_desc.group_indepth_x_inwidth_align8_by8,
@@ -751,7 +757,7 @@ void wino_systolic_top(
     for( ap_int<16> compute_start_row =0; compute_start_row < conv_desc.outheight; compute_start_row+=conv_desc.out_rowstep)
     {
 
-        ap_uint<16> start_row_idx_minus_pad_size=compute_start_row-conv_desc.pad_size;
+        ap_uint<16> start_row_idx_minus_pad_size=compute_start_row-conv_desc.pad_size_h;
        
         if(pingpong )
         {
@@ -799,13 +805,13 @@ void wino_systolic_top(
                 ap_clk_div2
             );
 
-        // //     #if DEBUG_FILE_PRINT
-        // //     char outfilename[100];
-        // //     sprintf(outfilename,"outbuffer.txt");
-        // //     attach_output_buffer_content_uniformed_hw<OUT_WIDTH,BATCH_SIZE,WINO_HEIGHT,WINO_WIDTH,WINO_OUT_SIZE_CELL,OUTPUT_BUFFER_DEPTH>(
-        // //         output_buffer0,0,outfilename);
-        // //     getchar();
-        // //     #endif
+            #if 0
+            char outfilename[100];
+            sprintf(outfilename,"outbuffer.txt");
+            attach_output_buffer_content_uniformed_hw<OUT_WIDTH,BATCH_SIZE,WINO_HEIGHT,WINO_WIDTH,WINO_OUT_SIZE_CELL,OUTPUT_BUFFER_DEPTH>(
+                output_buffer0,0,outfilename);
+            getchar();
+            #endif
 
 
 
@@ -854,13 +860,13 @@ void wino_systolic_top(
                 conv_desc,
                 ap_clk_div2);
 
-        // //     #if DEBUG_FILE_PRINT
-        // //     char outfilename[100];
-        // //     sprintf(outfilename,"outbuffer.txt");
-        // //     attach_output_buffer_content_uniformed_hw<OUT_WIDTH,BATCH_SIZE,WINO_HEIGHT,WINO_WIDTH,WINO_OUT_SIZE_CELL,OUTPUT_BUFFER_DEPTH>(
-        // //         output_buffer1,0,outfilename);
-        // //     getchar();
-        // //     #endif
+            #if 0
+            char outfilename[100];
+            sprintf(outfilename,"outbuffer.txt");
+            attach_output_buffer_content_uniformed_hw<OUT_WIDTH,BATCH_SIZE,WINO_HEIGHT,WINO_WIDTH,WINO_OUT_SIZE_CELL,OUTPUT_BUFFER_DEPTH>(
+                output_buffer1,0,outfilename);
+            getchar();
+            #endif
 
 
 

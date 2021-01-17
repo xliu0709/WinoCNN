@@ -315,7 +315,7 @@ void attach_output_buffer_content_uniformed(
 
 template<int out_width, int batch_size, int wino_height, int wino_width, int wino_out_size, int outbuffer_depth>
 void attach_output_buffer_content_uniformed_hw(
-    ap_uint<out_width*batch_size> output_buffer[wino_out_size][wino_out_size][wino_height][wino_width][outbuffer_depth],
+    ap_uint<out_width*batch_size> output_buffer[wino_out_size][wino_height/2][wino_width/2][2][2][wino_out_size][outbuffer_depth],
     int idx,
     char* filename 
 )
@@ -334,8 +334,8 @@ void attach_output_buffer_content_uniformed_hw(
                 {
                     for(int wc=0;wc<wino_out_size;wc++)
                     {
-                        fprintf(fptr,"[%8d %8d]", (int) output_buffer[wr][wc][wh][ww][address].range(out_width-1,0), 
-                                                (int) output_buffer[wr][wc][wh][ww][address].range(out_width*2-1,out_width) );
+                        fprintf(fptr,"[%8d %8d]", (int) output_buffer[wr][wh/2][ww/2][wh%2][ww%2][wc][address].range(out_width-1,0), 
+                                                (int) output_buffer[wr][wh/2][ww/2][wh%2][ww%2][wc][address].range(out_width*2-1,out_width) );
                     }
                     fprintf(fptr," ");
                 }

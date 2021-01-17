@@ -358,16 +358,18 @@ template<class Tin,class Tout>
 void weight_seperation(
     Tin* weight,
     Tout* weight_sep,
-    int kernel_size,
+    int kernel_size_h,
+    int kernel_size_w,
     int use_kernel_size,
     int indepth,
     int outdepth
 )
 {
-    std::cout<<"kernel_size "<<kernel_size<<std::endl;
+    std::cout<<"kernel_size_h "<<kernel_size_h<<std::endl;
+    std::cout<<"kernel_size_w "<<kernel_size_w<<std::endl;
     int addr=0;
-    for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size;merge_kernel_row_offset+=use_kernel_size)
-    for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size;merge_kernel_col_offset+=use_kernel_size)
+    for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size_h;merge_kernel_row_offset+=use_kernel_size)
+    for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size_w;merge_kernel_col_offset+=use_kernel_size)
     {
         for(int od=0;od<outdepth;od++)
         for(int id=0;id<indepth;id++)
@@ -377,11 +379,11 @@ void weight_seperation(
             {
                 int kernel_row_idx=merge_kernel_row_offset+merge_kernel_row_idx;
                 int kernel_col_idx=merge_kernel_col_offset+merge_kernel_col_idx;
-                int iaddr= ((od*indepth+id)*kernel_size+kernel_row_idx)*kernel_size+kernel_col_idx;
+                int iaddr= ((od*indepth+id)*kernel_size_h+kernel_row_idx)*kernel_size_w+kernel_col_idx;
 
                 if(use_kernel_size==3)
                 {
-                    if(kernel_row_idx<kernel_size && kernel_col_idx<kernel_size)
+                    if(kernel_row_idx<kernel_size_h && kernel_col_idx<kernel_size_w)
                     {
                         weight_sep[addr]=weight[iaddr];
                     }
@@ -411,16 +413,17 @@ void weight_seperation(
 void weight_int_to_merged_DDR(
     char* weight,
     char* weight_hw,
-    int kernel_size, 
+    int kernel_size_h, 
+    int kernel_size_w, 
     int use_kernel_size,
     ConvDesc_t conv_desc
 )
 {
     int indepth=conv_desc.indepth;
     int outdepth=conv_desc.outdepth;
-    char* weight_sep=new char[CEIL_DIV(kernel_size,use_kernel_size)*3*CEIL_DIV(kernel_size,use_kernel_size)*3*indepth*outdepth];
+    char* weight_sep=new char[CEIL_DIV(kernel_size_h,use_kernel_size)*3*CEIL_DIV(kernel_size_w,use_kernel_size)*3*indepth*outdepth];
     
-    weight_seperation<char,char>( weight, weight_sep, kernel_size, use_kernel_size, indepth,outdepth);
+    weight_seperation<char,char>( weight, weight_sep, kernel_size_h, kernel_size_w, use_kernel_size, indepth,outdepth);
 
     // an single 3x3 weight segment length
     int weight_hw_step=16*conv_desc.weightDDR_port_burst_length * conv_desc.weightDDR_burst_number*4;
@@ -428,11 +431,11 @@ void weight_int_to_merged_DDR(
     int weight_hw_offset=0;
     int weight_sep_offset=0;
 
-    std::cout<<kernel_size<<","<<kernel_size<<std::endl;
+    std::cout<<kernel_size_h <<","<<kernel_size_w <<std::endl;
     fflush(stdout);
 
-    for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size;merge_kernel_row_offset+=use_kernel_size)
-    for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size;merge_kernel_col_offset+=use_kernel_size)
+    for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size_h;merge_kernel_row_offset+=use_kernel_size)
+    for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size_w;merge_kernel_col_offset+=use_kernel_size)
     {
         std::cout<<merge_kernel_row_offset<<","<<merge_kernel_col_offset<<std::endl;
         fflush(stdout);
@@ -476,13 +479,14 @@ void init_weight_float(
     float* weight,
     int indepth,
     int outdepth,
-    int kernelsize,
+    int kernelsize_h,
+    int kernelsize_w,
    std::string mode 
 )
 {
     for(int id=0;id<indepth;id++)
     for(int od=0;od<outdepth;od++)
-    for(int ks=0;ks<kernelsize*kernelsize;ks++)
+    for(int ks=0;ks<kernelsize_h*kernelsize_w;ks++)
     {
         float value;
         if(mode=="depth_order")
@@ -499,7 +503,7 @@ void init_weight_float(
             value=random()%256/256.0-0.5;
         }
         
-        weight[ (od*indepth+id)*kernelsize*kernelsize+ks]=value;
+        weight[ (od*indepth+id)*kernelsize_h*kernelsize_w+ks]=value;
     }
 }
 
@@ -676,7 +680,7 @@ void alloc_float_weight_buffer(
         if(layerinfo_vect[i].layer_type == "conv")
         {
             std::cout<<"load weight for conv layer "<< layerinfo_vect[i].layer_name <<std::endl;
-            int length = layerinfo_vect[i].indim[0] * layerinfo_vect[i].outdim[0] * layerinfo_vect[i].kernel_size * layerinfo_vect[i].kernel_size;
+            int length = layerinfo_vect[i].indim[0] * layerinfo_vect[i].outdim[0] * layerinfo_vect[i].kernel_size_h * layerinfo_vect[i].kernel_size_w;
             float* weight_float = new float[length];
             float* bias_float = new float[layerinfo_vect[i].outdim[0]];
             
@@ -704,7 +708,8 @@ void alloc_float_weight_buffer(
                 layerinfo_vect[i].weightbuffers_sw[0],
                 layerinfo_vect[i].indim[0],
                 layerinfo_vect[i].outdim[0],
-                layerinfo_vect[i].kernel_size,
+                layerinfo_vect[i].kernel_size_h,
+                layerinfo_vect[i].kernel_size_w,
                 mode);                
             }
             
@@ -821,24 +826,25 @@ void weight_pretransform_float(
 )
 {
     std::cout<<"weight_pretransform_float START"<<std::endl; fflush(stdout);
-    for(int i=0;i<layerinfo_vect.size();i++)
-    {
-        if(layerinfo_vect[i].layer_type == "conv" && layerinfo_vect[i].kernel_size==5)
-        {
-            int indepth= layerinfo_vect[i].indim[0];
-            int outdepth= layerinfo_vect[i].outdim[0];
-            float* wino_weight_buffer= new float[indepth*outdepth*36];
-            transform_weight_5x5(
-                layerinfo_vect[i].weightbuffers_sw[0],
-                wino_weight_buffer,
-                indepth,
-                outdepth,
-                5
-            );
-            layerinfo_vect[i].winobuffers_float.push_back(wino_weight_buffer);
-            layerinfo_vect[i].winobuffers_float_size.push_back(indepth*outdepth*36);
-        }
-    }
+    assert(0);
+    // for(int i=0;i<layerinfo_vect.size();i++)
+    // {
+    //     if(layerinfo_vect[i].layer_type == "conv" && layerinfo_vect[i].kernel_size==5)
+    //     {
+    //         int indepth= layerinfo_vect[i].indim[0];
+    //         int outdepth= layerinfo_vect[i].outdim[0];
+    //         float* wino_weight_buffer= new float[indepth*outdepth*36];
+    //         transform_weight_5x5(
+    //             layerinfo_vect[i].weightbuffers_sw[0],
+    //             wino_weight_buffer,
+    //             indepth,
+    //             outdepth,
+    //             5
+    //         );
+    //         layerinfo_vect[i].winobuffers_float.push_back(wino_weight_buffer);
+    //         layerinfo_vect[i].winobuffers_float_size.push_back(indepth*outdepth*36);
+    //     }
+    // }
     std::cout<<"weight_pretransform_float END"<<std::endl; fflush(stdout);
 }
 
@@ -933,7 +939,7 @@ void compute_scale_factors(
         int weight_bit;
         if(layerinfo_vect[i].layer_type=="conv")
         {
-            weight_bit=layerinfo_vect[i].kernel_size!=5?G_WIDTH:8;
+            weight_bit=layerinfo_vect[i].use_kernel_size==3?G_WIDTH:8;
         }
         else
         {
@@ -949,7 +955,7 @@ void compute_scale_factors(
         }
 
         float Scale_winograd_tranform;
-        if( layerinfo_vect[i].kernel_size!=5)
+        if( layerinfo_vect[i].use_kernel_size ==3)
         {
             Scale_winograd_tranform= ((float) G_TRANSFACTOR*G_TRANSFACTOR)/ (1<< (RG_WIDTH-W_WIDTH) );
         }
@@ -1036,21 +1042,15 @@ void scale_weight_bias_data_float(
             int quant_bit;
             
 
-            if(layerinfo_vect[i].kernel_size!=5 && layerinfo_vect[i].layer_type=="conv")
+            if(layerinfo_vect[i].use_kernel_size==3 && layerinfo_vect[i].layer_type=="conv")
                 quant_bit=G_WIDTH;
             else
                 quant_bit=8;
 
-            if(layerinfo_vect[i].kernel_size==5 && layerinfo_vect[i].layer_type=="conv")
-            {
-                weight = layerinfo_vect[i].winobuffers_float[0];
-                weight_size=layerinfo_vect[i].winobuffers_float_size[0];
-            }
-            else
-            {
-                weight = layerinfo_vect[i].weightbuffers_sw[0];
-                weight_size=layerinfo_vect[i].weightbuffers_sw_size[0];
-            }
+    
+            weight = layerinfo_vect[i].weightbuffers_sw[0];
+            weight_size=layerinfo_vect[i].weightbuffers_sw_size[0];
+            
             weight_scaled = new float[weight_size];
             layerinfo_vect[i].weightbuffers_float_scaled.push_back(weight_scaled);
             layerinfo_vect[i].weightbuffers_float_scaled_size.push_back(weight_size);
@@ -1089,7 +1089,8 @@ void reorder_weight_quant(
     char* weight_quant,
     int indepth,
     int outdepth,
-    int K
+    int KH,
+    int KW
 )
 {
     // int addr=0;
@@ -1106,7 +1107,7 @@ void reorder_weight_quant(
     //     }
     // }
 
-    for(int i=0;i<outdepth*indepth*K*K;i++){
+    for(int i=0;i<outdepth*indepth*KH*KW;i++){
             weight_quant[i]
             =weight[i];
     }
@@ -1123,9 +1124,9 @@ void weight_preprocess_quant(
         if(layerinfo_vect[i].layer_type=="conv" )
         {
             int weight_size = layerinfo_vect[i].weightbuffers_float_scaled_size[0];
-            int kernel_size = layerinfo_vect[i].kernel_size;
-            if(kernel_size ==5) kernel_size=6;
-
+            int kernel_size_h = layerinfo_vect[i].kernel_size_h;
+            int kernel_size_w = layerinfo_vect[i].kernel_size_w;
+      
             char* weight_quant = new char[weight_size];
             fflush(stdout);
             reorder_weight_quant(
@@ -1133,7 +1134,8 @@ void weight_preprocess_quant(
                 weight_quant,
                 layerinfo_vect[i].indim[0],
                 layerinfo_vect[i].outdim[0],
-                kernel_size
+                kernel_size_h,
+                kernel_size_w
             );
             layerinfo_vect[i].weightbuffer_quant.push_back(weight_quant);
             layerinfo_vect[i].weightbuffer_quant_size.push_back(weight_size);
@@ -1292,7 +1294,7 @@ void alloc_hw_weight_buffer_single_layer(
 
     int segment_number;
     if(WINO_DOMAIN_SIZE==4)
-        segment_number = CEIL_DIV(layerinfo.kernel_size,layerinfo.use_kernel_size)*CEIL_DIV(layerinfo.kernel_size,layerinfo.use_kernel_size);
+        segment_number = CEIL_DIV(layerinfo.kernel_size_h,layerinfo.use_kernel_size)*CEIL_DIV(layerinfo.kernel_size_w,layerinfo.use_kernel_size);
     else
         segment_number = 1;
 
@@ -1338,7 +1340,7 @@ void process_hw_weight_buffer_single_layer(
     std::cout<<layerinfo.layer_name<<std::endl;
     fflush(stdout);
     // weight_to_ddr(layerinfo.weightbuffer_quant[0],layerinfo.weightbuffers_hw[0],conv_desc);
-    weight_int_to_merged_DDR(layerinfo.weightbuffer_quant[0], layerinfo.weightbuffers_hw[0],layerinfo.kernel_size,layerinfo.use_kernel_size,conv_desc);
+    weight_int_to_merged_DDR(layerinfo.weightbuffer_quant[0], layerinfo.weightbuffers_hw[0],layerinfo.kernel_size_h,layerinfo.kernel_size_w,layerinfo.use_kernel_size,conv_desc);
 }
 
 

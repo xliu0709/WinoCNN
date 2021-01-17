@@ -58,17 +58,19 @@ int main(int argc, char** argv)
     int output_height = atoi(argv[4]);
     int output_width = atoi(argv[5]);
     int output_depth = atoi(argv[6]);
-    int kernel_size = atoi(argv[7]);
-    int stride_size = atoi(argv[8]);
-    int pad_size = atoi(argv[9]);
-    int relu_flag = atoi(argv[10]);
-    int Scale_oback_int = atoi(argv[11]);
-    std::string input_gold(argv[12]);
-    std::string output_gold(argv[13]);
-    std::string weight_gold(argv[14]);
-    std::string dump_method(argv[15]);
-    std::string folder(argv[16]);
-    int use_kernel_size = atoi(argv[17]);
+    int kernel_size_h = atoi(argv[7]);
+    int kernel_size_w = atoi(argv[8]);
+    int stride_size = atoi(argv[9]);
+    int pad_size_h = atoi(argv[10]);
+    int pad_size_w = atoi(argv[11]);
+    int relu_flag = atoi(argv[12]);
+    int Scale_oback_int = atoi(argv[13]);
+    std::string input_gold(argv[14]);
+    std::string output_gold(argv[15]);
+    std::string weight_gold(argv[16]);
+    std::string dump_method(argv[17]);
+    std::string folder(argv[18]);
+    int use_kernel_size = atoi(argv[19]);
     int group_indepth_offset=0;
     int group_indepth=ALIGN(input_depth,8);
     int group_outdepth_offset=0;
@@ -87,9 +89,11 @@ int main(int argc, char** argv)
     layer_info.outdim[0]=output_depth;
     layer_info.outdim[1]=output_height;
     layer_info.outdim[2]=output_width;
-    layer_info.kernel_size=kernel_size;
+    layer_info.kernel_size_h=kernel_size_h;
+    layer_info.kernel_size_w=kernel_size_w;
     layer_info.stride=stride_size;
-    layer_info.pad_size=pad_size;
+    layer_info.pad_size_h=pad_size_h;
+    layer_info.pad_size_w=pad_size_w;
     layer_info.group_indepth=group_indepth;
     layer_info.group_indepth_offset=group_indepth_offset;
     layer_info.group_outdepth=group_outdepth;
@@ -107,13 +111,13 @@ int main(int argc, char** argv)
 
 
     // declare layer info wiehgt
-    char* weight_int = new char[ kernel_size*kernel_size* input_depth*output_depth];
+    char* weight_int = new char[ kernel_size_h*kernel_size_w* input_depth*output_depth];
     short* bias_int = new short[ ALIGN(output_depth,8) ];
     
     linfo_vect[0].weightbuffer_quant.push_back(weight_int);
     linfo_vect[0].biasbuffer_quant.push_back(bias_int);
 
-    float* weight_float = new float[ kernel_size*kernel_size* input_depth*output_depth];
+    float* weight_float = new float[ kernel_size_h*kernel_size_w* input_depth*output_depth];
     float* bias_float = new float[ output_depth ];
     
     linfo_vect[0].weightbuffers_sw.push_back(weight_float);
@@ -189,7 +193,7 @@ int main(int argc, char** argv)
   
 
 
-    init_weight<char>(linfo_vect[0].weightbuffer_quant[0],input_depth,output_depth,kernel_size,weight_gold);
+    init_weight<char>(linfo_vect[0].weightbuffer_quant[0],input_depth,output_depth,kernel_size_h,kernel_size_w,weight_gold);
 
     process_hw_weight_buffer_single_layer(linfo_vect[0]);
     // print_weight<0>( (ap_uint<128>*) linfo_vect[0].weightbuffers_hw[0],"idepthweight.txt", linfo_vect[0].port_segment_size[0]*WEIGHT_PORT_NUM*128/8);
@@ -216,29 +220,35 @@ int main(int argc, char** argv)
        output_width,
        linfo_vect[0].weightbuffer_quant[0],
        linfo_vect[0].biasbuffer_quant[0],
-       kernel_size,
-       pad_size,
+       kernel_size_h,
+       kernel_size_w,
+       pad_size_h,
+       pad_size_w,
        stride_size,
        relu_flag,
-       Scale_oback_int
+       Scale_oback_int,
+       use_kernel_size
    );
 
-   wino_model_int(fmap_dict["in"].buffers_int[1],
-       input_depth,
-       input_height,
-       input_width,
-       fmap_dict["out"].buffers_int[1],
-       output_depth,
-       output_height,
-       output_width,
-       linfo_vect[0].weightbuffer_quant[0],
-       linfo_vect[0].biasbuffer_quant[0],
-       kernel_size,
-       pad_size,
-       stride_size,
-       relu_flag,
-       Scale_oback_int
-   );
+    wino_model_int(fmap_dict["in"].buffers_int[1],
+        input_depth,
+        input_height,
+        input_width,
+        fmap_dict["out"].buffers_int[1],
+        output_depth,
+        output_height,
+        output_width,
+        linfo_vect[0].weightbuffer_quant[0],
+        linfo_vect[0].biasbuffer_quant[0],
+        kernel_size_h,
+        kernel_size_w,
+        pad_size_h,
+        pad_size_w,
+        stride_size,
+        relu_flag,
+        Scale_oback_int,
+        use_kernel_size
+    );
 
     char* inputddr=fmap_dict["in"].buffers_hw[0];
     char* outputddr=fmap_dict["out"].buffers_hw[0];
@@ -299,7 +309,7 @@ int main(int argc, char** argv)
     else if(dump_method== "dump_gen"   )
     {
         char filename[100];
-        sprintf(filename, "bin/cnm_%d_%d_%d_output.bin", output_height,output_depth,kernel_size);
+        sprintf(filename, "bin/cnm_%d_%d_%d_%d_output.bin", output_height,output_depth,kernel_size_h,kernel_size_w);
         if(  (fptr=fopen(filename,"rb")) !=NULL)
         {
             fread(fmap_dict["out"].buffers_hw[0], 16,output_depth/8*output_height*output_height,fptr);
@@ -355,7 +365,7 @@ int main(int argc, char** argv)
 
 
         char filename[100];
-        sprintf(filename, "%s/hw_%d_%d_%d.txt",folder.c_str(),input_height,input_depth,kernel_size);
+        sprintf(filename, "%s/hw_%d_%d_%d_%d.txt",folder.c_str(),input_height,input_depth,kernel_size_h,kernel_size_w);
 
     
         print_hw_buffers<char>(
@@ -377,7 +387,7 @@ int main(int argc, char** argv)
         ALIGN(fmap_dict["out"].blob_info->dim[0],8));
 
 
-        sprintf(filename, "%s/model_%d_%d_%d.txt",folder.c_str(),input_height,input_depth,kernel_size);
+        sprintf(filename, "%s/model_%d_%d_%d_%d.txt",folder.c_str(),input_height,input_depth,kernel_size_h,kernel_size_w);
 
     
         print_hw_buffers<char>(

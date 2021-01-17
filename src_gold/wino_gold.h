@@ -23,11 +23,14 @@ void wino_model_int(
     int output_width,
     char* weight,
     short* bias,
-    int kernel_size,
-    int pad_size,
+    int kernel_size_h,
+    int kernel_size_w,
+    int pad_size_h,
+    int pad_size_w,
     int stride,
     bool relu_flag,
-    int Scale_oback_int
+    int Scale_oback_int,
+    int use_kernel_size
 );
 
 void wino_model_float(

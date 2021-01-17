@@ -118,10 +118,12 @@ def generate_wino_systolic(config:Config_t):
     ret_string+="\n\t#pragma HLS dataflow\n\
     #pragma HLS interface ap_stable port=conv_desc\n\
     #pragma HLS array_partition variable =input_buffer dim=1 complete\n\
-	#pragma HLS array_partition variable =input_buffer dim=2 complete\n\
-    static hls::stream< ap_uint<8*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_stream[WINO_WIDTH];\n\
-    #pragma HLS stream variable=input_tile_stream depth=16\n\
-    static hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_transformed_stream[WINO_HEIGHT/2][WINO_WIDTH/2][2];\n\
+	#pragma HLS array_partition variable =input_buffer dim=2 complete\n"
+
+    ret_string+="\tstatic hls::stream< ap_uint<8*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_stream[WINO_WIDTH];\n\
+    #pragma HLS stream variable=input_tile_stream depth={}\n".format(2*config.WINO_WIDTH//2)
+
+    ret_string+="\tstatic hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_transformed_stream[WINO_HEIGHT/2][WINO_WIDTH/2][2];\n\
     #pragma HLS stream variable=input_tile_transformed_stream depth=2\n\
     static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream[WINO_HEIGHT/2][WINO_WIDTH/2-1][2];\n\
     #pragma HLS stream variable=weight_stream depth=2\n"
@@ -139,7 +141,7 @@ def generate_wino_systolic(config:Config_t):
         // hls::stream< ap_uint<16*BATCH_SIZE*36> > &input_tile_stream1, \n\
         // hls::stream< ap_uint<16*BATCH_SIZE*36> > &input_tile_stream2,\n\
         conv_desc.inwidth,\n\
-        conv_desc.pad_size,\n\
+        // conv_desc.pad_size,\n\
         conv_desc.weightbuffer_load_outdepth_number,\n\
         conv_desc.wino_output_tile_size,\n\
         conv_desc.input_buffer_feeding_loop_bound,\n\

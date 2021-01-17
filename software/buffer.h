@@ -266,7 +266,8 @@ void init_weight(
     T* weight,
     int indepth,
     int outdepth,
-    int kernelsize,
+    int kernelsize_h,
+    int kernelsize_w,
    std::string mode 
 )
 {
@@ -274,7 +275,7 @@ void init_weight(
     fflush(stdout);
     for(int id=0;id<indepth;id++)
     for(int od=0;od<outdepth;od++)
-    for(int ks=0;ks<kernelsize*kernelsize;ks++)
+    for(int ks=0;ks<kernelsize_h*kernelsize_w;ks++)
     {
         int value;
         if(mode=="depth_order")
@@ -289,7 +290,7 @@ void init_weight(
         }
         else if(mode=="odepth_order")
         {
-            value=od;
+            value=od%64;
             // value=od;
         }
         else if(mode=="kernel_order")
@@ -298,16 +299,15 @@ void init_weight(
             value=1;
             // if(ks==kernelsize*kernelsize/2 && od%16<8 && id==0) value=1;
             // else value=0;
-            
         }
         else if( mode == "center")
         {
-            if(ks==kernelsize*kernelsize/2 && id==0 && od%16<8) value=1;
+            if(ks==kernelsize_w*kernelsize_h/2 && id==0 && od%16<8) value=1;
             else value=0;
         }
         else if(mode=="random")
         {
-            value=random()%32-16;
+            value=random()%128-64;
         }
         else if(mode=="zero")
         {
@@ -318,7 +318,7 @@ void init_weight(
             assert(0);
         }
         
-        weight[ (od*indepth+id)*kernelsize*kernelsize+ks]=value;
+        weight[ (od*indepth+id)*kernelsize_h*kernelsize_w+ks]=value;
     }
 }
 

@@ -81,9 +81,9 @@ void wino_systolic_kernel(    WEIGHT_PORTS_DECLARE(weight_DDR),
     #pragma HLS interface ap_stable port=conv_desc
     #pragma HLS array_partition variable =input_buffer dim=1 complete
 	#pragma HLS array_partition variable =input_buffer dim=2 complete
-    static hls::stream< ap_uint<8*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_stream[WINO_WIDTH];
-    #pragma HLS stream variable=input_tile_stream depth=16
-    static hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_transformed_stream[WINO_HEIGHT/2][WINO_WIDTH/2][2];
+	static hls::stream< ap_uint<8*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_stream[WINO_WIDTH];
+    #pragma HLS stream variable=input_tile_stream depth=2
+	static hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_transformed_stream[WINO_HEIGHT/2][WINO_WIDTH/2][2];
     #pragma HLS stream variable=input_tile_transformed_stream depth=2
     static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream[WINO_HEIGHT/2][WINO_WIDTH/2-1][2];
     #pragma HLS stream variable=weight_stream depth=2
@@ -96,7 +96,7 @@ void wino_systolic_kernel(    WEIGHT_PORTS_DECLARE(weight_DDR),
         // hls::stream< ap_uint<16*BATCH_SIZE*36> > &input_tile_stream1, 
         // hls::stream< ap_uint<16*BATCH_SIZE*36> > &input_tile_stream2,
         conv_desc.inwidth,
-        conv_desc.pad_size,
+        // conv_desc.pad_size,
         conv_desc.weightbuffer_load_outdepth_number,
         conv_desc.wino_output_tile_size,
         conv_desc.input_buffer_feeding_loop_bound,

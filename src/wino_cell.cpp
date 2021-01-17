@@ -3193,7 +3193,6 @@ void winoPEB_CORN(
 					// 		printf("\n");
 					// 	}
 					// 	printf("\n");
-	
 					// }
 					// std::cout<<"weight tile in depth" <<std::endl;
 					// for(int nn=0;nn<INDEPTH_MINITILE_SIZE;nn++)
@@ -3570,6 +3569,8 @@ void winoPEB_CORN(
 				}
 				// if(wino_array_idx/WINO_HEIGHT==6 && cycle==0)
 				// {
+					// std::cout<<"Out addr "<< outbuffer_addr_reg <<std::endl;
+					// std::cout<<"idepth_minitile_idx "<< idepth_minitile_idx <<std::endl;
 					// for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
 					// {
 					// 	#pragma HLS unroll
@@ -5195,6 +5196,9 @@ void winoPEB_BOT(
 				}
 				// if(wino_array_idx/WINO_HEIGHT==6 && cycle==0)
 				// {
+					// std::cout<<"Out addr "<< outbuffer_addr_reg <<std::endl;
+					// std::cout<<"idepth_minitile_idx "<< idepth_minitile_idx <<std::endl;
+
 					// for(int r=0;r<WINO_OUT_SIZE_CELL;r++)
 					// {
 					// 	#pragma HLS unroll

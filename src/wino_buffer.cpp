@@ -16,7 +16,7 @@ void input_feed_underconstruction(
 	ap_uint<16> input_buffer[INBUFFER_HEIGHT][INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],
 	hls::stream< ap_uint<8*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_stream[WINO_WIDTH], 
 	ap_uint<16> inwidth,
-	ap_uint<16> pad_size,
+	// ap_uint<16> pad_size,
 	ap_uint<16> weightbuffer_load_outdepth_number,
 	ap_uint<16> wino_output_tile_size,
 	ap_uint<32> input_buffer_feeding_loop_bound,
@@ -884,7 +884,7 @@ void weight_feed_one_port(
 	#endif
 	);
 
-#if DEBUG_FILE_PRINT
+#if 0
 	char filename[100];
 	sprintf(filename,"weightbuffer_content%d.txt",dummy);
 
@@ -924,7 +924,7 @@ void weight_feed_one_port(
 		,conv_desc
 		#endif
 		);
-#if DEBUG_FILE_PRINT
+#if 0
 	attach_weight_buffer_content_uniformed<W_WIDTH,WINO_DOMAIN_SIZE,INDEPTH_MINITILE_SIZE,WEIGHT_FEED_NUMBER_PER_PORT,WEIGHT_BUFFER_DEPTH>
 	(weight_buff,cnt+1,filename);
 #endif

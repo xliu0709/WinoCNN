@@ -11,9 +11,11 @@ class LayerInfo_t{
         std::string layer_type;
         int indim[3];
         int outdim[3];
-        int kernel_size;
+        int kernel_size_h;
+        int kernel_size_w;
         int stride;
-        int pad_size;
+        int pad_size_h;
+        int pad_size_w;
         int group_indepth;
         int group_indepth_offset;
         int group_outdepth;

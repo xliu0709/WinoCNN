@@ -766,7 +766,7 @@ void load_input_rowtile_from_ddr(
 		ap_uint<16> inheight,
 		ap_uint<16> inwidth,
 		ap_uint<16> stride,
-        ap_uint<16> pad_size,
+        // ap_uint<16> pad_size,
 		ap_uint<16> inwidth_align8,
 		ap_uint<16> indepth_align8,
 		ap_uint<16> group_indepth_x_inwidth_align8_by8,

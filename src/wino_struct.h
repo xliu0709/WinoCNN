@@ -10,8 +10,10 @@ typedef struct{
     int outheight;
     int outwidth;
     int outdepth;
-    int kernel_size;
-    int pad_size;
+    int kernel_size_h;
+    int kernel_size_w;
+    int pad_size_h;
+    int pad_size_w;
     int stride;
 
     //wino related
@@ -105,8 +107,10 @@ typedef struct{
 
 
     //Merge Kernel
-    int merge_kernel_size;
+    int merge_kernel_size_h;
+    int merge_kernel_size_w;
     int merge_kernel_step;
+    // int merge_kernel_step_w;
     int merge_kernel_flag;
     int scale_oback_int;
     int merge_weight_row_step;

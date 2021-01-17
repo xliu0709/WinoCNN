@@ -22,14 +22,15 @@ void get_wino_input_tile(
     int depth_idx,
     int start_output_row,
     int start_output_col,
-    int pad_size
+    int pad_size_h,
+    int pad_size_w
 )
 {
     for(int wino_row=0; wino_row<tilesize;wino_row++)
         for(int wino_col=0; wino_col<tilesize;wino_col++)
         {
-            int col=start_output_col+wino_col-pad_size;
-            int row=start_output_row+wino_row-pad_size;
+            int col=start_output_col+wino_col-pad_size_w;
+            int row=start_output_row+wino_row-pad_size_h;
             if(col<0 || col >= width || row < 0 || row >= height)
             {
                 tile[wino_row*tilesize+wino_col]=0;
@@ -138,7 +139,8 @@ void get_merge_weight_tile(
     Tout* wino_weight_tile,
     int indepth,
     int outdepth,
-    int tilesize,
+    int tilesize_h,
+    int tilesize_w,
     int input_depth_idx,
     int output_depth_idx,
     int tile_row_offset,
@@ -146,17 +148,17 @@ void get_merge_weight_tile(
 
 )
 {
-        int address_offset=output_depth_idx*indepth*tilesize*tilesize +
-                            input_depth_idx*tilesize*tilesize;
+        int address_offset=output_depth_idx*indepth*tilesize_h*tilesize_w +
+                            input_depth_idx*tilesize_h*tilesize_w;
 
         for(int r=0;r<3;r++)
         for(int c=0;c<3;c++)
         {
             int tile_row_idx=tile_row_offset+r;
             int tile_col_idx=tile_col_offset+c;
-            if(tile_row_idx<tilesize && tile_col_idx < tilesize)
+            if(tile_row_idx<tilesize_h && tile_col_idx < tilesize_w)
             {
-                wino_weight_tile[r*3+c]=weight[address_offset+tile_row_idx*tilesize+tile_col_idx];
+                wino_weight_tile[r*3+c]=weight[address_offset+tile_row_idx*tilesize_w+tile_col_idx];
             }
             else
             {
@@ -268,7 +270,7 @@ void wino_model_float_offset(
                         float input_tile[WINO_DOMAIN_SIZE_SQUARE];
 
                         get_wino_input_tile<float,float>(input,input_tile,input_depth,input_width,input_height,WINO_DOMAIN_SIZE,
-                                                        input_depth_idx,start_output_row+merge_kernel_row_offset,start_output_col+merge_kernel_col_offset,pad_size);
+                                                        input_depth_idx,start_output_row+merge_kernel_row_offset,start_output_col+merge_kernel_col_offset,pad_size,pad_size);
                         
                         float dBT[WINO_DOMAIN_SIZE_SQUARE];
                         
@@ -309,7 +311,7 @@ void wino_model_float_offset(
                         if(kernel_size!=5)
                         {
                             float g[WINO_DOMAIN_SIZE_SQUARE];
-                            get_merge_weight_tile<float,float>(weight,g,input_depth,output_depth,kernel_size,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
+                            get_merge_weight_tile<float,float>(weight,g,input_depth,output_depth,kernel_size,kernel_size,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
                                               
                             
                             float gGT[3*WINO_DOMAIN_SIZE];
@@ -505,22 +507,27 @@ void wino_model_int(
     int output_width,
     char* weight,
     short* bias,
-    int kernel_size,
-    int pad_size,
+    int kernel_size_h,
+    int kernel_size_w,
+    int pad_size_h,
+    int pad_size_w,
     int stride,
     bool relu_flag,
-    int Scale_oback_int
+    int Scale_oback_int,
+    int use_kernel_size
 )
 {
-
+    std::cout<<"********wino_model_int************"<<std::endl;
     std::cout<<"input_depth "<<input_depth<< std::endl;
     std::cout<<"input_height "<<input_height<< std::endl;
     std::cout<<"input_width "<<input_width<< std::endl;
     std::cout<<"output_depth "<<output_depth<< std::endl;
     std::cout<<"output_height "<<output_height<< std::endl;
     std::cout<<"output_width "<<output_width<< std::endl;
-    std::cout<<"kernel_size "<<kernel_size<< std::endl;
-    std::cout<<"pad_size "<<pad_size<< std::endl;
+    std::cout<<"kernel_size "<<kernel_size_h<< std::endl;
+    std::cout<<"kernel_size "<<kernel_size_w<< std::endl;
+    std::cout<<"pad_size "<<pad_size_h<< std::endl;
+    std::cout<<"pad_size "<<pad_size_w<< std::endl;
     std::cout<<"stride "<<stride<< std::endl;
     std::cout<<"relu_flag "<<relu_flag<< std::endl;
     std::cout<<"Scale_oback_int "<<Scale_oback_int<< std::endl;
@@ -528,7 +535,7 @@ void wino_model_int(
     int wino_output_tile_size;
     
     #if WINO_DOMAIN_SIZE==4
-    if(kernel_size==1)
+    if(kernel_size_h==1  && kernel_size_w==1)
     {
         wino_output_tile_size=4;
     }
@@ -559,10 +566,11 @@ void wino_model_int(
     fflush(stdout);
     for(int start_output_row =0; start_output_row < output_height*stride; start_output_row+=wino_output_tile_size )
     {
-        int merge_kernel_size= (kernel_size==1) ?3:kernel_size;
+        int merge_kernel_size_h= kernel_size_h;
+        int merge_kernel_size_w= kernel_size_w;
 
-        for(int merge_kernel_row_offset=0;merge_kernel_row_offset<merge_kernel_size;merge_kernel_row_offset+=3)
-        for(int merge_kernel_col_offset=0;merge_kernel_col_offset<merge_kernel_size;merge_kernel_col_offset+=3)
+        for(int merge_kernel_row_offset=0;merge_kernel_row_offset<kernel_size_h;merge_kernel_row_offset+=use_kernel_size)
+        for(int merge_kernel_col_offset=0;merge_kernel_col_offset<kernel_size_w;merge_kernel_col_offset+=use_kernel_size)
         {
             for(int output_depth_idx=0;output_depth_idx<output_depth;output_depth_idx++)
             {
@@ -573,7 +581,7 @@ void wino_model_int(
                         int input_tile[WINO_DOMAIN_SIZE_SQUARE];
 
                         get_wino_input_tile<char,int>(input,input_tile,input_depth,input_width,input_height,WINO_DOMAIN_SIZE,
-                                                        input_depth_idx,start_output_row+merge_kernel_row_offset,start_output_col+merge_kernel_col_offset,pad_size);
+                                                        input_depth_idx,start_output_row+merge_kernel_row_offset,start_output_col+merge_kernel_col_offset,pad_size_h, pad_size_w);
 
                         int dBT[WINO_DOMAIN_SIZE_SQUARE];
 
@@ -582,7 +590,7 @@ void wino_model_int(
                         
                         int wino_input_tile[WINO_DOMAIN_SIZE_SQUARE];
                         #if WINO_DOMAIN_SIZE==4
-                        if(kernel_size!=1)
+                        if(use_kernel_size==3)
                         {
                             input_right_mul_16<int>(input_tile,dBT);
 
@@ -612,12 +620,12 @@ void wino_model_int(
                         // if(kernel_size!=1)
                         // {
                         int g[WINO_DOMAIN_SIZE_SQUARE];
-                        get_merge_weight_tile<char,int>(weight,g,input_depth,output_depth,kernel_size,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
+                        get_merge_weight_tile<char,int>(weight,g,input_depth,output_depth,kernel_size_h,kernel_size_w,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
                         
                         // print_tile<int>(g,9,"weight_tile");
                         int gGT[3*WINO_DOMAIN_SIZE];
                         #if WINO_DOMAIN_SIZE==4
-                            if(kernel_size!=1)
+                            if(use_kernel_size==3)
                             {
                                 weight_right_mul_3to4<int>(g,gGT);
 
@@ -692,7 +700,7 @@ void wino_model_int(
                         // {
                             
                             #if WINO_DOMAIN_SIZE==4
-                            if(kernel_size!=1)
+                            if(use_kernel_size==3)
                             {
                                 output_right_mul_4to2<int>(wino_output_tile,vA);
                                 apply_quant_int<UVA_QUANT_BIT>(vA,WINO_OUT_SIZE*WINO_DOMAIN_SIZE);
@@ -802,6 +810,7 @@ void wino_model_int(
         delete[] output_temp_accum[i];
     }
     delete[] output_buffer;
+    std::cout<<"********wino_model_int end************\n"<<std::endl;
 }
 
 

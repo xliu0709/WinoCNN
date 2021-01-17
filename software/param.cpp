@@ -86,9 +86,11 @@ void process_element6x6_soft(
     int output_height,
     int output_width,
     int output_depth,
-    int kernel_size,
+    int kernel_size_h,
+    int kernel_size_w,
     int stride_size,
-    int pad_size,
+    int pad_size_h,
+    int pad_size_w,
     int group_indepth_offset,
     int group_indepth,
     int group_outdepth_offset,
@@ -125,77 +127,75 @@ void process_element6x6_soft(
     conv_desc.outwidth = output_width*stride_size;
     conv_desc.outheight = output_height*stride_size;
     conv_desc.outdepth = output_depth;
-    conv_desc.kernel_size = kernel_size;
+    conv_desc.kernel_size_h = kernel_size_h;
+    conv_desc.kernel_size_w = kernel_size_w;
     conv_desc.stride= stride_size;
-    conv_desc.pad_size = pad_size;
+    conv_desc.pad_size_h = pad_size_h;
+    conv_desc.pad_size_w = pad_size_w;
     // conv_desc.use_kernel_size=use_kernel_size;
 
     // wino related parameters
     if(wino_domain_size==6)
     {
-        if( kernel_size == 3)
-        {
-            conv_desc.wino3x3_flag = 1;
-            conv_desc.wino_output_tile_size = 4;
-            conv_desc.merge_kernel_flag=0;
-            conv_desc.merge_kernel_size=ALIGN(3,3);
-            conv_desc.merge_kernel_step=3;
-        }
-        else if( kernel_size == 5)
-        {
-            conv_desc.wino3x3_flag = 0;
-            conv_desc.wino_output_tile_size =2;
-            conv_desc.merge_kernel_flag=0;
-            conv_desc.merge_kernel_size=3;
-            conv_desc.merge_kernel_step=3;
-        }
-        else
-        {
-            conv_desc.wino3x3_flag = 1;
-            conv_desc.wino_output_tile_size = 4;
-            conv_desc.merge_kernel_flag=1;
-            conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
-            conv_desc.merge_kernel_step=3;
-        }
+        // if( kernel_size == 3)
+        // {
+        //     conv_desc.wino3x3_flag = 1;
+        //     conv_desc.wino_output_tile_size = 4;
+        //     conv_desc.merge_kernel_flag=0;
+        //     conv_desc.merge_kernel_size=ALIGN(3,3);
+        //     conv_desc.merge_kernel_step=3;
+        // }
+        // else if( kernel_size == 5)
+        // {
+        //     conv_desc.wino3x3_flag = 0;
+        //     conv_desc.wino_output_tile_size =2;
+        //     conv_desc.merge_kernel_flag=0;
+        //     conv_desc.merge_kernel_size=3;
+        //     conv_desc.merge_kernel_step=3;
+        // }
+        // else
+        // {
+        //     conv_desc.wino3x3_flag = 1;
+        //     conv_desc.wino_output_tile_size = 4;
+        //     conv_desc.merge_kernel_flag=1;
+        //     conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
+        //     conv_desc.merge_kernel_step=3;
+        // }
     }
     else
     {
         if( use_kernel_size==3 )
         {
-            if(kernel_size==3)
+            conv_desc.wino3x3_flag = 1;
+            conv_desc.wino_output_tile_size = 2;
+            conv_desc.merge_kernel_size_h=ALIGN(kernel_size_h,3);
+            conv_desc.merge_kernel_size_w=ALIGN(kernel_size_w,3);
+            conv_desc.merge_kernel_step=3;
+
+            if(kernel_size_h<=3)
             {
-                conv_desc.wino3x3_flag = 1;
-                conv_desc.wino_output_tile_size = 2;
                 conv_desc.merge_kernel_flag=0;
-                conv_desc.merge_kernel_size=ALIGN(3,3);
-                conv_desc.merge_kernel_step=3;
             }
             else
             {
-                conv_desc.wino3x3_flag = 1;
-                conv_desc.wino_output_tile_size = 2;
                 conv_desc.merge_kernel_flag=1;
-                conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
-                conv_desc.merge_kernel_step=3;
             }
         }
         else
         {
-            if(kernel_size==1)
+            conv_desc.wino3x3_flag = 0;
+            conv_desc.wino_output_tile_size = 4;
+            conv_desc.merge_kernel_size_h=kernel_size_h;
+            conv_desc.merge_kernel_size_w=kernel_size_w;
+            conv_desc.merge_kernel_step=1;
+
+            if(kernel_size_h==1)
             {
-                conv_desc.wino3x3_flag = 0;
-                conv_desc.wino_output_tile_size = 4;
                 conv_desc.merge_kernel_flag=0;
-                conv_desc.merge_kernel_size=1;
-                conv_desc.merge_kernel_step=1;
             }
             else
             {
-                conv_desc.wino3x3_flag = 0;
-                conv_desc.wino_output_tile_size = 4;
                 conv_desc.merge_kernel_flag=1;
-                conv_desc.merge_kernel_size=kernel_size;
-                conv_desc.merge_kernel_step=1;
             }
         }
     }
@@ -299,12 +299,8 @@ void process_element6x6_soft(
     conv_desc.weightbuffer_load_outdepth_number = conv_desc.outdepth_align8 / conv_desc.weightbuffer_load_outdepth_step;
 
     int weightbuffer_load_size=indepth_factor*outdepth_factor;
-    if(kernel_size==5 && wino_domain_size==6)
+    if(kernel_size_h==5 && kernel_size_w && wino_domain_size==6)
         conv_desc.weightDDR_buffer_burst_length = weightddr_indepth_minitile_128bit_step*weightbuffer_load_size;
-    else if( kernel_size != 1)
-    {
-        conv_desc.weightDDR_buffer_burst_length = (indepth_minitile_size/2)*weightbuffer_load_size;
-    }
     else
     {
         conv_desc.weightDDR_buffer_burst_length = (indepth_minitile_size/2)*weightbuffer_load_size;
@@ -431,7 +427,7 @@ void process_element6x6_soft(
     conv_desc.scale_oback_int=scale_oback;
     std::cout<<"scale_oback "<< scale_oback<<std::endl;
 
-    conv_desc.merge_weight_row_step=conv_desc.merge_kernel_size/conv_desc.merge_kernel_step*conv_desc.weightDDR_port_burst_length*conv_desc.weightDDR_burst_number*4;
+    conv_desc.merge_weight_row_step=conv_desc.merge_kernel_size_w/conv_desc.merge_kernel_step*conv_desc.weightDDR_port_burst_length*conv_desc.weightDDR_burst_number*4;
     conv_desc.merge_weight_col_step=conv_desc.weightDDR_port_burst_length*conv_desc.weightDDR_burst_number*4;
 
     conv_desc.relu_flag=relu_flag;
@@ -489,9 +485,11 @@ void load_layer_info(
         ifs>>layer_info.outdim[1];
         ifs>>layer_info.outdim[2];
 
-        ifs>>layer_info.kernel_size;
+        ifs>>layer_info.kernel_size_h;
+        ifs>>layer_info.kernel_size_w;
         ifs>>layer_info.stride;
-        ifs>>layer_info.pad_size;
+        ifs>>layer_info.pad_size_h;
+        ifs>>layer_info.pad_size_w;
 
         ifs>>layer_info.group_indepth;
         ifs>>layer_info.group_indepth_offset;
@@ -633,9 +631,11 @@ prepare_conv_descriptor(
                 layerinfo_vect[i].outdim[1],
                 layerinfo_vect[i].outdim[2],
                 layerinfo_vect[i].outdim[0],
-                layerinfo_vect[i].kernel_size,
+                layerinfo_vect[i].kernel_size_h,
+                layerinfo_vect[i].kernel_size_w,
                 layerinfo_vect[i].stride,
-                layerinfo_vect[i].pad_size,
+                layerinfo_vect[i].pad_size_h,
+                layerinfo_vect[i].pad_size_w,
                 layerinfo_vect[i].group_indepth_offset,
                 layerinfo_vect[i].group_indepth,
                 layerinfo_vect[i].group_outdepth_offset,
