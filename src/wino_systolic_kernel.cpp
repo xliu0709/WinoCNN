@@ -88,7 +88,7 @@ void wino_systolic_kernel(    WEIGHT_PORTS_DECLARE(weight_DDR),
     static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream[WINO_HEIGHT/2][WINO_WIDTH/2-1][2];
     #pragma HLS stream variable=weight_stream depth=2
 	static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream_out[WEIGHT_PORT_NUM][WEIGHT_FEED_NUMBER_PER_PORT];
-    #pragma HLS stream variable=weight_stream_out depth=16
+    #pragma HLS stream variable=weight_stream_out depth=2
 
 	input_feed_underconstruction(
         input_buffer,

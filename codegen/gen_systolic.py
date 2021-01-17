@@ -130,10 +130,10 @@ def generate_wino_systolic(config:Config_t):
 
     if(config.WINO_HEIGHT==8 or config.WINO_HEIGHT==2):
         ret_string+="\tstatic hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream_out[WEIGHT_PORT_NUM][WEIGHT_FEED_NUMBER_PER_PORT];\n\
-    #pragma HLS stream variable=weight_stream_out depth=16\n\n"
+    #pragma HLS stream variable=weight_stream_out depth=2\n\n"
     else:
         ret_string+="\tstatic hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream_out[WEIGHT_PORT_NUM/2][2];\n\
-    #pragma HLS stream variable=weight_stream_out depth=16\n\n"   
+    #pragma HLS stream variable=weight_stream_out depth=2\n\n"   
 
     ret_string+="\tinput_feed_underconstruction(\n\
         input_buffer,\n\
