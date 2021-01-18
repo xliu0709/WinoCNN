@@ -2864,16 +2864,15 @@ void wino_stream_cell_corner(
 
 
 
-
 void winoPEB_CORN(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > top_stream_in[WINO_W2],
 		// hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > bottom_stream_out[WINO_W2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WINO_H2],
 		// hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > right_stream_out[WEIGHT_PORT_NUM][WINO_H2],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_0[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_1[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_2[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_3[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_0[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_1[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_2[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_3[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_uint<16> weightbuffer_outdepth_minitile_number,
 		ap_uint<24> total_input_stream_tile,
 		ap_uint<16> loop_omini_base_reset_cycle,
@@ -3104,7 +3103,7 @@ void winoPEB_CORN(
 		#if WINO_DOMAIN_SIZE==6
 		for(int wino_array_idx=0;wino_array_idx<WINO_HEIGHT*WINO_WIDTH;wino_array_idx++)
 		#else
-		for(int wino_w2=0;wino_w2<WINO_H2;wino_w2++)
+		for(int wino_w2=0;wino_w2<WINO_W2;wino_w2++)
 		#endif
 		{
 			#pragma HLS unroll 
@@ -3188,7 +3187,7 @@ void winoPEB_CORN(
 					// 	{
 					// 		for(int j=0;j<4;j++)
 					// 		{
-					// 			printf("%4d ", (int) input_tile_reg[nn][i][j][0]);
+					// 			printf("[%4d %4d]", (int) input_tile_reg[nn][i][j][0],(int) input_tile_reg[nn][i][j][1]);
 					// 		}
 					// 		printf("\n");
 					// 	}
@@ -3694,10 +3693,10 @@ void winoPEB_EDG(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > bottom_stream_out[WINO_W2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WINO_H2],
 		// hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > right_stream_out[WEIGHT_PORT_NUM][WINO_H2],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_0[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_1[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_2[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_3[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_0[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_1[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_2[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_3[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_uint<16> weightbuffer_outdepth_minitile_number,
 		ap_uint<24> total_input_stream_tile,
 		ap_uint<16> loop_omini_base_reset_cycle,
@@ -3926,7 +3925,7 @@ void winoPEB_EDG(
 		#if WINO_DOMAIN_SIZE==6
 		for(int wino_array_idx=0;wino_array_idx<WINO_HEIGHT*WINO_WIDTH;wino_array_idx++)
 		#else
-		for(int wino_w2=0;wino_w2<WINO_H2;wino_w2++)
+		for(int wino_w2=0;wino_w2<WINO_W2;wino_w2++)
 		#endif
 		{
 			#pragma HLS unroll 
@@ -4505,10 +4504,10 @@ void winoPEB_BOT(
 		// hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > bottom_stream_out[WINO_W2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WINO_H2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > right_stream_out[WINO_H2],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_0[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_1[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_2[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_3[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_0[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_1[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_2[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_3[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_uint<16> weightbuffer_outdepth_minitile_number,
 		ap_uint<24> total_input_stream_tile,
 		ap_uint<16> loop_omini_base_reset_cycle,
@@ -4738,7 +4737,7 @@ void winoPEB_BOT(
 		#if WINO_DOMAIN_SIZE==6
 		for(int wino_array_idx=0;wino_array_idx<WINO_HEIGHT*WINO_WIDTH;wino_array_idx++)
 		#else
-		for(int wino_w2=0;wino_w2<WINO_H2;wino_w2++)
+		for(int wino_w2=0;wino_w2<WINO_W2;wino_w2++)
 		#endif
 		{
 			#pragma HLS unroll 
@@ -5320,10 +5319,10 @@ void winoPEB_CENT(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > bottom_stream_out[WINO_W2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WINO_H2],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > right_stream_out[WINO_H2],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_0[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_1[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_2[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_3[2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_0[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_1[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_2[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer_3[WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_uint<16> weightbuffer_outdepth_minitile_number,
 		ap_uint<24> total_input_stream_tile,
 		ap_uint<16> loop_omini_base_reset_cycle,
@@ -5552,7 +5551,7 @@ void winoPEB_CENT(
 		#if WINO_DOMAIN_SIZE==6
 		for(int wino_array_idx=0;wino_array_idx<WINO_HEIGHT*WINO_WIDTH;wino_array_idx++)
 		#else
-		for(int wino_w2=0;wino_w2<WINO_H2;wino_w2++)
+		for(int wino_w2=0;wino_w2<WINO_W2;wino_w2++)
 		#endif
 		{
 			#pragma HLS unroll 
@@ -6129,7 +6128,7 @@ void winoPEB_CENT(
 void wino_stream_block2(
 		hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > top_stream_in[WINO_WIDTH],
 		hls::stream< ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> > left_stream_in[WEIGHT_PORT_NUM][WEIGHT_FEED_NUMBER_PER_PORT],
-		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*BATCH_SIZE> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_uint<16> weightbuffer_outdepth_minitile_number,
 		ap_uint<24> total_input_stream_tile,
 		ap_uint<16> loop_omini_base_reset_cycle,

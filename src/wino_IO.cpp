@@ -1078,7 +1078,7 @@ void load_input_rowtile_from_ddr(
 template<int port_idx>
 void write_output_row(
 	ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR,
-	ap_uint<OUT_WIDTH*2> out_buffer0[OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+	ap_uint<OUT_WIDTH*2> out_buffer0[OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> rowtile_baseaddr0,
 	ap_uint<16> row_idx,
 	// ap_int<16> bias_buffer[8][BIAS_BUFFER_DEPTH],
@@ -1154,7 +1154,7 @@ void write_output_row(
 		for(int j=0;j<OUTDEPTH_MINITILE_SIZE ;j++)
 		{
 			#pragma HLS unroll
-			outbuffer_data_lo[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_lo];
+			outbuffer_data_lo[i][j]=out_buffer0[j/WINO_H2][wino_width_idx/WINO_W2][j%WINO_H2][wino_width_idx%WINO_W2][i][buffer_address_lo];
 		}
 
 
@@ -1164,7 +1164,7 @@ void write_output_row(
 		for(int j=0;j<OUTDEPTH_MINITILE_SIZE ;j++)
 		{
 			#pragma HLS unroll
-			outbuffer_data_hi[i][j]=out_buffer0[j/2][wino_width_idx/2][j%2][wino_width_idx%2][i][buffer_address_hi];
+			outbuffer_data_hi[i][j]=out_buffer0[j/WINO_H2][wino_width_idx/WINO_W2][j%WINO_H2][wino_width_idx%WINO_W2][i][buffer_address_hi];
 		}
 
 		#endif
@@ -1211,13 +1211,13 @@ void write_output_row(
 			(outdata_vect[i][1],outdata_vect[i][0])=outbuffer_data_lo[wino_cell_inneridx][i];
 		}
 		#endif
-
+		
+		// std::cout<<"Col "<<col<<std::endl;
+		// std::cout<<"OUT_PORT_VECTOR"<<std::endl;
 		// for(int j=0;j<OUT_PORT_BATCH_NUM ;j++)
 		// {
 		// 	printf("%d ",(int) outdata_vect[j][0]);
 		// }
-		// getchar();
-
 		// for(int j=0;j<OUT_PORT_BATCH_NUM ;j++)
 		// {
 		// 	printf("%d ",(int) outdata_vect[j][1]);
@@ -1379,220 +1379,220 @@ void write_output_row(
 
 
 
-template<int port_idx>
-void write_output_to_DDR_onerow(
-	ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR,
-	ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
-	ap_uint<16> outheight,
-	ap_uint<16> outwidth_align8,
-	ap_uint<4> wino_output_tile_size,
-	ap_uint<4> wino_col_pix_upper_bound,
-	ap_uint<8> wino_tile_number_rowcol,
-	ap_uint<24> output_burst_length,
-	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> rowtile_baseaddr,
-	ap_uint<16> start_row_idx,
-	ap_int<18> oback_scale,
-	ap_int<16> bias_buffer[8][BIAS_BUFFER_DEPTH]
-	#if DEBUG_CONV_DESC
-	,ConvDesc_t conv_desc
-	#endif
-)
-{
-	printf("\t^^write_output_to_DDR_onerow %d^^\n",(int) start_row_idx);
-	#pragma HLS array_partition variable=out_buffer complete dim=1
-	#pragma HLS array_partition variable=out_buffer complete dim=2
-	#pragma HLS array_partition variable=out_buffer complete dim=3
-	#if WINO_OUT_SIZE == 4
+// template<int port_idx>
+// void write_output_to_DDR_onerow(
+// 	ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR,
+// 	ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+// 	ap_uint<16> outheight,
+// 	ap_uint<16> outwidth_align8,
+// 	ap_uint<4> wino_output_tile_size,
+// 	ap_uint<4> wino_col_pix_upper_bound,
+// 	ap_uint<8> wino_tile_number_rowcol,
+// 	ap_uint<24> output_burst_length,
+// 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> rowtile_baseaddr,
+// 	ap_uint<16> start_row_idx,
+// 	ap_int<18> oback_scale,
+// 	ap_int<16> bias_buffer[8][BIAS_BUFFER_DEPTH]
+// 	#if DEBUG_CONV_DESC
+// 	,ConvDesc_t conv_desc
+// 	#endif
+// )
+// {
+// 	printf("\t^^write_output_to_DDR_onerow %d^^\n",(int) start_row_idx);
+// 	#pragma HLS array_partition variable=out_buffer complete dim=1
+// 	#pragma HLS array_partition variable=out_buffer complete dim=2
+// 	#pragma HLS array_partition variable=out_buffer complete dim=3
+// 	#if WINO_OUT_SIZE == 4
 	
-	if(port_idx >= wino_output_tile_size || start_row_idx >= outheight)
-	{
-		return;
-	}
-	#else
+// 	if(port_idx >= wino_output_tile_size || start_row_idx >= outheight)
+// 	{
+// 		return;
+// 	}
+// 	#else
 
-	if(start_row_idx >= outheight)
-	{
-		return;
-	}
-	#endif
-	ap_uint<WINO_WIDTH_BITWIDTH> wino_widthtile_idx=0;
+// 	if(start_row_idx >= outheight)
+// 	{
+// 		return;
+// 	}
+// 	#endif
+// 	ap_uint<WINO_WIDTH_BITWIDTH> wino_widthtile_idx=0;
 	
-	ap_uint<4> wino_col_pix_idx=0;
+// 	ap_uint<4> wino_col_pix_idx=0;
 
 
 
-	ap_uint<2> depthtile_idx=0;
+// 	ap_uint<2> depthtile_idx=0;
 
-	ap_uint<16> col_idx_cnt=1;
+// 	ap_uint<16> col_idx_cnt=1;
 
-	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> coltile_baseaddr=0;
-	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> depthtile_baseaddr0=0;
-	ap_uint<10> bias_buffer_addr=0;
-	#if WEIGHT_FEED_NUMBER_PER_PORT == 1
-	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> depthtile_baseaddr1=wino_tile_number_rowcol;
-	#endif
-
-
-
-	#if WEIGHT_FEED_NUMBER_PER_PORT == 1
-	ap_uint<8> depthtile_baseaddr_increment_step=wino_tile_number_rowcol*2;
-	#else
-	ap_uint<8> depthtile_baseaddr_increment_step=wino_tile_number_rowcol;
-	#endif
+// 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> coltile_baseaddr=0;
+// 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> depthtile_baseaddr0=0;
+// 	ap_uint<10> bias_buffer_addr=0;
+// 	#if WEIGHT_FEED_NUMBER_PER_PORT == 1
+// 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> depthtile_baseaddr1=wino_tile_number_rowcol;
+// 	#endif
 
 
-	// printf("write_length %d\n", (int) conv_desc.output_burst_length);
-	for(ap_uint<24> cycle=0;cycle < output_burst_length;cycle++)
-	{		
-		#pragma HLS pipeline
-		ap_uint<OUT_WIDTH*BATCH_SIZE> outbuffer_data_depth0[OUTDEPTH_MINITILE_SIZE];
-		#pragma HLS array_partition variable =outbuffer_data_depth0 complete
 
-		#if WEIGHT_FEED_NUMBER_PER_PORT == 1
-		ap_int<OUT_WIDTH*BATCH_SIZE> outbuffer_data_depth1[OUTDEPTH_MINITILE_SIZE];
-		#pragma HLS array_partition variable =outbuffer_data_depth1 complete
-		#endif
+// 	#if WEIGHT_FEED_NUMBER_PER_PORT == 1
+// 	ap_uint<8> depthtile_baseaddr_increment_step=wino_tile_number_rowcol*2;
+// 	#else
+// 	ap_uint<8> depthtile_baseaddr_increment_step=wino_tile_number_rowcol;
+// 	#endif
 
-		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> buffer_address0;
-		buffer_address0=depthtile_baseaddr0+rowtile_baseaddr+coltile_baseaddr;
 
-		#if WEIGHT_FEED_NUMBER_PER_PORT == 1
-			ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> buffer_address1;
-			buffer_address1=depthtile_baseaddr1+rowtile_baseaddr+coltile_baseaddr;
-		#endif
+// 	// printf("write_length %d\n", (int) conv_desc.output_burst_length);
+// 	for(ap_uint<24> cycle=0;cycle < output_burst_length;cycle++)
+// 	{		
+// 		#pragma HLS pipeline
+// 		ap_uint<OUT_WIDTH*BATCH_SIZE> outbuffer_data_depth0[OUTDEPTH_MINITILE_SIZE];
+// 		#pragma HLS array_partition variable =outbuffer_data_depth0 complete
 
-		// printf("outbuffer add %d %d %d %d\n",(int) coltile_baseaddr,(int)wino_widthtile_idx,(int) wino_col_pix_idx, (int) wino_col_pix_upper_bound );
+// 		#if WEIGHT_FEED_NUMBER_PER_PORT == 1
+// 		ap_int<OUT_WIDTH*BATCH_SIZE> outbuffer_data_depth1[OUTDEPTH_MINITILE_SIZE];
+// 		#pragma HLS array_partition variable =outbuffer_data_depth1 complete
+// 		#endif
 
-		for(int b=0;b<BATCH_SIZE;b++)
-		{
-			#pragma HLS unroll
-			for(int od=0;od<OUTDEPTH_MINITILE_SIZE;od++)
-			{
-				#pragma HLS unroll
-				outbuffer_data_depth0[od]=out_buffer[wino_col_pix_idx][od][wino_widthtile_idx][buffer_address0];
+// 		ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> buffer_address0;
+// 		buffer_address0=depthtile_baseaddr0+rowtile_baseaddr+coltile_baseaddr;
+
+// 		#if WEIGHT_FEED_NUMBER_PER_PORT == 1
+// 			ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> buffer_address1;
+// 			buffer_address1=depthtile_baseaddr1+rowtile_baseaddr+coltile_baseaddr;
+// 		#endif
+
+// 		// printf("outbuffer add %d %d %d %d\n",(int) coltile_baseaddr,(int)wino_widthtile_idx,(int) wino_col_pix_idx, (int) wino_col_pix_upper_bound );
+
+// 		for(int b=0;b<BATCH_SIZE;b++)
+// 		{
+// 			#pragma HLS unroll
+// 			for(int od=0;od<OUTDEPTH_MINITILE_SIZE;od++)
+// 			{
+// 				#pragma HLS unroll
+// 				outbuffer_data_depth0[od]=out_buffer[wino_col_pix_idx][od][wino_widthtile_idx][buffer_address0];
 				
-				#if WEIGHT_FEED_NUMBER_PER_PORT == 1
-				outbuffer_data_depth1[od]=out_buffer[wino_col_pix_idx][od][wino_widthtile_idx][buffer_address1];
-				#endif
-			}
-		}
-		// printf("Addr:%7d", (int) buffer_address0);
-		// for(int i=0;i<8;i++)
-		// {
-		// 	printf("[%6d %6d]",(int) outbuffer_data_depth0[i].range(17,0),(int) outbuffer_data_depth0[i].range(35,18) );
-		// }
-		// printf("\n");
-		// getchar();
-		ap_int<ODDR_WIDTH>  outmem_data[8][BATCH_SIZE];
-		#pragma HLS array_partition variable =outmem_data complete dim=2
-		#pragma HLS array_partition variable =outmem_data complete dim=1
-		#if WEIGHT_FEED_NUMBER_PER_PORT ==1
+// 				#if WEIGHT_FEED_NUMBER_PER_PORT == 1
+// 				outbuffer_data_depth1[od]=out_buffer[wino_col_pix_idx][od][wino_widthtile_idx][buffer_address1];
+// 				#endif
+// 			}
+// 		}
+// 		// printf("Addr:%7d", (int) buffer_address0);
+// 		// for(int i=0;i<8;i++)
+// 		// {
+// 		// 	printf("[%6d %6d]",(int) outbuffer_data_depth0[i].range(17,0),(int) outbuffer_data_depth0[i].range(35,18) );
+// 		// }
+// 		// printf("\n");
+// 		// getchar();
+// 		ap_int<ODDR_WIDTH>  outmem_data[8][BATCH_SIZE];
+// 		#pragma HLS array_partition variable =outmem_data complete dim=2
+// 		#pragma HLS array_partition variable =outmem_data complete dim=1
+// 		#if WEIGHT_FEED_NUMBER_PER_PORT ==1
 		
-			for(int i=0;i<4;i++)
-			{
-				#pragma HLS unroll
-				for(int b=0;b<BATCH_SIZE;b++)
-				{	
-					#pragma HLS unroll
-					outmem_data[i][b]= (outbuffer_data_depth0[i].range(b*OUT_WIDTH+OUT_WIDTH-1,b*OUT_WIDTH))>>(OUT_WIDTH- ODDR_WIDTH);
-					outmem_data[i+4][b]= (outbuffer_data_depth1[i].range(b*OUT_WIDTH+OUT_WIDTH-1,b*OUT_WIDTH))>>(OUT_WIDTH- ODDR_WIDTH);
-				}
-			}
-		#else
-			for(int i=0;i<8;i++)
-			{
-				#pragma HLS unroll
-				for(int b=0;b<BATCH_SIZE;b++)
-				{	
-					#pragma HLS unroll
+// 			for(int i=0;i<4;i++)
+// 			{
+// 				#pragma HLS unroll
+// 				for(int b=0;b<BATCH_SIZE;b++)
+// 				{	
+// 					#pragma HLS unroll
+// 					outmem_data[i][b]= (outbuffer_data_depth0[i].range(b*OUT_WIDTH+OUT_WIDTH-1,b*OUT_WIDTH))>>(OUT_WIDTH- ODDR_WIDTH);
+// 					outmem_data[i+4][b]= (outbuffer_data_depth1[i].range(b*OUT_WIDTH+OUT_WIDTH-1,b*OUT_WIDTH))>>(OUT_WIDTH- ODDR_WIDTH);
+// 				}
+// 			}
+// 		#else
+// 			for(int i=0;i<8;i++)
+// 			{
+// 				#pragma HLS unroll
+// 				for(int b=0;b<BATCH_SIZE;b++)
+// 				{	
+// 					#pragma HLS unroll
 
-					ap_int<OUT_WIDTH> temp= outbuffer_data_depth0[i].range(b*OUT_WIDTH+OUT_WIDTH-1,b*OUT_WIDTH);
-					ap_int<18> temp2= (temp*oback_scale)>>OBACK_QUANT_BIT;
-					ap_int<16> bias=bias_buffer[i][bias_buffer_addr];
-					ap_int<18> temp3= temp2+bias;
-					if(temp3 < 0 ) outmem_data[i][b]=0;
-					else if(temp3 > (1<<(IN_WIDTH-1))-1 ) outmem_data[i][b]=(1<<(IN_WIDTH-1))-1;
-					else outmem_data[i][b]=temp3;
-				}
-			}
-		#endif
-
-
-		ap_int<ODDR_WIDTH*8*BATCH_SIZE> write_back_value;
-
-		for(int i=0;i<8;i++)
-		{
-			#pragma HLS unroll
-			for(int b=0;b<BATCH_SIZE;b++)
-			{
-				#pragma HLS unroll
-				write_back_value.range( (i*BATCH_SIZE+b)*ODDR_WIDTH+ODDR_WIDTH-1, (i*BATCH_SIZE+b)*ODDR_WIDTH )=outmem_data[i][b];
-			}
-		}
+// 					ap_int<OUT_WIDTH> temp= outbuffer_data_depth0[i].range(b*OUT_WIDTH+OUT_WIDTH-1,b*OUT_WIDTH);
+// 					ap_int<18> temp2= (temp*oback_scale)>>OBACK_QUANT_BIT;
+// 					ap_int<16> bias=bias_buffer[i][bias_buffer_addr];
+// 					ap_int<18> temp3= temp2+bias;
+// 					if(temp3 < 0 ) outmem_data[i][b]=0;
+// 					else if(temp3 > (1<<(IN_WIDTH-1))-1 ) outmem_data[i][b]=(1<<(IN_WIDTH-1))-1;
+// 					else outmem_data[i][b]=temp3;
+// 				}
+// 			}
+// 		#endif
 
 
-		// printf("Addr:%7d ", (int) cycle);
-		// for(int i=0;i<16;i++)
-		// {
+// 		ap_int<ODDR_WIDTH*8*BATCH_SIZE> write_back_value;
 
-		// 	printf("%3d ",(int) write_back_value.range(i*8+7,i*8));
-		// }
-		// printf("\n");
-		// getchar();
-
-		out_DDR[cycle]=write_back_value;
-
-		if(col_idx_cnt==outwidth_align8 )
-		{
-			depthtile_baseaddr0+=depthtile_baseaddr_increment_step;
-			bias_buffer_addr++;
-			#if WEIGHT_FEED_NUMBER_PER_PORT == 1
-			depthtile_baseaddr1+=depthtile_baseaddr_increment_step;
-			#endif
-		}
+// 		for(int i=0;i<8;i++)
+// 		{
+// 			#pragma HLS unroll
+// 			for(int b=0;b<BATCH_SIZE;b++)
+// 			{
+// 				#pragma HLS unroll
+// 				write_back_value.range( (i*BATCH_SIZE+b)*ODDR_WIDTH+ODDR_WIDTH-1, (i*BATCH_SIZE+b)*ODDR_WIDTH )=outmem_data[i][b];
+// 			}
+// 		}
 
 
+// 		// printf("Addr:%7d ", (int) cycle);
+// 		// for(int i=0;i<16;i++)
+// 		// {
+
+// 		// 	printf("%3d ",(int) write_back_value.range(i*8+7,i*8));
+// 		// }
+// 		// printf("\n");
+// 		// getchar();
+
+// 		out_DDR[cycle]=write_back_value;
+
+// 		if(col_idx_cnt==outwidth_align8 )
+// 		{
+// 			depthtile_baseaddr0+=depthtile_baseaddr_increment_step;
+// 			bias_buffer_addr++;
+// 			#if WEIGHT_FEED_NUMBER_PER_PORT == 1
+// 			depthtile_baseaddr1+=depthtile_baseaddr_increment_step;
+// 			#endif
+// 		}
 
 
-		if(col_idx_cnt==outwidth_align8 )
-		{
-			coltile_baseaddr=0;
-		}
-		else if( wino_col_pix_idx == wino_col_pix_upper_bound  && wino_widthtile_idx == WINO_WIDTH-1  )
-		{
-			coltile_baseaddr++;
-		}
 
 
-		if( (wino_col_pix_idx == wino_col_pix_upper_bound  && wino_widthtile_idx == WINO_WIDTH-1) || col_idx_cnt==outwidth_align8)
-		{
-			wino_widthtile_idx=0;
-		}
-		else if( wino_col_pix_idx == wino_col_pix_upper_bound )
-		{
-			wino_widthtile_idx++;
-		}
+// 		if(col_idx_cnt==outwidth_align8 )
+// 		{
+// 			coltile_baseaddr=0;
+// 		}
+// 		else if( wino_col_pix_idx == wino_col_pix_upper_bound  && wino_widthtile_idx == WINO_WIDTH-1  )
+// 		{
+// 			coltile_baseaddr++;
+// 		}
 
 
-		if(wino_col_pix_idx == wino_col_pix_upper_bound || col_idx_cnt==outwidth_align8)
-		{
-			wino_col_pix_idx=0;
-		}
-		else
-		{
-			wino_col_pix_idx++;
-		}
+// 		if( (wino_col_pix_idx == wino_col_pix_upper_bound  && wino_widthtile_idx == WINO_WIDTH-1) || col_idx_cnt==outwidth_align8)
+// 		{
+// 			wino_widthtile_idx=0;
+// 		}
+// 		else if( wino_col_pix_idx == wino_col_pix_upper_bound )
+// 		{
+// 			wino_widthtile_idx++;
+// 		}
 
-		if(col_idx_cnt==outwidth_align8)
-		{
-			col_idx_cnt=1;
-		}
-		else
-		{
-			col_idx_cnt++;
-		}
-	}
-}
+
+// 		if(wino_col_pix_idx == wino_col_pix_upper_bound || col_idx_cnt==outwidth_align8)
+// 		{
+// 			wino_col_pix_idx=0;
+// 		}
+// 		else
+// 		{
+// 			wino_col_pix_idx++;
+// 		}
+
+// 		if(col_idx_cnt==outwidth_align8)
+// 		{
+// 			col_idx_cnt=1;
+// 		}
+// 		else
+// 		{
+// 			col_idx_cnt++;
+// 		}
+// 	}
+// }
 
 
 
@@ -2098,7 +2098,7 @@ void write_output_to_DDR3(
 		ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR1,
 		// ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR2,
 		// ap_uint<ODDR_WIDTH*BATCH_SIZE*OUT_PORT_BATCH_NUM>* out_DDR3,
-		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 		ap_int<16> start_row_idx,
 		ap_uint<1> first_flag,
 		ConvDesc_t conv_desc
@@ -2189,127 +2189,127 @@ void write_output_to_DDR3(
 
 
 
-void write_output_to_DDR(
-		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR0,
-		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR1,
-		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR2,
-		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR3,
-		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
-		ap_int<16> start_row_idx,
-		ap_uint<1> first_flag,
-		ap_int<18> oback_scale,
-		ap_int<16> bias_buffer[8][BIAS_BUFFER_DEPTH],
-		ConvDesc_t conv_desc
-)
-{
+// void write_output_to_DDR(
+// 		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR0,
+// 		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR1,
+// 		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR2,
+// 		ap_uint<ODDR_WIDTH*BATCH_SIZE*8>* out_DDR3,
+// 		ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE][WINO_WIDTH][OUTPUT_BUFFER_DEPTH],
+// 		ap_int<16> start_row_idx,
+// 		ap_uint<1> first_flag,
+// 		ap_int<18> oback_scale,
+// 		ap_int<16> bias_buffer[8][BIAS_BUFFER_DEPTH],
+// 		ConvDesc_t conv_desc
+// )
+// {
 
 
-	#pragma HLS array_partition variable=out_buffer complete dim=1
-	#pragma HLS array_partition variable=out_buffer complete dim=2
-	#pragma HLS array_partition variable=out_buffer complete dim=3
-	#pragma HLS array_partition variable=out_buffer complete dim=4
+// 	#pragma HLS array_partition variable=out_buffer complete dim=1
+// 	#pragma HLS array_partition variable=out_buffer complete dim=2
+// 	#pragma HLS array_partition variable=out_buffer complete dim=3
+// 	#pragma HLS array_partition variable=out_buffer complete dim=4
 
-	static ap_uint<24> out_ddr_offset0;
-	static ap_uint<24> out_ddr_offset1;
-	static ap_uint<24> out_ddr_offset2;
-	static ap_uint<24> out_ddr_offset3;
-	printf("---write_output_to_DDR %d---\n",(int) start_row_idx);
-	if(start_row_idx<0) return;
+// 	static ap_uint<24> out_ddr_offset0;
+// 	static ap_uint<24> out_ddr_offset1;
+// 	static ap_uint<24> out_ddr_offset2;
+// 	static ap_uint<24> out_ddr_offset3;
+// 	printf("---write_output_to_DDR %d---\n",(int) start_row_idx);
+// 	if(start_row_idx<0) return;
 
-	ap_uint<16> outrow_idx=start_row_idx;
-	if( first_flag)
-	{
-		out_ddr_offset0=0;
-		out_ddr_offset1=conv_desc.output_burst_length;
-		out_ddr_offset2=(conv_desc.output_burst_length)<<1;
-		out_ddr_offset3=out_ddr_offset1+out_ddr_offset2;
-	}
+// 	ap_uint<16> outrow_idx=start_row_idx;
+// 	if( first_flag)
+// 	{
+// 		out_ddr_offset0=0;
+// 		out_ddr_offset1=conv_desc.output_burst_length;
+// 		out_ddr_offset2=(conv_desc.output_burst_length)<<1;
+// 		out_ddr_offset3=out_ddr_offset1+out_ddr_offset2;
+// 	}
 
-	ap_uint<16> rowtile_baseaddr=0;
+// 	ap_uint<16> rowtile_baseaddr=0;
 
-	for(ap_uint<4> wino_rowtile_idx=0; wino_rowtile_idx<conv_desc.wino_tile_number_in_out_rowstep;wino_rowtile_idx++)
-	{
-		write_output_to_DDR_onerow<0>(
-			out_DDR0+out_ddr_offset0,
-			out_buffer[0],
-			conv_desc.outheight,
-			conv_desc.outwidth_align8,
-			conv_desc.wino_output_tile_size,
-			conv_desc.wino_col_pix_upper_bound,
-			conv_desc.wino_tile_number_rowcol,
-			conv_desc.output_burst_length,
-			rowtile_baseaddr,
-			outrow_idx+0,
-			oback_scale,
-			bias_buffer
-			#if DEBUG_CONV_DESC
-			,conv_desc
-			#endif
-			);
-		// write_output_d0
-		// write_output_d1
+// 	for(ap_uint<4> wino_rowtile_idx=0; wino_rowtile_idx<conv_desc.wino_tile_number_in_out_rowstep;wino_rowtile_idx++)
+// 	{
+// 		write_output_to_DDR_onerow<0>(
+// 			out_DDR0+out_ddr_offset0,
+// 			out_buffer[0],
+// 			conv_desc.outheight,
+// 			conv_desc.outwidth_align8,
+// 			conv_desc.wino_output_tile_size,
+// 			conv_desc.wino_col_pix_upper_bound,
+// 			conv_desc.wino_tile_number_rowcol,
+// 			conv_desc.output_burst_length,
+// 			rowtile_baseaddr,
+// 			outrow_idx+0,
+// 			oback_scale,
+// 			bias_buffer
+// 			#if DEBUG_CONV_DESC
+// 			,conv_desc
+// 			#endif
+// 			);
+// 		// write_output_d0
+// 		// write_output_d1
 
-		write_output_to_DDR_onerow<1>(
-			out_DDR1+out_ddr_offset1,
-			out_buffer[1],
-			conv_desc.outheight,
-			conv_desc.outwidth_align8,
-			conv_desc.wino_output_tile_size,
-			conv_desc.wino_col_pix_upper_bound,
-			conv_desc.wino_tile_number_rowcol,
-			conv_desc.output_burst_length,
-			rowtile_baseaddr,
-			outrow_idx+1,
-			oback_scale,
-			bias_buffer
-			#if DEBUG_CONV_DESC
-			,conv_desc
-			#endif
-			);
+// 		write_output_to_DDR_onerow<1>(
+// 			out_DDR1+out_ddr_offset1,
+// 			out_buffer[1],
+// 			conv_desc.outheight,
+// 			conv_desc.outwidth_align8,
+// 			conv_desc.wino_output_tile_size,
+// 			conv_desc.wino_col_pix_upper_bound,
+// 			conv_desc.wino_tile_number_rowcol,
+// 			conv_desc.output_burst_length,
+// 			rowtile_baseaddr,
+// 			outrow_idx+1,
+// 			oback_scale,
+// 			bias_buffer
+// 			#if DEBUG_CONV_DESC
+// 			,conv_desc
+// 			#endif
+// 			);
 
-		// #if WINO_OUT_SIZE == 4
-		// write_output_to_DDR_onerow<2>(
-		// 	out_DDR2+out_ddr_offset2,
-		// 	out_buffer[2],
-		// 	outheight,
-		// 	outwidth_align8,
-		// 	wino_output_tile_size,
-		// 	wino_col_pix_upper_bound,
-		// 	wino_tile_number_rowcol,
-		// 	output_burst_length,
-		// 	rowtile_baseaddr,
-		// 	outrow_idx+2,
-		// 	oback_scale,
-		// 	bias_buffer
-		// 	#if DEBUG_CONV_DESC
-		// 	,conv_desc
-		// 	#endif
-		// 	);
-		// write_output_to_DDR_onerow<3>(
-		// 	out_DDR3+out_ddr_offset3,
-		// 	out_buffer[3],
-		// 	outheight,
-		// 	outwidth_align8,
-		// 	wino_output_tile_size,
-		// 	wino_col_pix_upper_bound,
-		// 	wino_tile_number_rowcol,
-		// 	output_burst_length,
-		// 	rowtile_baseaddr,
-		// 	outrow_idx+3,
-		// 	oback_scale,
-		// 	bias_buffer
-		// 	#if DEBUG_CONV_DESC
-		// 	,conv_desc
-		// 	#endif
-		// 	);
-		// #endif
-		rowtile_baseaddr+=conv_desc.wino_tile_number_in_outwidth;
-		out_ddr_offset0+=conv_desc.out_ddr_increment_step;
-		out_ddr_offset1+=conv_desc.out_ddr_increment_step;
-		out_ddr_offset2+=conv_desc.out_ddr_increment_step;
-		out_ddr_offset3+=conv_desc.out_ddr_increment_step;
-		outrow_idx+=conv_desc.wino_output_tile_size;
-	}
-}
+// 		// #if WINO_OUT_SIZE == 4
+// 		// write_output_to_DDR_onerow<2>(
+// 		// 	out_DDR2+out_ddr_offset2,
+// 		// 	out_buffer[2],
+// 		// 	outheight,
+// 		// 	outwidth_align8,
+// 		// 	wino_output_tile_size,
+// 		// 	wino_col_pix_upper_bound,
+// 		// 	wino_tile_number_rowcol,
+// 		// 	output_burst_length,
+// 		// 	rowtile_baseaddr,
+// 		// 	outrow_idx+2,
+// 		// 	oback_scale,
+// 		// 	bias_buffer
+// 		// 	#if DEBUG_CONV_DESC
+// 		// 	,conv_desc
+// 		// 	#endif
+// 		// 	);
+// 		// write_output_to_DDR_onerow<3>(
+// 		// 	out_DDR3+out_ddr_offset3,
+// 		// 	out_buffer[3],
+// 		// 	outheight,
+// 		// 	outwidth_align8,
+// 		// 	wino_output_tile_size,
+// 		// 	wino_col_pix_upper_bound,
+// 		// 	wino_tile_number_rowcol,
+// 		// 	output_burst_length,
+// 		// 	rowtile_baseaddr,
+// 		// 	outrow_idx+3,
+// 		// 	oback_scale,
+// 		// 	bias_buffer
+// 		// 	#if DEBUG_CONV_DESC
+// 		// 	,conv_desc
+// 		// 	#endif
+// 		// 	);
+// 		// #endif
+// 		rowtile_baseaddr+=conv_desc.wino_tile_number_in_outwidth;
+// 		out_ddr_offset0+=conv_desc.out_ddr_increment_step;
+// 		out_ddr_offset1+=conv_desc.out_ddr_increment_step;
+// 		out_ddr_offset2+=conv_desc.out_ddr_increment_step;
+// 		out_ddr_offset3+=conv_desc.out_ddr_increment_step;
+// 		outrow_idx+=conv_desc.wino_output_tile_size;
+// 	}
+// }
 
 #endif

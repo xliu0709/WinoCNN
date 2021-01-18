@@ -229,7 +229,7 @@ void load_params(
 void wino_flatten_kernel(
     WEIGHT_PORTS_DECLARE(weight_DDR),
     ap_uint<16> input_buffer[INBUFFER_HEIGHT][INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],
-    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
     ap_uint<16> start_output_row,
     ap_int<16> start_row_idx_minus_pad_size,
     ap_int<16> start_col_idx_minus_pad_size,
@@ -413,7 +413,7 @@ void wino_flatten_kernel(
 void wino_kernel_merge_row(
     WEIGHT_PORTS_DECLARE(weight_DDR),
     ap_uint<16> input_buffer[INBUFFER_HEIGHT][INBUFFER_WIDTH][INPUT_BUFFER_DEPTH],
-    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
     ap_uint<16> start_output_row,
     ap_int<16> start_row_idx_minus_pad_size,
     bool first_flag,
@@ -464,7 +464,7 @@ void wino_kernel_merge_row(
 void wino_input_compute(
     INPUT_PORTS_DECLARE(DDR_port),
     WEIGHT_PORTS_DECLARE(weight_DDR),
-    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
+    ap_uint<OUT_WIDTH*2> out_buffer[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
     ap_uint<16> start_output_row,
     ap_uint<16> next_start_row,
     ap_int<16> start_row_idx_minus_pad_size,
@@ -685,11 +685,11 @@ void wino_systolic_top(
     #pragma HLS array_partition variable=input_buffer complete dim=1 
     #pragma HLS array_partition variable=input_buffer complete dim=2 
     #pragma HLS resource variable=input_buffer core=RAM_S2P_BRAM 
-    ap_uint<OUT_WIDTH*2> output_buffer0[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH];
+    ap_uint<OUT_WIDTH*2> output_buffer0[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH];
     #pragma HLS array_partition variable=output_buffer0 complete dim=1 
     #pragma HLS array_partition variable=output_buffer0 complete dim=2
     #pragma HLS resource variable=output_buffer0 core=RAM_T2P_BRAM  
-    ap_uint<OUT_WIDTH*2> output_buffer1[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/2][WINO_WIDTH/2][2][2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH];
+    ap_uint<OUT_WIDTH*2> output_buffer1[WINO_OUT_SIZE_CELL][OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH];
     #pragma HLS array_partition variable=output_buffer1 complete dim=1 
     #pragma HLS array_partition variable=output_buffer1 complete dim=2 
     #pragma HLS resource variable=output_buffer1 core=RAM_T2P_BRAM 

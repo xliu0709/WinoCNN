@@ -325,7 +325,11 @@ void process_element6x6_soft(
     int maximum_row_step_input =(input_buffer_row_capacity+1-conv_desc.merge_kernel_step)/2;
     
     int outdepth_minitile_number = conv_desc.weightbuffer_outdepth_minitile_number*conv_desc.weightbuffer_load_outdepth_number;
-    int maximum_row_step_output = output_buffer_depth / (outdepth_minitile_number * conv_desc.wino_tile_number_in_outwidth) * conv_desc.wino_output_tile_size;                               
+    int maximum_row_step_output;
+                        
+    maximum_row_step_output = output_buffer_depth / ( outdepth_minitile_number * conv_desc.wino_tile_number_in_outwidth ) * conv_desc.wino_output_tile_size;     
+      
+
     printf("maximum_row_step_input %d\n",maximum_row_step_input);
     printf("maximum_row_step_output %d\n",maximum_row_step_output);
     printf("expected_row_step %d\n",expected_row_step);
