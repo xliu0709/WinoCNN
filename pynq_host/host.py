@@ -862,7 +862,7 @@ if __name__ == "__main__":
             i[5]=i[1]
             i[9]=1
 
-        scale_fact=int((1<<14)/id/i[7]/i[8]);
+        scale_fact=int( (1<<14)/i[7]/i[8] );
         i.append(1)
         i.append(scale_fact)
         i.append("src/wino_hw_config.h")
