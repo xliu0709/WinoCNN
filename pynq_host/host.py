@@ -550,9 +550,9 @@ def running_test( argv,validate_dict):
     # test.write(0x28,weight.physical_address+physical_byte_num*1)
     # test.write(0x30,weight.physical_address+physical_byte_num*2)
     # test.write(0x38,weight.physical_address+physical_byte_num*3)
-    test.write(0x40,output_FM.physical_address)
-    test.write(0x48,output_FM.physical_address)
-    test.write(0x50,params.physical_address)
+    test.write(0x28,output_FM.physical_address)
+    test.write(0x30,output_FM.physical_address)
+    test.write(0x38,params.physical_address)
 
     print("start calling", test.read(0x00))
     start = time.time()
@@ -657,7 +657,7 @@ if __name__ == "__main__":
 
     if(sys.argv[1]=="VGG" ):
         config=VGG
-    elif(sys.argv[1]="YOLO1"):
+    elif(sys.argv[1]=="YOLO1"):
         config=Yolo_config1
 
 
@@ -699,22 +699,6 @@ if __name__ == "__main__":
         print (key , val)
 
 
-    result_dict={}
-    for i in Yolo_config2:
-        i[3]=ALIGN(i[3],4)
-        i[6]=ALIGN(i[6],8)
-        ks=i[7]
-        id=i[3]
-        scale_fact=(1<<14)//id//ks;
-        i.append(1)
-        i.append(scale_fact)
-        i.append("src/wino_hw_config.h")
-        
-        # argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
-        running_test(i, result_dict)
-
-    for key, val in result_dict.items():
-        print (key , val)
 
     input_FM.close()
     weight.close()
