@@ -125,15 +125,19 @@ def generate_wino_systolic(config:Config_t):
 
     ret_string+="\tstatic hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > input_tile_transformed_stream[WINO_HEIGHT/WINO_H2][WINO_WIDTH/WINO_W2][WINO_W2];\n\
     #pragma HLS stream variable=input_tile_transformed_stream depth=2\n\
+    #pragma HLS resource variable=input_tile_transformed_stream core=FIFO_SRL\n\
     static hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream[WINO_HEIGHT/WINO_H2][WINO_WIDTH/WINO_W2-1][WINO_H2];\n\
-    #pragma HLS stream variable=weight_stream depth=2\n"
+    #pragma HLS stream variable=weight_stream depth=2\n\
+    #pragma HLS resource variable=weight_stream core=FIFO_SRL\n"
 
     if(config.WINO_HEIGHT==8 or config.WINO_HEIGHT==2):
         ret_string+="\tstatic hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream_out[WEIGHT_PORT_NUM][WEIGHT_FEED_NUMBER_PER_PORT];\n\
-    #pragma HLS stream variable=weight_stream_out depth=2\n\n"
+    #pragma HLS stream variable=weight_stream_out depth=2\n\
+    #pragma HLS resource variable=weight_stream_out core=FIFO_SRL\n\n"
     else:
         ret_string+="\tstatic hls::stream<ap_uint<W_WIDTH*INDEPTH_MINITILE_SIZE*WINO_DOMAIN_SIZE_SQUARE> >  weight_stream_out[WEIGHT_PORT_NUM/2][2];\n\
-    #pragma HLS stream variable=weight_stream_out depth=2\n\n"   
+    #pragma HLS stream variable=weight_stream_out depth=2\n\
+    #pragma HLS resource variable=weight_stream_out core=FIFO_SRL\n\n"
 
     ret_string+="\tinput_feed_underconstruction(\n\
         input_buffer,\n\

@@ -3,7 +3,7 @@
 ## Please DO NOT edit it.
 ## Copyright (C) 1986-2019 Xilinx, Inc. All Rights Reserved.
 ############################################################
-open_project HLS
+open_project HLS_ultra96
 set_top wino_systolic_top
 add_files src/wino_struct.h
 add_files src/wino_macro.h
