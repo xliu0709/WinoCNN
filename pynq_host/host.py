@@ -74,8 +74,6 @@ class ConvDesc_t():
 
     def __init__(self, argv):
 
-        
-
         self.input_width = int(argv[1])
         self.input_height = int(argv[2])
         self.input_depth = int(argv[3])
@@ -297,7 +295,7 @@ class ConvDesc_t():
         
 
         maximum_row_step =maximum_row_step_output if( maximum_row_step_output < maximum_row_step_input ) else maximum_row_step_input;
-        assert( maximum_row_step >= self.wino_output_tile_size);
+        # assert( maximum_row_step >= self.wino_output_tile_size);
         row_step=0;
         if(expected_row_step <= maximum_row_step ):
             row_step=expected_row_step if(expected_row_step<self.output_height*self.stride_size) else self.output_height*self.stride_size;
@@ -447,38 +445,46 @@ def running_test( argv,validate_dict):
 
 
 
-    print("conv_desc.out_width ",conv_desc.out_width )
-    print("conv_desc.out_depth ",conv_desc.out_depth )
+    print("conv_desc.out_width ",conv_desc.output_width )
+    print("conv_desc.out_depth ",conv_desc.output_depth )
     print("conv_desc.wino_height ",conv_desc.wino_height )
     print("conv_desc.output_buffer_depth ",conv_desc.output_buffer_depth )
 
-    if(argv[7]):
+    if(argv[7]==1):
         conv_desc.wino_output_tile_size=4
     else:
         conv_desc.wino_output_tile_size=2
     
-    min_support_depth <   conv_desc.output_buffer_depth//CEIL_DIV(conv_desc.out_width,conv_desc.wino_output_tile_size)*conv_desc.wino_height//8*8
+    min_support_depth =  conv_desc.output_buffer_depth//  CEIL_DIV(conv_desc.output_width,conv_desc.wino_output_tile_size*conv_desc.wino_width) *conv_desc.wino_height//8*8
 
     print("min_support_depth ",min_support_depth )
 
     if(min_support_depth < 8):
         validate_dict[key]=None
         return
+    else:
+        validate_dict[key]=argv
     
-    if(argv[6]< min_support_depth ):
+    if(argv[6] > min_support_depth ):
         min_support_depth=min_support_depth//8*8
 
-        repeat_factor= CEIL_DIV(argv[6], min_support_depth)
-        argv[6]=min_support_depth
+        expected_depth=CEIL_DIV(argv[6], 8)
+
+        while( expected_depth >0):
+            if( expected_depth*8 <= min_support_depth):
+                break
+            expected_depth=expected_depth//2
+
+        repeat_factor= CEIL_DIV(argv[6], expected_depth*8)
+        argv[6]=expected_depth*8
     else:
         repeat_factor=1
 
 
 
-    print("")
-    print(argv)
+   
     sys_command=""
-    for i in range(1,12):
+    for i in range(1,14):
         sys_command+=" "+str(argv[i])
     sys_command+=" random"
     sys_command+=" random"
@@ -490,14 +496,14 @@ def running_test( argv,validate_dict):
         sys_command+=" 1 "
     else:
         sys_command+=" 3 "
-
+     
+    print(sys_command)
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
-    maximum_row_step_output = self.output_buffer_depth / (outdepth_minitile_number * self.wino_tile_number_in_outwidth) * self.wino_output_tile_size; 
 
    
 
-
+    
     
     
     
@@ -520,21 +526,21 @@ def running_test( argv,validate_dict):
         if( params[i]!=params_load[i] ):
             params[i]=params_load[i]
 
-    print("row_step ", params[54] )
+    print("row_step ", params[56] )
 
 
 
-    input_load=np.fromfile("input.bin",dtype=np.int16)
-    for i in range(len(input_load)):
-        input_FM[i]=input_load[i]
+    # input_load=np.fromfile("input.bin",dtype=np.int16)
+    # for i in range(len(input_load)):
+    #     input_FM[i]=input_load[i]
 
 
-    weight_load=np.fromfile("weight.bin",dtype=np.int32)
-    for i in range(len(weight_load)):
-        weight[i]=weight_load[i]
+    # weight_load=np.fromfile("weight.bin",dtype=np.int32)
+    # for i in range(len(weight_load)):
+    #     weight[i]=weight_load[i]
 
 
-    output_load=np.fromfile("output.bin",dtype=np.int16)
+    # output_load=np.fromfile("output.bin",dtype=np.int16)
 
 
     for i in range(len(output_FM) ):
@@ -576,20 +582,22 @@ def running_test( argv,validate_dict):
     #         # output_load[i]=output_FM[i]
     #         count+=1
 
-    error_rate=count/(conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
-    print(key, conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
-    print("error_rate",error_rate)
-    validate_dict[ key ].append((end - start)*1e9) 
-    validate_dict[ key ].append(repeat_factor )
-    validate_dict[ key ].append(error_rate )
-    
-    
-    output_FM.tofile("bin/cnm_"+prefix+"output.bin")
+    # error_rate=count/(conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
+    # print(key, conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
+    # print("error_rate",error_rate)
 
-    os.system("cp output.bin bin/"+prefix+"output.bin")
-    os.system("cp param.bin bin/"+prefix+"param.bin")
-    os.system("cp input.bin bin/"+prefix+"input.bin")
-    os.system("cp weight.bin bin/"+prefix+"weight.bin")
+    validate_dict[ key ].append((end - start)*1e9*repeat_factor) 
+    validate_dict[ key ].append(repeat_factor )
+    validate_dict[ key ][6]*=repeat_factor
+    # validate_dict[ key ].append(error_rate )
+    
+    
+    # output_FM.tofile("bin/cnm_"+prefix+"output.bin")
+
+    # os.system("cp output.bin bin/"+prefix+"output.bin")
+    # os.system("cp param.bin bin/"+prefix+"param.bin")
+    # os.system("cp input.bin bin/"+prefix+"input.bin")
+    # os.system("cp weight.bin bin/"+prefix+"weight.bin")
 
 Yolo_config1=[
 ["layer0-conv",448,448,3,448,448,10,3,3,1,1,1,1],
@@ -642,14 +650,15 @@ Yolo_config1=[
 # ["layer30-conv",14,14,512,14,14,125,1,1,0],]
 
 VGG=[
-["layer0-conv",224,224,3,224,224,64,3,3,1,1,1,1],
-["layer0-conv",224,224,64,224,224,64,3,3,1,1,1,1],
-["layer0-conv",112,112,64,112,112,128,3,3,1,1,1,1],
-["layer0-conv",112,112,128,112,112,128,3,3,1,1,1,1],
-["layer0-conv",56,56,128,56,56,256,3,3,1,1,1,1],
-["layer0-conv",56,56,256,56,56,256,3,3,1,1,1,1],
-["layer0-conv",28,28,256,28,28,512,3,3,1,1,1,1],
-["layer0-conv",14,14,512,14,14,512,3,3,1,1,1,1],
+["conv0",224,224,3,224,224,64,3,3,1,1,1,1],
+["conv1",224,224,64,224,224,64,3,3,1,1,1,1],
+["conv2",112,112,64,112,112,128,3,3,1,1,1,1],
+["conv3",112,112,128,112,112,128,3,3,1,1,1,1],
+["conv4",56,56,128,56,56,256,3,3,1,1,1,1],
+["conv5",56,56,256,56,56,256,3,3,1,1,1,1],
+["conv6",28,28,256,28,28,512,3,3,1,1,1,1],
+["conv7",28,28,512,28,28,512,3,3,1,1,1,1],
+["conv8",14,14,512,14,14,512,3,3,1,1,1,1],
 ]
 
 if __name__ == "__main__":
@@ -696,7 +705,7 @@ if __name__ == "__main__":
         running_test(i, result_dict)
 
     for key, val in result_dict.items():
-        print (key , val)
+        print (key , val[1:])
 
 
 
