@@ -535,7 +535,7 @@ void wino_model_int(
     int wino_output_tile_size;
     
     #if WINO_DOMAIN_SIZE==4
-    if(kernel_size_h==1  && kernel_size_w==1)
+    if(use_kernel_size==1 )
     {
         wino_output_tile_size=4;
     }
