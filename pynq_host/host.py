@@ -83,11 +83,13 @@ class ConvDesc_t():
         self.output_height = int(argv[5])
         self.output_depth = int(argv[6])
         self.kernel_size = int(argv[7])
-        self.stride_size = int(argv[8])
-        self.pad_size = int(argv[9])
-        self.relu_flag = int(argv[10])
-        self.scale_writeback = int(argv[11])
-        self.hardware_conf_filename= argv[12]
+        self.kernel_size = int(argv[8])
+        self.stride_size = int(argv[9])
+        self.pad_size = int(argv[10])
+        self.pad_size = int(argv[11])
+        self.relu_flag = int(argv[12])
+        self.scale_writeback = int(argv[13])
+        self.hardware_conf_filename= argv[14]
     
         file=open(self.hardware_conf_filename,"r");
 
@@ -204,8 +206,7 @@ class ConvDesc_t():
 
         
         if(max_row_bit <1):
-        
-
+    
             print("ERROR: in sufficient IN BUFFER DEPTH, expected depth=[%d x %d], reald depth [%d]\n".format(self.inwidth_ceildiv_inbufferwidth, self.indepth_align8, input_buffer_depth) );
             exit();
         
@@ -442,7 +443,37 @@ def running_test( argv,validate_dict):
     conv_desc=ConvDesc_t(argv)
     conv_desc.gen_conv_desc()
 
-  
+    key=argv[0]
+
+
+
+    print("conv_desc.out_width ",conv_desc.out_width )
+    print("conv_desc.out_depth ",conv_desc.out_depth )
+    print("conv_desc.wino_height ",conv_desc.wino_height )
+    print("conv_desc.output_buffer_depth ",conv_desc.output_buffer_depth )
+
+    if(argv[7]):
+        conv_desc.wino_output_tile_size=4
+    else:
+        conv_desc.wino_output_tile_size=2
+    
+    min_support_depth <   conv_desc.output_buffer_depth//CEIL_DIV(conv_desc.out_width,conv_desc.wino_output_tile_size)*conv_desc.wino_height//8*8
+
+    print("min_support_depth ",min_support_depth )
+
+    if(min_support_depth < 8):
+        validate_dict[key]=None
+        return
+    
+    if(argv[6]< min_support_depth ):
+        min_support_depth=min_support_depth//8*8
+
+        repeat_factor= CEIL_DIV(argv[6], min_support_depth)
+        argv[6]=min_support_depth
+    else:
+        repeat_factor=1
+
+
 
     print("")
     print(argv)
@@ -462,14 +493,12 @@ def running_test( argv,validate_dict):
 
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
 
-    key=argv[0]
-    prefix=""
-    for i in key:
-        prefix=prefix+str(i)+"_"
+    maximum_row_step_output = self.output_buffer_depth / (outdepth_minitile_number * self.wino_tile_number_in_outwidth) * self.wino_output_tile_size; 
+
+   
 
 
-
-    validate_dict[ key ] = [0, argv[11]]
+    
     
     
     # if(ret_val%256 !=0):
@@ -518,9 +547,9 @@ def running_test( argv,validate_dict):
     test.write(0x10,input_FM.physical_address)
     test.write(0x18,input_FM.physical_address)
     test.write(0x20,weight.physical_address+physical_byte_num*0)
-    test.write(0x28,weight.physical_address+physical_byte_num*1)
-    test.write(0x30,weight.physical_address+physical_byte_num*2)
-    test.write(0x38,weight.physical_address+physical_byte_num*3)
+    # test.write(0x28,weight.physical_address+physical_byte_num*1)
+    # test.write(0x30,weight.physical_address+physical_byte_num*2)
+    # test.write(0x38,weight.physical_address+physical_byte_num*3)
     test.write(0x40,output_FM.physical_address)
     test.write(0x48,output_FM.physical_address)
     test.write(0x50,params.physical_address)
@@ -551,7 +580,9 @@ def running_test( argv,validate_dict):
     print(key, conv_desc.outdepth_align8*conv_desc.outwidth_align8*conv_desc.output_height)
     print("error_rate",error_rate)
     validate_dict[ key ].append((end - start)*1e9) 
+    validate_dict[ key ].append(repeat_factor )
     validate_dict[ key ].append(error_rate )
+    
     
     output_FM.tofile("bin/cnm_"+prefix+"output.bin")
 
@@ -561,85 +592,73 @@ def running_test( argv,validate_dict):
     os.system("cp weight.bin bin/"+prefix+"weight.bin")
 
 Yolo_config1=[
-["layer0-conv",448,448,3,448,448,10,3,1,1],
-["layer2-conv",224,224,10,224,224,46,3,1,1],
-["layer4-conv",112,112,46,112,112,52,3,1,1],
-["layer5-conv",112,112,52,112,112,52,1,1,0],
-["layer6-conv",112,112,52,112,112,104,3,1,1],
-["layer8-conv",56,56,104,56,56,154,3,1,1],
-["layer9-conv",56,56,154,56,56,104,1,1,0],
-["layer10-conv",56,56,104,56,56,206,3,1,1],
-["layer12-conv",28,28,206,28,28,256,3,1,1],
-["layer13-conv",28,28,256,28,28,154,1,1,0],
-["layer14-conv",28,28,154,28,28,308,3,1,1],
-["layer15-conv",28,28,308,28,28,154,1,1,0],
-["layer16-conv",28,28,154,28,28,308,3,1,1],
-["layer18-conv",14,14,308,14,14,616,3,1,1],
-["layer19-conv",14,14,616,14,14,308,1,1,0],
-["layer20-conv",14,14,308,14,14,616,3,1,1],
-["layer21-conv",14,14,616,14,14,154,1,1,0],
-["layer22-conv",14,14,154,14,14,308,3,1,1],
-["layer23-conv",14,14,308,14,14,512,3,1,1],
-["layer24-conv",14,14,512,14,14,616,3,1,1],
-["layer26-conv",28,28,308,28,28,40,1,1,0],
-["layer29-conv",14,14,776,14,14,616,3,1,1],
-["layer30-conv",14,14,616,14,14,125,1,1,0],]
+["layer0-conv",448,448,3,448,448,10,3,3,1,1,1,1],
+["layer2-conv",224,224,10,224,224,46,3,3,1,1,1,1],
+["layer4-conv",112,112,46,112,112,52,3,3,1,1,1,1],
+["layer5-conv",112,112,52,112,112,52,1,1,1,0,0,1],
+["layer6-conv",112,112,52,112,112,104,3,3,1,1,1,1],
+["layer8-conv",56,56,104,56,56,154,3,3,1,1,1,1],
+["layer9-conv",56,56,154,56,56,104,1,1,1,0,0,1],
+["layer10-conv",56,56,104,56,56,206,3,3,1,1,1,1],
+["layer12-conv",28,28,206,28,28,256,3,3,1,1,1,1],
+["layer13-conv",28,28,256,28,28,154,1,1,1,0,0,1],
+["layer14-conv",28,28,154,28,28,308,3,3,1,1,1,1],
+["layer15-conv",28,28,308,28,28,154,1,1,1,0,0,1],
+["layer16-conv",28,28,154,28,28,308,3,3,1,1,1,1],
+["layer18-conv",14,14,308,14,14,616,3,3,1,1,1,1],
+["layer19-conv",14,14,616,14,14,308,1,1,1,0,0,1],
+["layer20-conv",14,14,308,14,14,616,3,3,1,1,1,1],
+["layer21-conv",14,14,616,14,14,154,1,1,1,0,0,1],
+["layer22-conv",14,14,154,14,14,308,3,3,1,1,1,1],
+["layer23-conv",14,14,308,14,14,512,3,3,1,1,1,1],
+["layer24-conv",14,14,512,14,14,616,3,3,1,1,1,1],
+["layer26-conv",28,28,308,28,28,40,1,1,1,0,0,1],
+["layer29-conv",14,14,776,14,14,616,3,3,1,1,1,1],
+["layer30-conv",14,14,616,14,14,125,1,1,1,0,0,1],]
 
-Yolo_config2=[
-["layer0-conv",448,448,3,448,448,10,3,1,1],
-["layer2-conv",224,224,10,224,224,40,3,1,1],
-["layer4-conv",112,112,40,112,112,40,3,1,1],
-["layer5-conv",112,112,40,112,112,46,1,1,0],
-["layer6-conv",112,112,46,112,112,90,3,1,1],
-["layer8-conv",56,56,90,56,56,128,3,1,1],
-["layer9-conv",56,56,128,56,56,90,1,1,0],
-["layer10-conv",56,56,90,56,56,180,3,1,1],
-["layer12-conv",28,28,180,28,28,206,3,1,1],
-["layer13-conv",28,28,206,28,28,104,1,1,0],
-["layer14-conv",28,28,104,28,28,206,3,1,1],
-["layer15-conv",28,28,206,28,28,128,1,1,0],
-["layer16-conv",28,28,128,28,28,256,3,1,1],
-["layer18-conv",14,14,256,14,14,512,3,1,1],
-["layer19-conv",14,14,512,14,14,256,1,1,0],
-["layer20-conv",14,14,256,14,14,512,3,1,1],
-["layer21-conv",14,14,512,14,14,104,1,1,0],
-["layer22-conv",14,14,104,14,14,206,3,1,1],
-["layer23-conv",14,14,206,14,14,410,3,1,1],
-["layer24-conv",14,14,410,14,14,512,3,1,1],
-["layer26-conv",28,28,256,28,28,32,1,1,0],
-["layer29-conv",14,14,640,14,14,512,3,1,1],
-["layer30-conv",14,14,512,14,14,125,1,1,0],]
+# Yolo_config2=[
+# ["layer0-conv",448,448,3,448,448,10,3,1,1],
+# ["layer2-conv",224,224,10,224,224,40,3,1,1],
+# ["layer4-conv",112,112,40,112,112,40,3,1,1],
+# ["layer5-conv",112,112,40,112,112,46,1,1,0],
+# ["layer6-conv",112,112,46,112,112,90,3,1,1],
+# ["layer8-conv",56,56,90,56,56,128,3,1,1],
+# ["layer9-conv",56,56,128,56,56,90,1,1,0],
+# ["layer10-conv",56,56,90,56,56,180,3,1,1],
+# ["layer12-conv",28,28,180,28,28,206,3,1,1],
+# ["layer13-conv",28,28,206,28,28,104,1,1,0],
+# ["layer14-conv",28,28,104,28,28,206,3,1,1],
+# ["layer15-conv",28,28,206,28,28,128,1,1,0],
+# ["layer16-conv",28,28,128,28,28,256,3,1,1],
+# ["layer18-conv",14,14,256,14,14,512,3,1,1],
+# ["layer19-conv",14,14,512,14,14,256,1,1,0],
+# ["layer20-conv",14,14,256,14,14,512,3,1,1],
+# ["layer21-conv",14,14,512,14,14,104,1,1,0],
+# ["layer22-conv",14,14,104,14,14,206,3,1,1],
+# ["layer23-conv",14,14,206,14,14,410,3,1,1],
+# ["layer24-conv",14,14,410,14,14,512,3,1,1],
+# ["layer26-conv",28,28,256,28,28,32,1,1,0],
+# ["layer29-conv",14,14,640,14,14,512,3,1,1],
+# ["layer30-conv",14,14,512,14,14,125,1,1,0],]
 
-
-
-layer0-conv,448,448,3,448,448,10,3,1,1
-layer2-conv,224,224,10,224,224,40,3,1,1
-layer4-conv,112,112,40,112,112,40,3,1,1
-layer5-conv,112,112,40,112,112,46,1,1,0
-layer6-conv,112,112,46,112,112,90,3,1,1
-layer8-conv,56,56,90,56,56,128,3,1,1
-layer9-conv,56,56,128,56,56,90,1,1,0
-layer10-conv,56,56,90,56,56,180,3,1,1
-layer12-conv,28,28,180,28,28,206,3,1,1
-layer13-conv,28,28,206,28,28,104,1,1,0
-layer14-conv,28,28,104,28,28,206,3,1,1
-layer15-conv,28,28,206,28,28,128,1,1,0
-layer16-conv,28,28,128,28,28,256,3,1,1
-layer18-conv,14,14,256,14,14,512,3,1,1
-layer19-conv,14,14,512,14,14,256,1,1,0
-layer20-conv,14,14,256,14,14,512,3,1,1
-layer21-conv,14,14,512,14,14,104,1,1,0
-layer22-conv,14,14,104,14,14,206,3,1,1
-layer23-conv,14,14,206,14,14,410,3,1,1
-layer24-conv,14,14,410,14,14,512,3,1,1
-layer26-conv,28,28,256,28,28,32,1,1,0
-layer29-conv,14,14,640,14,14,512,3,1,1
-layer30-conv,14,14,512,14,14,125,1,1,0
+VGG=[
+["layer0-conv",224,224,3,224,224,64,3,3,1,1,1,1],
+["layer0-conv",224,224,64,224,224,64,3,3,1,1,1,1],
+["layer0-conv",112,112,64,112,112,128,3,3,1,1,1,1],
+["layer0-conv",112,112,128,112,112,128,3,3,1,1,1,1],
+["layer0-conv",56,56,128,56,56,256,3,3,1,1,1,1],
+["layer0-conv",56,56,256,56,56,256,3,3,1,1,1,1],
+["layer0-conv",28,28,256,28,28,512,3,3,1,1,1,1],
+["layer0-conv",14,14,512,14,14,512,3,3,1,1,1,1],
+]
 
 if __name__ == "__main__":
 
 
-
+    if(sys.argv[1]=="VGG" ):
+        config=VGG
+    elif(sys.argv[1]="YOLO1"):
+        config=Yolo_config1
 
 
 
@@ -664,13 +683,12 @@ if __name__ == "__main__":
     #     argv=[0,ih,ih,id,ih,ih,od,ks,1,ks//2,1,scale_fact,"src/wino_hw_config.h"]
     #     running_test(argv, result_dict)
     result_dict={}
-    for i in Yolo_config1:
+    for i in config:
         i[3]=ALIGN(i[3],4)
         i[6]=ALIGN(i[6],8)
         ks=i[7]
         id=i[3]
         scale_fact=(1<<14)//id//ks;
-        i.append(1)
         i.append(scale_fact)
         i.append("src/wino_hw_config.h")
         
