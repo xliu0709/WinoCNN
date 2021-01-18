@@ -450,10 +450,13 @@ def running_test( argv,validate_dict):
     print("conv_desc.wino_height ",conv_desc.wino_height )
     print("conv_desc.output_buffer_depth ",conv_desc.output_buffer_depth )
 
-    if(argv[7]==1):
-        conv_desc.wino_output_tile_size=4
-    else:
+
+    kernel_total=argv[7]*argv[8]
+
+    if(argv[7]*argv[8]*2.25/ALIGN(argv[7],3)/ALIGN(argv[8],3) > 1):
         conv_desc.wino_output_tile_size=2
+    else:
+        conv_desc.wino_output_tile_size=4
     
     min_support_depth =  conv_desc.output_buffer_depth//  CEIL_DIV(conv_desc.output_width,conv_desc.wino_output_tile_size*conv_desc.wino_width) *conv_desc.wino_height//8*8
 
@@ -492,10 +495,10 @@ def running_test( argv,validate_dict):
     sys_command+=" dump_param"
     sys_command+=" ．"
 
-    if(int(argv[7]))==1:
-        sys_command+=" 1 "
-    else:
+    if(argv[7]*argv[8]*2.25/ALIGN(argv[7],3)/ALIGN(argv[8],3) > 1):
         sys_command+=" 3 "
+    else:
+        sys_command+=" 1 "
      
     print(sys_command)
     ret_val=os.system("./single_csim.out "+sys_command +">output.txt")
@@ -553,12 +556,12 @@ def running_test( argv,validate_dict):
     test.write(0x10,input_FM.physical_address)
     test.write(0x18,input_FM.physical_address)
     test.write(0x20,weight.physical_address+physical_byte_num*0)
-    test.write(0x28,weight.physical_address+physical_byte_num*1)
-    test.write(0x30,weight.physical_address+physical_byte_num*2)
-    test.write(0x38,weight.physical_address+physical_byte_num*3)
-    test.write(0x40,output_FM.physical_address)
-    test.write(0x48,output_FM.physical_address)
-    test.write(0x50,params.physical_address)
+    # test.write(0x28,weight.physical_address+physical_byte_num*1)
+    # test.write(0x30,weight.physical_address+physical_byte_num*2)
+    # test.write(0x38,weight.physical_address+physical_byte_num*3)
+    test.write(0x28,output_FM.physical_address)
+    test.write(0x30,output_FM.physical_address)
+    test.write(0x38,params.physical_address)
 
     print("start calling", test.read(0x00))
     start = time.time()
@@ -861,6 +864,7 @@ if __name__ == "__main__":
             i[4]=i[1]
             i[5]=i[1]
             i[9]=1
+        
 
         scale_fact=int( (1<<14)/i[7]/i[8] );
         i.append(1)
