@@ -1447,6 +1447,12 @@ void featuremap_int_to_hw_pointers(
     char* feature_map2=source1;
     char* featuremap_buffer_hw=targetDDR;
 
+    std::cout<<"depth "<<depth<<std::endl;
+    std::cout<<"depth_ceildiv8 "<<depth_ceildiv8<<std::endl;
+    std::cout<<"width_align8 "<<width_align8<<std::endl;
+    std::cout<<"group_depth_by8 "<<group_depth_by8<<std::endl;
+
+    // getchar();
     int ddr_address = 0;
     for(int row=0; row<height;row++)
     {
@@ -1459,6 +1465,9 @@ void featuremap_int_to_hw_pointers(
                    
                     int depth_idx_by8 = group_depth_idx_by8-group_depth_offset_by8;
                     int depth_idx = depth_idx_by8*8+ idx_tile8;
+
+                    // std::cout<<"ddr_address "<<ddr_address<<std::endl;
+                    // std::cout<<"dim "<<depth_idx<<","<<row<<","<<col<<std::endl;
 
                     if(group_depth_idx_by8<group_depth_offset_by8 || depth_idx_by8>=depth_ceildiv8)
                     {

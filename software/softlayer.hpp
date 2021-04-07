@@ -270,8 +270,10 @@ void conv_soft(
     int outdepth,
     int outheight,
     int outwidth,
-    int pad_size,
-    int window_size,
+    int pad_size_h,
+    int pad_size_w,
+    int window_size_h,
+    int window_size_w,
     int stride,
     bool adding_bias,
     bool relu_flag
@@ -297,12 +299,12 @@ void conv_soft(
     for(int od=0;od<outdepth;od++)
     for(int id=0;id<indepth;id++)
     {
-        for(int kh=0;kh<window_size;kh++)
-        for(int kw=0;kw<window_size;kw++)
+        for(int kh=0;kh<window_size_h;kh++)
+        for(int kw=0;kw<window_size_w;kw++)
         {
             T weightval=weight[weightidx];
-            for(int oh=0,ih_off=-pad_size+kh;oh<outheight;oh++,ih_off+=stride)
-            for(int ow=0,iw_off=-pad_size+kw;ow<outwidth;ow++,iw_off+=stride)
+            for(int oh=0,ih_off=-pad_size_h+kh;oh<outheight;oh++,ih_off+=stride)
+            for(int ow=0,iw_off=-pad_size_w+kw;ow<outwidth;ow++,iw_off+=stride)
             {
                 T inval;
                 if(ih_off>=0 && ih_off < inheight && iw_off >=0 && iw_off <inwidth)

@@ -406,6 +406,10 @@ def generate_wino_cell_call(config:Config_t, wino_h, wino_w):
     ret_string+="\t\tout_buffer1_{}_{},\n".format(wino_h,wino_w)
     ret_string+="\t\tout_buffer2_{}_{},\n".format(wino_h,wino_w)
     ret_string+="\t\tout_buffer3_{}_{},\n".format(wino_h,wino_w)
+    if(config.WINO_DOMAIN_SIZE==6):
+        ret_string+="\t\tout_buffer4_{}_{},\n".format(wino_h,wino_w)
+        ret_string+="\t\tout_buffer5_{}_{},\n".format(wino_h,wino_w)
+
     ret_string+="\t\tconv_desc.weightbuffer_outdepth_minitile_number,\n\
         conv_desc.total_input_stream_tile,\n\
         conv_desc.loop_omini_base_reset_cycle,\n\

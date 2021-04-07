@@ -201,34 +201,25 @@ int main(int argc, char** argv)
 
     init_bias_int(linfo_vect[0].biasbuffer_quant[0],output_depth,"zero");
 
-    // conv_soft<float>(
-
-    // );
-
-
-    
-    // 11 bit
-    
-
-   wino_model_int(fmap_dict["in"].buffers_int[0],
-       input_depth,
-       input_height,
-       input_width,
-       fmap_dict["out"].buffers_int[0],
-       output_depth,
-       output_height,
-       output_width,
-       linfo_vect[0].weightbuffer_quant[0],
-       linfo_vect[0].biasbuffer_quant[0],
-       kernel_size_h,
-       kernel_size_w,
-       pad_size_h,
-       pad_size_w,
-       stride_size,
-       relu_flag,
-       Scale_oback_int,
-       use_kernel_size
-   );
+    wino_model_int(fmap_dict["in"].buffers_int[0],
+        input_depth,
+        input_height,
+        input_width,
+        fmap_dict["out"].buffers_int[0],
+        output_depth,
+        output_height,
+        output_width,
+        linfo_vect[0].weightbuffer_quant[0],
+        linfo_vect[0].biasbuffer_quant[0],
+        kernel_size_h,
+        kernel_size_w,
+        pad_size_h,
+        pad_size_w,
+        stride_size,
+        relu_flag,
+        Scale_oback_int,
+        use_kernel_size
+    );
 
     wino_model_int(fmap_dict["in"].buffers_int[1],
         input_depth,
@@ -257,16 +248,15 @@ int main(int argc, char** argv)
     char* weightddr2=linfo_vect[0].weightbuffers_hw[2];
     char* weightddr3=linfo_vect[0].weightbuffers_hw[3];
 
-
     if(dump_method=="dump_txt")
     {
-
         print_feature_map<char>(fmap_dict["in"].buffers_int[0],
         "C1_mdoel_int_in.txt",
         linfo_vect[0].indim[1],
         linfo_vect[0].indim[2],
         linfo_vect[0].indim[0]
         );
+        
         print_feature_map<char>(fmap_dict["in"].buffers_int[1],
         "C2_mdoel_int_in.txt",
         linfo_vect[0].indim[1],
@@ -276,6 +266,7 @@ int main(int argc, char** argv)
     }
 
     
+
 
 
 
@@ -441,8 +432,7 @@ int main(int argc, char** argv)
         } 
         else return 3;
     }
-    
-
+  
 
     // FREE(input_DDR);
     // FREE(weight_DDR);

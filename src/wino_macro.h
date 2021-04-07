@@ -52,18 +52,14 @@
 #define WINO_OUT_SIZE 2
 #define WINO_OUT_SIZE_CELL 4
 
-#elif WINO3x3_EN
-
-#define WINO_OUT_SIZE 4
-#define WINO_OUT_SIZE_CELL 4
 #else
 
-#define WINO_OUT_SIZE 2
-
+#define WINO_OUT_SIZE 4
+#define WINO_OUT_SIZE_CELL 6
 #endif
 
 #define WINO_OUT_SIZE_SQUARE (WINO_OUT_SIZE * WINO_OUT_SIZE)
-
+#define WINO_OUT_SIZE_CELL_SQUARE (WINO_OUT_SIZE_CELL * WINO_OUT_SIZE_CELL)
 
 
 #define INPUT_BUFFER_DEPTH (1<<INPUT_BUFFER_DEPTH_BITWIDTH)
@@ -137,7 +133,8 @@
 
 #if WINO_DOMAIN_SIZE == 6
 #define IN_WIDTH 8
-#define W_WIDTH 16
+// #define W_WIDTH 17
+#define W_WIDTH 13
 #else
 #define IN_WIDTH 8
 #define W_WIDTH 11
@@ -150,26 +147,28 @@
 #define DB_QUANT_BIT 0
 #define DB_WIDTH (IN_WIDTH+IN_TRANSBIT-DB_QUANT_BIT)
 
-#define BTB_QUANT_BIT 0
+#define BTB_QUANT_BIT 4
 #define BTB_WIDTH (DB_WIDTH+IN_TRANSBIT-BTB_QUANT_BIT)
 
-#define UV_QUANT_BIT 0
+// #define UV_QUANT_BIT 0
+#define UV_QUANT_BIT 5
 #define UV_MUL_WIDTH (BTB_WIDTH+W_WIDTH+1)
 #define UV_WIDTH (BTB_WIDTH+W_WIDTH+INDEPTH_MINITILE_SIZE_BITWIDTH-UV_QUANT_BIT)
 
 #define UVA_QUANT_BIT 0
 #define UVA_WIDTH (UV_WIDTH+OUT_TRANSBIT-UVA_QUANT_BIT)
 
-#define ATA_QUANT_BIT 0
+// #define ATA_QUANT_BIT 0
+#define ATA_QUANT_BIT 6
 #define ATA_WIDTH (UVA_WIDTH+OUT_TRANSBIT-ATA_QUANT_BIT)
 
 
 
 
-#define OUT_WIDTH 18
+#define OUT_WIDTH 9
 #define OUT_BUFFER_QUANT_BIT 0
 
-#define OBACK_QUANT_BIT 14
+#define OBACK_QUANT_BIT 10
 
 #if DEBUG_FILE_PRINT
 #define OUT_SAT_MAX ( (1L<<(OUT_WIDTH-1)) - 1 )
@@ -209,6 +208,12 @@
 #define INFM_WORD_BYTES 8
 #endif
 
+#define INPUT_PORT_NUM 2
+#define INPUT_PORT_NUM_BITS 1
+
+#if INPUT_PORT_NUM==2
+
+
 #define INPUT_PORTS_DECLARE(x)  ap_uint<128>* x##0,\
                                 ap_uint<128>* x##1
                                 // ap_uint<128>* x##2,\
@@ -219,7 +224,17 @@
                                 // x##2,\
                                 // x##3
 
+#elif INPUT_PORT_NUM==4
+#define INPUT_PORTS_DECLARE(x)  ap_uint<128>* x##0,\
+                                ap_uint<128>* x##1,\
+                                ap_uint<128>* x##2,\
+                                ap_uint<128>* x##3
 
+#define INPUT_PORTS_CALL(x)     x##0,\
+                                x##1,\
+                                x##2,\
+                                x##3
+#endif
 
 #if WINO_HEIGHT >=4 
 #define WEIGHT_PORT_NUM 4

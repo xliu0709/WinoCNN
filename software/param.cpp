@@ -135,39 +135,39 @@ void process_element6x6_soft(
     // conv_desc.use_kernel_size=use_kernel_size;
 
     // wino related parameters
-    if(wino_domain_size==6)
-    {
-        // if( kernel_size == 3)
-        // {
-        //     conv_desc.wino3x3_flag = 1;
-        //     conv_desc.wino_output_tile_size = 4;
-        //     conv_desc.merge_kernel_flag=0;
-        //     conv_desc.merge_kernel_size=ALIGN(3,3);
-        //     conv_desc.merge_kernel_step=3;
-        // }
-        // else if( kernel_size == 5)
-        // {
-        //     conv_desc.wino3x3_flag = 0;
-        //     conv_desc.wino_output_tile_size =2;
-        //     conv_desc.merge_kernel_flag=0;
-        //     conv_desc.merge_kernel_size=3;
-        //     conv_desc.merge_kernel_step=3;
-        // }
-        // else
-        // {
-        //     conv_desc.wino3x3_flag = 1;
-        //     conv_desc.wino_output_tile_size = 4;
-        //     conv_desc.merge_kernel_flag=1;
-        //     conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
-        //     conv_desc.merge_kernel_step=3;
-        // }
-    }
-    else
-    {
+    // if(wino_domain_size==6)
+    // {
+    //     // if( kernel_size == 3)
+    //     // {
+    //     //     conv_desc.wino3x3_flag = 1;
+    //     //     conv_desc.wino_output_tile_size = 4;
+    //     //     conv_desc.merge_kernel_flag=0;
+    //     //     conv_desc.merge_kernel_size=ALIGN(3,3);
+    //     //     conv_desc.merge_kernel_step=3;
+    //     // }
+    //     // else if( kernel_size == 5)
+    //     // {
+    //     //     conv_desc.wino3x3_flag = 0;
+    //     //     conv_desc.wino_output_tile_size =2;
+    //     //     conv_desc.merge_kernel_flag=0;
+    //     //     conv_desc.merge_kernel_size=3;
+    //     //     conv_desc.merge_kernel_step=3;
+    //     // }
+    //     // else
+    //     // {
+    //     //     conv_desc.wino3x3_flag = 1;
+    //     //     conv_desc.wino_output_tile_size = 4;
+    //     //     conv_desc.merge_kernel_flag=1;
+    //     //     conv_desc.merge_kernel_size=ALIGN(kernel_size,3);
+    //     //     conv_desc.merge_kernel_step=3;
+    //     // }
+    // }
+    // else
+    // {
         if( use_kernel_size==3 )
         {
             conv_desc.wino3x3_flag = 1;
-            conv_desc.wino_output_tile_size = 2;
+            conv_desc.wino_output_tile_size = wino_domain_size-2;
             conv_desc.merge_kernel_size_h=ALIGN(kernel_size_h,3);
             conv_desc.merge_kernel_size_w=ALIGN(kernel_size_w,3);
             conv_desc.merge_kernel_step=3;
@@ -184,7 +184,7 @@ void process_element6x6_soft(
         else
         {
             conv_desc.wino3x3_flag = 0;
-            conv_desc.wino_output_tile_size = 4;
+            conv_desc.wino_output_tile_size = wino_domain_size;
             conv_desc.merge_kernel_size_h=kernel_size_h;
             conv_desc.merge_kernel_size_w=kernel_size_w;
             conv_desc.merge_kernel_step=1;
@@ -198,7 +198,7 @@ void process_element6x6_soft(
                 conv_desc.merge_kernel_flag=1;
             }
         }
-    }
+    // }
     //input buffer related
 
     conv_desc.indepth_align8 = ALIGN(input_depth,8);
@@ -209,6 +209,10 @@ void process_element6x6_soft(
     conv_desc.group_indepth_offset = group_indepth_offset;
     
     conv_desc.outwidth_align8 = ALIGN(output_width,8)*stride_size;
+
+    std::cout<<"conv_desc.outwidth "<< conv_desc.outwidth << std::endl;
+    std::cout<<"conv_desc.wino_output_tile_size "<< conv_desc.outwidth << std::endl;
+    std::cout<<"wino_width "<< conv_desc.outwidth << std::endl;
 
     conv_desc.wino_tile_number_in_outwidth = CEIL_DIV(conv_desc.outwidth, conv_desc.wino_output_tile_size * wino_width);
 
@@ -299,12 +303,9 @@ void process_element6x6_soft(
     conv_desc.weightbuffer_load_outdepth_number = conv_desc.outdepth_align8 / conv_desc.weightbuffer_load_outdepth_step;
 
     int weightbuffer_load_size=indepth_factor*outdepth_factor;
-    if(kernel_size_h==5 && kernel_size_w && wino_domain_size==6)
-        conv_desc.weightDDR_buffer_burst_length = weightddr_indepth_minitile_128bit_step*weightbuffer_load_size;
-    else
-    {
-        conv_desc.weightDDR_buffer_burst_length = (indepth_minitile_size/2)*weightbuffer_load_size;
-    }
+
+    conv_desc.weightDDR_buffer_burst_length = (indepth_minitile_size/2)*weightbuffer_load_size;
+  
 
 
 
@@ -315,7 +316,7 @@ void process_element6x6_soft(
 
 
     // row_tile parameter.
-
+    printf("wino_tile_number_in_outwidth cycle %d\n", conv_desc.wino_tile_number_in_outwidth);fflush(stdout);
     int expected_row_step =CEIL_DIV(weightddr_indepth_minitile_128bit_step * outdepth_minitile_size/WEIGHT_PORT_NUM*5, conv_desc.wino_tile_number_in_outwidth*4)*conv_desc.wino_output_tile_size;
     printf("load cycle %d\n", weightddr_indepth_minitile_128bit_step * (outdepth_minitile_size/4));
     printf("Repeat tile in row_tile %d\n", conv_desc.wino_tile_number_in_outwidth);
@@ -347,14 +348,14 @@ void process_element6x6_soft(
     }
     else if(input_buffer_row_capacity >= input_height )
     {
-        row_step=ALIGN(output_height*stride_size,4);
+        row_step=ALIGN(output_height*stride_size,WINO_DOMAIN_SIZE);
     }
     else
     {
         row_step=maximum_row_step/conv_desc.wino_output_tile_size*conv_desc.wino_output_tile_size;
     }
     printf("row_step %d\n",row_step );
-
+    // getchar();
     conv_desc.out_rowstep=row_step;
     conv_desc.wino_tile_number_in_out_rowstep=row_step/conv_desc.wino_output_tile_size;
 
@@ -417,19 +418,16 @@ void process_element6x6_soft(
     //out buffer related
     conv_desc.outdepth_ceildiv8 = CEIL_DIV(conv_desc.outdepth, 8);
     conv_desc.output_burst_length = conv_desc.outwidth_align8*CEIL_DIV(conv_desc.outdepth, OUT_PORT_BATCH_NUM)/stride_size;
-    printf("conv_desc.output_burst_length %d\n",conv_desc.output_burst_length);
-    
-    fflush(stdout);
+
 
     //output write back related
 
     conv_desc.wino_col_pix_upper_bound= conv_desc.wino_output_tile_size-stride_size;
     conv_desc.wino_tile_number_rowcol=conv_desc.wino_tile_number_in_out_rowstep*conv_desc.wino_tile_number_in_outwidth;
-	conv_desc.out_ddr_increment_step=conv_desc.output_burst_length*conv_desc.wino_output_tile_size/conv_desc.stride;
+	conv_desc.out_ddr_increment_step=conv_desc.output_burst_length*2/conv_desc.stride;
 
 
     conv_desc.scale_oback_int=scale_oback;
-    std::cout<<"scale_oback "<< scale_oback<<std::endl;
 
     conv_desc.merge_weight_row_step=conv_desc.merge_kernel_size_w/conv_desc.merge_kernel_step*conv_desc.weightDDR_port_burst_length*conv_desc.weightDDR_burst_number*4;
     conv_desc.merge_weight_col_step=conv_desc.weightDDR_port_burst_length*conv_desc.weightDDR_burst_number*4;

@@ -102,7 +102,7 @@ void print_hw_buffers(
         for(int l=0;l<8;l++)
         {
             int address = (i*width_align8*depth_align8 +j*width+k*8+l)*2;
-            fprintf(fptr,"[%8d]", sourceDDR[address],sourceDDR[address+1]);
+            fprintf(fptr,"[%8d %8d]", sourceDDR[address],sourceDDR[address+1]);
         }
         fprintf(fptr, "\n");
 

@@ -183,8 +183,8 @@ void apply_quant_float(float* arr, int size)
     }
 }
 
-template<int quant_bit>
-void apply_quant_int(int* arr, int size)
+template<int quant_bit,class IntT>
+void apply_quant_int(IntT* arr, int size)
 {
     for(int i=0;i<size;i++)
     {
@@ -193,13 +193,18 @@ void apply_quant_int(int* arr, int size)
 }
 
 template<class T>
-void print_tile( T* tile, int size, std::string name)
+void print_tile( T* tile, int edge_size, std::string name)
 {
     std::cout<<name<<std::endl;
-    for(int i=0;i<size;i++)
+    for(int j=0;j<edge_size;j++)
     {
-        std::cout<<tile[i]<<" ";
+        for(int i=0;i<edge_size;i++)
+        {
+            std::cout<<tile[j*edge_size+i]<<" ";
+        }
+        std::cout<<std::endl;
     }
+
     std::cout<<std::endl;
     getchar();
     fflush(stdout);
@@ -544,8 +549,14 @@ void wino_model_int(
         wino_output_tile_size=2;
     }
     #else
-    printf(" WINO_DOMAIN_SIZ 6 not implemented");
-    assert(0);
+    if(use_kernel_size==1 )
+    {
+        wino_output_tile_size=6;
+    }
+    else
+    {
+        wino_output_tile_size=4;
+    }
     #endif
 
     int OH_ALIGNED = CEIL_DIV(output_height*stride,wino_output_tile_size);
@@ -553,16 +564,15 @@ void wino_model_int(
 
 
 
-    std::vector<int*> output_temp_accum;
+    std::vector< ap_int<OUT_WIDTH>*> output_temp_accum;
 
     for(int i=0;i<INDEPTH_MINITILE_SIZE;i++)
     {
-        int* output_buf=new int[output_depth*OH_ALIGNED*OW_ALIGNED*WINO_DOMAIN_SIZE_SQUARE];
+        ap_int<OUT_WIDTH>* output_buf=new ap_int<OUT_WIDTH>[output_depth*OH_ALIGNED*OW_ALIGNED*WINO_DOMAIN_SIZE_SQUARE];
         output_temp_accum.push_back(output_buf);
     }
 
-    int* output_buffer=new int[output_depth*output_height*stride*output_width*stride];
-    std::cout<<"1"<<std::endl;
+    ap_int<OUT_WIDTH>* output_buffer=new ap_int<OUT_WIDTH>[output_depth*output_height*stride*output_width*stride];
     fflush(stdout);
     for(int start_output_row =0; start_output_row < output_height*stride; start_output_row+=wino_output_tile_size )
     {
@@ -574,28 +584,31 @@ void wino_model_int(
         {
             for(int output_depth_idx=0;output_depth_idx<output_depth;output_depth_idx++)
             {
+                // std::cout<< "output_depth "<< output_depth << std::endl;
+                // getchar();
                 for(int input_depth_idx=0;input_depth_idx<input_depth;input_depth_idx++)
                 {
                     for(int start_output_col =0; start_output_col < output_width*stride; start_output_col+=wino_output_tile_size)
                     {
-                        int input_tile[WINO_DOMAIN_SIZE_SQUARE];
+                        
+                        long int input_tile[WINO_DOMAIN_SIZE_SQUARE];
 
-                        get_wino_input_tile<char,int>(input,input_tile,input_depth,input_width,input_height,WINO_DOMAIN_SIZE,
+                        get_wino_input_tile<char,long int>(input,input_tile,input_depth,input_width,input_height,WINO_DOMAIN_SIZE,
                                                         input_depth_idx,start_output_row+merge_kernel_row_offset,start_output_col+merge_kernel_col_offset,pad_size_h, pad_size_w);
 
-                        int dBT[WINO_DOMAIN_SIZE_SQUARE];
+                        long int dBT[WINO_DOMAIN_SIZE_SQUARE];
 
-                        // print_tile<int>(input_tile,WINO_DOMAIN_SIZE_SQUARE,"input_tile");
+                        // print_tile<long int>(input_tile,WINO_DOMAIN_SIZE,"input_tile");
 
                         
-                        int wino_input_tile[WINO_DOMAIN_SIZE_SQUARE];
+                        long int wino_input_tile[WINO_DOMAIN_SIZE_SQUARE];
                         #if WINO_DOMAIN_SIZE==4
                         if(use_kernel_size==3)
                         {
                             input_right_mul_16<int>(input_tile,dBT);
 
                             apply_quant_int<DB_QUANT_BIT>(dBT,WINO_DOMAIN_SIZE_SQUARE);
-                            // print_tile<float>(dBT,WINO_DOMAIN_SIZE_SQUARE,"dBT");
+                            // print_tile<float>(dBT,WINO_DOMAIN_SIZE,"dBT");
 
                             input_left_mul_16<int>(dBT,wino_input_tile);
 
@@ -609,27 +622,37 @@ void wino_model_int(
                             }
                         }
                         #else
-                        input_right_mul_36<int>(input_tile,dBT);
-                        apply_quant_int<DB_QUANT_BIT>(dBT,WINO_DOMAIN_SIZE_SQUARE);
+                            if(use_kernel_size==3)
+                            {
+                                input_right_mul_36<long int>(input_tile,dBT);
+                                apply_quant_int<DB_QUANT_BIT,long int>(dBT,WINO_DOMAIN_SIZE_SQUARE);
 
-                        input_left_mul_36<int>(dBT,wino_input_tile);
-                        apply_quant_int<BTB_QUANT_BIT>(wino_input_tile,WINO_DOMAIN_SIZE_SQUARE);
+                                input_left_mul_36<long int>(dBT,wino_input_tile);
+                                apply_quant_int<BTB_QUANT_BIT,long int>(wino_input_tile,WINO_DOMAIN_SIZE_SQUARE);
+                            }
+                            else
+                            {
+                                for(int i=0;i<WINO_DOMAIN_SIZE_SQUARE;i++)
+                                {
+                                    wino_input_tile[i]=input_tile[i];
+                                } 
+                            }
                         #endif
                         
-                        int wino_weight_tile[WINO_DOMAIN_SIZE_SQUARE];
+                        long int wino_weight_tile[WINO_DOMAIN_SIZE_SQUARE];
                         // if(kernel_size!=1)
                         // {
-                        int g[WINO_DOMAIN_SIZE_SQUARE];
-                        get_merge_weight_tile<char,int>(weight,g,input_depth,output_depth,kernel_size_h,kernel_size_w,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
+                        long int g[WINO_DOMAIN_SIZE_SQUARE];
+                        get_merge_weight_tile<char,long int>(weight,g,input_depth,output_depth,kernel_size_h,kernel_size_w,input_depth_idx,output_depth_idx,merge_kernel_row_offset,merge_kernel_col_offset);
                         
-                        // print_tile<int>(g,9,"weight_tile");
-                        int gGT[3*WINO_DOMAIN_SIZE];
+                        // print_tile<int>(g,3,"weight_tile");
+                        long int gGT[3*WINO_DOMAIN_SIZE];
                         #if WINO_DOMAIN_SIZE==4
                             if(use_kernel_size==3)
                             {
-                                weight_right_mul_3to4<int>(g,gGT);
+                                weight_right_mul_3to4<long int>(g,gGT);
 
-                                weight_left_mul_3to4<int>(gGT,wino_weight_tile);    
+                                weight_left_mul_3to4<long int>(gGT,wino_weight_tile);    
                                 apply_quant_int<RG_WIDTH-W_WIDTH>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE);
                                 for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++) wino_weight_tile[ii]=(ap_int<W_WIDTH>)wino_weight_tile[ii];
                                 // print_tile<int>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE,"wino_weight_tile");
@@ -642,13 +665,23 @@ void wino_model_int(
                                 }
                             }
                         #else
+                            if(use_kernel_size==3)
+                            {
+                                weight_right_mul_3to6<long int>(g,gGT);
+                            
+                                weight_left_mul_3to6<long int>(gGT,wino_weight_tile);
+                                apply_quant_int<RG_WIDTH-W_WIDTH,long int>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE);
+                                // print_tile<long int>(wino_weight_tile,WINO_DOMAIN_SIZE,"wino_weight_tile");
 
-                            weight_right_mul_3to6<int>(g,gGT);
-                        
-                            weight_left_mul_3to6<int>(gGT,wino_weight_tile);
-                            apply_quant_int<RG_WIDTH-W_WIDTH>(wino_weight_tile,WINO_DOMAIN_SIZE_SQUARE);
-
-                            for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++) wino_weight_tile[ii]=wino_weight_tile[ii]/576;
+                                for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++) wino_weight_tile[ii]=(ap_int<W_WIDTH>) wino_weight_tile[ii];
+                            }
+                            else
+                            {
+                                for(int i=0;i<WINO_DOMAIN_SIZE_SQUARE;i++)
+                                {
+                                    wino_weight_tile[i]=g[0]*(512>>(RG_WIDTH-W_WIDTH));
+                                }
+                            }
                         #endif
                         // }
                         // else
@@ -666,18 +699,20 @@ void wino_model_int(
                         }
 
                 
-                        // print_tile<int>(output_temp_accum[input_depth_idx% INDEPTH_MINITILE_SIZE]+off,WINO_DOMAIN_SIZE_SQUARE,"wino_mul");
+                        // print_tile<int>(output_temp_accum[input_depth_idx% INDEPTH_MINITILE_SIZE]+off,WINO_DOMAIN_SIZE,"wino_mul");
                 
+                        // std::cout<< "start_output_col,input_depth_idx,output_depth_idx "<< start_output_col<<","<<output_depth_idx<<","<<input_depth_idx<< std::endl;
                         if( input_depth_idx% INDEPTH_MINITILE_SIZE != INDEPTH_MINITILE_SIZE-1 && input_depth_idx != input_depth-1) continue;            
-
-                        int wino_output_tile[WINO_DOMAIN_SIZE_SQUARE*4];
+                        // std::cout<< "start_output_col,input_depth_idx,output_depth_idx "<< start_output_col<<","<<output_depth_idx<<","<<input_depth_idx<< std::endl;
+                        
+                        long int wino_output_tile[WINO_DOMAIN_SIZE_SQUARE];
                         
                         for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++) wino_output_tile[ii]=0;
 
                         for(int dd=0;dd<= input_depth_idx% INDEPTH_MINITILE_SIZE;dd++)
                         {
                                         
-                            // print_tile<int>(output_temp_accum[dd]+off,WINO_DOMAIN_SIZE_SQUARE,"wino_mul");
+                            // print_tile<int>(output_temp_accum[dd]+off,WINO_DOMAIN_SIZE,"wino_mul");
 
                             for(int ii=0;ii<WINO_DOMAIN_SIZE_SQUARE;ii++)
                             {
@@ -685,21 +720,20 @@ void wino_model_int(
                             }
                         }
                         
-                        // print_tile<int>(wino_output_tile,WINO_DOMAIN_SIZE_SQUARE,"wino_out_tile");
+                        // print_tile<long int>(wino_output_tile,WINO_DOMAIN_SIZE,"wino_out_tile");
 
                 
-                        apply_quant_int<UV_QUANT_BIT>(wino_output_tile,WINO_DOMAIN_SIZE_SQUARE);
+                        apply_quant_int<UV_QUANT_BIT,long int>(wino_output_tile,WINO_DOMAIN_SIZE_SQUARE);
 
 
 
 
-                        int output_tile[WINO_OUT_SIZE_SQUARE*4];
+                        long int output_tile[WINO_OUT_SIZE_CELL_SQUARE];
 
-                        int vA[WINO_OUT_SIZE*WINO_DOMAIN_SIZE];   
-                        // if(kernel_size!=5)
-                        // {
+                        long int vA[WINO_OUT_SIZE*WINO_DOMAIN_SIZE];   
+              
                             
-                            #if WINO_DOMAIN_SIZE==4
+                        #if WINO_DOMAIN_SIZE==4
                             if(use_kernel_size==3)
                             {
                                 output_right_mul_4to2<int>(wino_output_tile,vA);
@@ -710,38 +744,40 @@ void wino_model_int(
                             }
                             else
                             {
-                                for(int i=0;i<WINO_OUT_SIZE_SQUARE*4;i++)
+                                for(int i=0;i<WINO_OUT_SIZE_CELL_SQUARE;i++)
                                 {
                                     output_tile[i]=wino_output_tile[i];
                                 }
                             }
-                            #else
-                                output_right_mul_6to4<int>(wino_output_tile,vA);
-                                apply_quant_int<UVA_QUANT_BIT>(vA,WINO_OUT_SIZE*WINO_DOMAIN_SIZE);
-                                output_left_mul_6to4<int>(vA,output_tile);
-                                apply_quant_int<ATA_QUANT_BIT>(output_tile,WINO_OUT_SIZE_SQUARE);
-                            #endif
-                        // }
-                        // else
-                        // {
-                        //         output_right_mul_6to2<int>(wino_output_tile,vA);
-                        //         apply_quant_int<UVA_QUANT_BIT>(vA,WINO_OUT_SIZE*WINO_DOMAIN_SIZE);
-                        //         output_left_mul_6to2<int>(vA,output_tile);    
-                        //         apply_quant_int<ATA_QUANT_BIT>(output_tile,WINO_OUT_SIZE_SQUARE); 
-                        // }
+                        #else
+                            if(use_kernel_size==3)
+                            {
+                                output_right_mul_6to4<long int>(wino_output_tile,vA);
+                                apply_quant_int<UVA_QUANT_BIT,long int>(vA,WINO_OUT_SIZE*WINO_DOMAIN_SIZE);
+                                output_left_mul_6to4<long int>(vA,output_tile);
+                                apply_quant_int<ATA_QUANT_BIT,long int>(output_tile,WINO_OUT_SIZE_SQUARE);
+                            }
+                            else
+                            {
+                                for(int i=0;i<WINO_OUT_SIZE_CELL_SQUARE;i++)
+                                {
+                                    output_tile[i]=wino_output_tile[i];
+                                }
+                            }
+                        #endif
 
-                        apply_quant_int<OUT_BUFFER_QUANT_BIT>(output_tile,WINO_OUT_SIZE_SQUARE);
-                        // print_tile<int>(output_tile,WINO_OUT_SIZE_SQUARE,"output_tile");
+                        apply_quant_int<OUT_BUFFER_QUANT_BIT,long int>(output_tile,WINO_OUT_SIZE_SQUARE);
+                        // print_tile<long int>(output_tile,WINO_OUT_SIZE_CELL,"output_tile");
 
-                        int output_residual[WINO_OUT_SIZE_SQUARE*4];
+                        long int output_residual[WINO_OUT_SIZE_CELL_SQUARE];
                         if(input_depth_idx/INDEPTH_MINITILE_SIZE!=0 || merge_kernel_col_offset!=0 || merge_kernel_row_offset!=0)
-                            get_wino_output_tile<int,int>(output_buffer,output_residual,output_depth,output_width*stride,output_height*stride,wino_output_tile_size,
+                            get_wino_output_tile<ap_int<OUT_WIDTH>,long int>(output_buffer,output_residual,output_depth,output_width*stride,output_height*stride,wino_output_tile_size,
                                                             output_depth_idx,start_output_row, start_output_col,wino_output_tile_size);
                         else
                             for(int ii=0;ii<wino_output_tile_size*wino_output_tile_size;ii++) output_residual[ii]=0;
 
 
-                        int output_back[WINO_OUT_SIZE_SQUARE*4];
+                        long int output_back[WINO_OUT_SIZE_SQUARE*4];
                         for(int ii=0;ii<wino_output_tile_size*wino_output_tile_size;ii++) output_back[ii]=output_residual[ii]+output_tile[ii];
 
                         for(int ii=0;ii<wino_output_tile_size*wino_output_tile_size;ii++){
@@ -749,8 +785,7 @@ void wino_model_int(
                                 std::cout<<"Soft enncountering MAX"<<std::endl;
                                 output_back[ii]=OUT_SAT_MAX;
 
-                            }
-                            
+                            }  
                             else if( output_back[ii] <= OUT_SAT_MIN) 
                             {
                                 std::cout<<"Soft enncountering MIN"<<std::endl;
@@ -758,9 +793,10 @@ void wino_model_int(
                             }
                         } 
                         
-                        // print_tile<int>(output_back,WINO_OUT_SIZE_SQUARE,"output_back_tile");
+                        // if(output_depth_idx%8==0)
+                        //     print_tile<long int>(output_back,WINO_OUT_SIZE_CELL,"output_back_tile");
 
-                        set_wino_output_tile<int,int>(output_buffer,output_back,output_depth,output_width*stride,output_height*stride,wino_output_tile_size,
+                        set_wino_output_tile<ap_int<OUT_WIDTH>,long int>(output_buffer,output_back,output_depth,output_width*stride,output_height*stride,wino_output_tile_size,
                                     output_depth_idx,start_output_row, start_output_col,wino_output_tile_size);
 
                     }

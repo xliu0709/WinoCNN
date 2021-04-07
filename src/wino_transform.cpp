@@ -45,7 +45,7 @@
 #define GGGT_QUANT_BIT 7
 
 #define gGT3to6(in,out,cidx,bidx) \
-        out[bidx][0][cidx]=in[bidx][0][cidx]*3*2;\
+        out[bidx][0][cidx]=in[bidx][0][cidx]*6;\
         out[bidx][1][cidx]=-(in[bidx][0][cidx]+in[bidx][1][cidx]+in[bidx][2][cidx])*4;\
         out[bidx][2][cidx]=(-in[bidx][0][cidx]+in[bidx][1][cidx]-in[bidx][2][cidx])*4;\
         out[bidx][3][cidx]=in[bidx][0][cidx]+in[bidx][1][cidx]*2+in[bidx][2][cidx]*4;\
@@ -93,20 +93,13 @@ void UVA_row(
         out[ridx][1][bidx]=(in[ridx][1][bidx]-in[ridx][2][bidx]-flag*in[ridx][3][bidx])>>UVA_QUANT_BIT;
         out[ridx][2][bidx]=(in[ridx][1][bidx]+in[ridx][2][bidx])>>UVA_QUANT_BIT;
         out[ridx][3][bidx]=(in[ridx][1][bidx]-in[ridx][2][bidx]+in[ridx][3][bidx])>>UVA_QUANT_BIT;
-    
-    #elif WINO3x3_EN && WINO5x5_EN
-        out[ridx][0][bidx]=(in[ridx][0][bidx]+in[ridx][1][bidx]+in[ridx][2][bidx]+in[ridx][3][bidx]+in[ridx][4][bidx])>>UVA_QUANT_BIT;
-        out[ridx][1][bidx]=(in[ridx][1][bidx]-in[ridx][2][bidx]+(in[ridx][3][bidx]-in[ridx][4][bidx])*2+in[ridx][5][bidx]*flag)>>UVA_QUANT_BIT;
-        out[ridx][2][bidx]=(in[ridx][1][bidx]+in[ridx][2][bidx]+(in[ridx][3][bidx]+in[ridx][4][bidx])*4)>>UVA_QUANT_BIT;
-        out[ridx][3][bidx]=(in[ridx][1][bidx]-in[ridx][2][bidx]+(in[ridx][3][bidx]-in[ridx][4][bidx])*8+in[ridx][5][bidx])>>UVA_QUANT_BIT;
-    #elif WINO3x3_EN
+    #else
         out[ridx][0][bidx]=(in[ridx][0][bidx]+in[ridx][1][bidx]+in[ridx][2][bidx]+in[ridx][3][bidx]+in[ridx][4][bidx])>>UVA_QUANT_BIT;
         out[ridx][1][bidx]=(in[ridx][1][bidx]-in[ridx][2][bidx]+(in[ridx][3][bidx]-in[ridx][4][bidx])*2)>>UVA_QUANT_BIT;
         out[ridx][2][bidx]=(in[ridx][1][bidx]+in[ridx][2][bidx]+(in[ridx][3][bidx]+in[ridx][4][bidx])*4)>>UVA_QUANT_BIT;
         out[ridx][3][bidx]=(in[ridx][1][bidx]-in[ridx][2][bidx]+(in[ridx][3][bidx]-in[ridx][4][bidx])*8+in[ridx][5][bidx])>>UVA_QUANT_BIT;
-    #else
-        out[ridx][0][bidx]=(in[ridx][0][bidx]+in[ridx][1][bidx]+in[ridx][2][bidx]+in[ridx][3][bidx]+in[ridx][4][bidx])>>UVA_QUANT_BIT;
-        out[ridx][1][bidx]=(in[ridx][1][bidx]-in[ridx][2][bidx]+(in[ridx][3][bidx]-in[ridx][4][bidx])*2+in[ridx][4][bidx])>>UVA_QUANT_BIT;
+        // out[ridx][4][bidx]=(in[ridx][1][bidx]+in[ridx][2][bidx]+(in[ridx][3][bidx]+in[ridx][4][bidx])*16)>>UVA_QUANT_BIT;
+        // out[ridx][5][bidx]=(in[ridx][1][bidx]-in[ridx][2][bidx]+(in[ridx][3][bidx]-in[ridx][4][bidx])*32)>>UVA_QUANT_BIT;
     #endif
 
 }
@@ -124,29 +117,21 @@ void ATA_col(
 
 
     #pragma HLS inline
-
     #if WINO_DOMAIN_SIZE == 4
         out[0][cidx][bidx]=(in[0][cidx][bidx]+in[1][cidx][bidx]+in[2][cidx][bidx])>>ATA_QUANT_BIT;
         out[1][cidx][bidx]=(in[1][cidx][bidx]-in[2][cidx][bidx]-flag*in[3][cidx][bidx])>>ATA_QUANT_BIT;
         out[2][cidx][bidx]=(in[1][cidx][bidx]+in[2][cidx][bidx])>>ATA_QUANT_BIT;
         out[3][cidx][bidx]=(in[1][cidx][bidx]-in[2][cidx][bidx]+in[3][cidx][bidx])>>ATA_QUANT_BIT;
-
-    #elif WINO3x3_EN && WINO5x5_EN
-        out[0][cidx][bidx]=(in[0][cidx][bidx]+in[1][cidx][bidx]+in[2][cidx][bidx]+in[3][cidx][bidx]+in[4][cidx][bidx])>>ATA_QUANT_BIT;
-        out[1][cidx][bidx]=(in[1][cidx][bidx]-in[2][cidx][bidx]+(in[3][cidx][bidx]-in[4][cidx][bidx])*2+in[5][cidx][bidx]*flag)>>ATA_QUANT_BIT;
-        out[2][cidx][bidx]=(in[1][cidx][bidx]+in[2][cidx][bidx]+(in[3][cidx][bidx]+in[4][cidx][bidx])*4)>>ATA_QUANT_BIT;
-        out[3][cidx][bidx]=(in[1][cidx][bidx]-in[2][cidx][bidx]+(in[3][cidx][bidx]-in[4][cidx][bidx])*8+in[5][cidx][bidx])>>ATA_QUANT_BIT;
-    #elif WINO3x3_EN
+    #else
         out[0][cidx][bidx]=(in[0][cidx][bidx]+in[1][cidx][bidx]+in[2][cidx][bidx]+in[3][cidx][bidx]+in[4][cidx][bidx])>>ATA_QUANT_BIT;
         out[1][cidx][bidx]=(in[1][cidx][bidx]-in[2][cidx][bidx]+(in[3][cidx][bidx]-in[4][cidx][bidx])*2)>>ATA_QUANT_BIT;
         out[2][cidx][bidx]=(in[1][cidx][bidx]+in[2][cidx][bidx]+(in[3][cidx][bidx]+in[4][cidx][bidx])*4)>>ATA_QUANT_BIT;
         out[3][cidx][bidx]=(in[1][cidx][bidx]-in[2][cidx][bidx]+(in[3][cidx][bidx]-in[4][cidx][bidx])*8+in[5][cidx][bidx])>>ATA_QUANT_BIT;
-    #else
-        out[0][cidx][bidx]=(in[0][cidx][bidx]+in[1][cidx][bidx]+in[2][cidx][bidx]+in[3][cidx][bidx]+in[4][cidx][bidx])>>ATA_QUANT_BIT;
-        out[1][cidx][bidx]=(in[1][cidx][bidx]-in[2][cidx][bidx]+(in[3][cidx][bidx]-in[4][cidx][bidx])*2+in[4][cidx][bidx])>>ATA_QUANT_BIT;
+        // out[4][cidx][bidx]=(in[1][cidx][bidx]+in[2][cidx][bidx]+(in[3][cidx][bidx]+in[4][cidx][bidx])*16)>>ATA_QUANT_BIT;
+        // out[5][cidx][bidx]=(in[1][cidx][bidx]-in[2][cidx][bidx]+(in[3][cidx][bidx]-in[4][cidx][bidx])*32)>>ATA_QUANT_BIT;
     #endif
-
 }
+
 
 
 void ATA_col2(

@@ -248,7 +248,7 @@ void load_input_row_from_ddr(
 {
 	#pragma HLS array_partition variable = input_buffer dim=1 complete
 	#pragma HLS interface m_axi port = DDR_port
-	if(row_idx >= inheight || row_idx >= row_load_bound) return;
+	if(row_idx >= inheight || row_idx >= row_load_bound ) return;
 
 	bool bufferflag= (row_idx%INBUFFER_HEIGHT/4 == 0);
 
@@ -302,9 +302,11 @@ void load_input_row_from_ddr(
 	ap_uint<128>* DDR_offset = DDR_port + ddr_address_offset;
 	
 	ap_uint<1> left_down_flag=1;
+
 	#if INBUFFER_WIDTH_BITWIDTH>3
 	ap_uint<INBUFFER_WIDTH_BITWIDTH-3> bank_split_idx=0;
 	#endif
+	
 	for(ap_uint<16> cycle=0;cycle<input_load_burst_length;cycle++)
 	{
 		#pragma HLS pipeline
@@ -794,8 +796,13 @@ void load_input_rowtile_from_ddr(
 	#pragma HLS array_partition variable =input_buffer dim=1 complete
 	#pragma HLS array_partition variable =input_buffer dim=2 complete
     static ap_uint<16> loaded_input_row_number;
-    if(clear_flag)
-        loaded_input_row_number = new_start_input_row;
+	
+	
+	if(clear_flag)
+		loaded_input_row_number = new_start_input_row;
+
+
+
     std::cout<<"clear flag "<<clear_flag<<std::endl;
     std::cout<<"loaded_input_row_number "<<loaded_input_row_number<<std::endl;
     std::cout<<"required_loaded_input_row_number "<<required_loaded_input_row_number<<std::endl;
@@ -827,171 +834,82 @@ void load_input_rowtile_from_ddr(
 		printf("\trow_idx[%d %d %d %d]\n",(int) row_idx_selected[0],(int) row_idx_selected[1],(int) row_idx_selected[2],(int) row_idx_selected[3] );
 
 		#if INBUFFER_HEIGHT == 8
-			// if( row_idx_selected[0]%INBUFFER_HEIGHT/4 == 0)
-			// {
-
-				load_input_row_from_ddr<0>(
-					DDR_port0,
-					input_buffer[0],
-					input_buffer[4],
-					inheight,
-					inwidth,
-					inwidth_align8,
-					indepth_align8,
-					group_indepth_x_inwidth_align8_by8,
-					group_indepth_offset_x_inwidth_align8_by8,
-					inwidth_ceildiv_inbufferwidth,
-					buffer_address_mid_increment_step,
-					input_load_burst_length,
-					row_address_bitnumber_flag,
-					row_idx_selected[0],
-					required_loaded_input_row_number
-				);
-			// }
-			// else
-			// {
-			// 	load_input_row_from_ddr<0>(
-			// 		DDR_port0,
-			// 		input_buffer[4],
-			// 		inheight,
-			// 		inwidth,
-			// 		inwidth_align8,
-			// 		indepth_align8,
-			// 		group_indepth_x_inwidth_align8_by8,
-			// 		group_indepth_offset_x_inwidth_align8_by8,
-			// 		inwidth_ceildiv_inbufferwidth,
-			// 		buffer_address_mid_increment_step,
-			// 		input_load_burst_length,
-			// 		row_address_bitnumber_flag,
-			// 		row_idx_selected[0],
-			// 		required_loaded_input_row_number
-			// 	);
-			// }
-
-			// if( row_idx_selected[1]%INBUFFER_HEIGHT/4 == 0)
-			// {
-
-				load_input_row_from_ddr<1>(
-					DDR_port1,
-					input_buffer[1],
-					input_buffer[5],
-					inheight,
-					inwidth,
-					inwidth_align8,
-					indepth_align8,
-					group_indepth_x_inwidth_align8_by8,
-					group_indepth_offset_x_inwidth_align8_by8,
-					inwidth_ceildiv_inbufferwidth,
-					buffer_address_mid_increment_step,
-					input_load_burst_length,
-					row_address_bitnumber_flag,
-					row_idx_selected[1],
-					required_loaded_input_row_number
-				);
-			// }
-			// else
-			// {
-			// 	load_input_row_from_ddr<1>(
-			// 		DDR_port1,
-			// 		input_buffer[5],
-			// 		inheight,
-			// 		inwidth,
-			// 		inwidth_align8,
-			// 		indepth_align8,
-			// 		group_indepth_x_inwidth_align8_by8,
-			// 		group_indepth_offset_x_inwidth_align8_by8,
-			// 		inwidth_ceildiv_inbufferwidth,
-			// 		buffer_address_mid_increment_step,
-			// 		input_load_burst_length,
-			// 		row_address_bitnumber_flag,
-			// 		row_idx_selected[1],
-			// 		required_loaded_input_row_number
-			// 	);
-			// }
-
-			// if( row_idx_selected[2]%INBUFFER_HEIGHT/4 == 0)
-			// {
-
-				load_input_row_from_ddr<2>(
-					DDR_port2,
-					input_buffer[2],
-					input_buffer[6],
-					inheight,
-					inwidth,
-					inwidth_align8,
-					indepth_align8,
-					group_indepth_x_inwidth_align8_by8,
-					group_indepth_offset_x_inwidth_align8_by8,
-					inwidth_ceildiv_inbufferwidth,
-					buffer_address_mid_increment_step,
-					input_load_burst_length,
-					row_address_bitnumber_flag,
-					row_idx_selected[2],
-					required_loaded_input_row_number
-				);
-			// }
-			// else
-			// {
-			// 	load_input_row_from_ddr<2>(
-			// 		DDR_port2,
-			// 		input_buffer[6],
-			// 		inheight,
-			// 		inwidth,
-			// 		inwidth_align8,
-			// 		indepth_align8,
-			// 		group_indepth_x_inwidth_align8_by8,
-			// 		group_indepth_offset_x_inwidth_align8_by8,
-			// 		inwidth_ceildiv_inbufferwidth,
-			// 		buffer_address_mid_increment_step,
-			// 		input_load_burst_length,
-			// 		row_address_bitnumber_flag,
-			// 		row_idx_selected[2],
-			// 		required_loaded_input_row_number
-			// 	);
-			// }
 
 
-			// if( row_idx_selected[3]%INBUFFER_HEIGHT/4 == 0)
-			// {
+			
+			
+			load_input_row_from_ddr<0>(
+			DDR_port0,
+			input_buffer[0],
+			input_buffer[4],
+			inheight,
+			inwidth,
+			inwidth_align8,
+			indepth_align8,
+			group_indepth_x_inwidth_align8_by8,
+			group_indepth_offset_x_inwidth_align8_by8,
+			inwidth_ceildiv_inbufferwidth,
+			buffer_address_mid_increment_step,
+			input_load_burst_length,
+			row_address_bitnumber_flag,
+			row_idx_selected[0],
+			required_loaded_input_row_number
+			);
 
-				load_input_row_from_ddr<3>(
-					DDR_port3,
-					input_buffer[3],
-					input_buffer[7],
-					inheight,
-					inwidth,
-					inwidth_align8,
-					indepth_align8,
-					group_indepth_x_inwidth_align8_by8,
-					group_indepth_offset_x_inwidth_align8_by8,
-					inwidth_ceildiv_inbufferwidth,
-					buffer_address_mid_increment_step,
-					input_load_burst_length,
-					row_address_bitnumber_flag,
-					row_idx_selected[3],
-					required_loaded_input_row_number
-				);
-			// }
-			// else
-			// {
-			// 	load_input_row_from_ddr<3>(
-			// 		DDR_port3,
-			// 		input_buffer[7],
-			// 		inheight,
-			// 		inwidth,
-			// 		inwidth_align8,
-			// 		indepth_align8,
-			// 		group_indepth_x_inwidth_align8_by8,
-			// 		group_indepth_offset_x_inwidth_align8_by8,
-			// 		inwidth_ceildiv_inbufferwidth,
-			// 		buffer_address_mid_increment_step,
-			// 		input_load_burst_length,
-			// 		row_address_bitnumber_flag,
-			// 		row_idx_selected[3],
-			// 		required_loaded_input_row_number
-			// 	);
+			load_input_row_from_ddr<1>(
+			DDR_port1,
+			input_buffer[1],
+			input_buffer[5],
+			inheight,
+			inwidth,
+			inwidth_align8,
+			indepth_align8,
+			group_indepth_x_inwidth_align8_by8,
+			group_indepth_offset_x_inwidth_align8_by8,
+			inwidth_ceildiv_inbufferwidth,
+			buffer_address_mid_increment_step,
+			input_load_burst_length,
+			row_address_bitnumber_flag,
+			row_idx_selected[1],
+			required_loaded_input_row_number
+			);
 
-			// }
+			load_input_row_from_ddr<1>(
+			DDR_port0,
+			input_buffer[2],
+			input_buffer[6],
+			inheight,
+			inwidth,
+			inwidth_align8,
+			indepth_align8,
+			group_indepth_x_inwidth_align8_by8,
+			group_indepth_offset_x_inwidth_align8_by8,
+			inwidth_ceildiv_inbufferwidth,
+			buffer_address_mid_increment_step,
+			input_load_burst_length,
+			row_address_bitnumber_flag,
+			row_idx_selected[2],
+			required_loaded_input_row_number
+			);
+
+			load_input_row_from_ddr<1>(
+			DDR_port1,
+			input_buffer[3],
+			input_buffer[7],
+			inheight,
+			inwidth,
+			inwidth_align8,
+			indepth_align8,
+			group_indepth_x_inwidth_align8_by8,
+			group_indepth_offset_x_inwidth_align8_by8,
+			inwidth_ceildiv_inbufferwidth,
+			buffer_address_mid_increment_step,
+			input_load_burst_length,
+			row_address_bitnumber_flag,
+			row_idx_selected[3],
+			required_loaded_input_row_number
+			);
+
 		#elif INBUFFER_HEIGHT==4
 			load_input_row_from_ddr<0>(
 			DDR_port0,
@@ -1081,6 +999,7 @@ void write_output_row(
 	ap_uint<OUT_WIDTH*2> out_buffer0[OUTDEPTH_MINITILE_SIZE/WINO_H2][WINO_WIDTH/WINO_W2][WINO_H2][WINO_W2][WINO_OUT_SIZE_CELL][OUTPUT_BUFFER_DEPTH],
 	ap_uint<OUTPUT_BUFFER_DEPTH_BITWIDTH> rowtile_baseaddr0,
 	ap_uint<16> row_idx,
+	ap_uint<1> skip_flag,
 	// ap_int<16> bias_buffer[8][BIAS_BUFFER_DEPTH],
 	ConvDesc_t conv_desc
 )
@@ -1090,7 +1009,7 @@ void write_output_row(
 	#pragma HLS array_partition variable=out_buffer0 complete dim=2
 	#pragma HLS array_partition variable=out_buffer0 complete dim=3
 
-	if(row_idx >= conv_desc.outheight || row_idx <0)
+	if(skip_flag || row_idx >= conv_desc.outheight || row_idx <0 )
 	{
 		return;
 	}
@@ -1218,11 +1137,12 @@ void write_output_row(
 		// {
 		// 	printf("%d ",(int) outdata_vect[j][0]);
 		// }
+
 		// for(int j=0;j<OUT_PORT_BATCH_NUM ;j++)
 		// {
 		// 	printf("%d ",(int) outdata_vect[j][1]);
 		// }
-		// getchar();
+	
 
 		ap_int<OUT_WIDTH> outmem_data_scale[OUT_PORT_BATCH_NUM][2];
 
@@ -1238,6 +1158,23 @@ void write_output_row(
 				outmem_data_scale[i][b]=(( ((int)outdata_vect[i][b])*(int)scale_oback)>>OBACK_QUANT_BIT);//+bias_vect[i];		
 			}
 		}
+
+
+		// std::cout<<"Col "<<col<<std::endl;
+		// std::cout<<"Addr "<<out_address<<std::endl;
+		// for(int j=0;j<OUT_PORT_BATCH_NUM ;j++)
+		// {
+		// 	printf("%d ",(int) outmem_data_scale[j][0]);
+		// }
+
+		// for(int j=0;j<OUT_PORT_BATCH_NUM ;j++)
+		// {
+		// 	printf("%d ",(int) outmem_data_scale[j][1]);
+		// }
+		// std::cout<<std::endl;
+	
+
+
 		ap_int<OUT_WIDTH> outmem_data_sat[OUT_PORT_BATCH_NUM][2];
 		
 		#pragma HLS array_partition variable =outmem_data_sat complete dim=2
@@ -1272,7 +1209,6 @@ void write_output_row(
 		#pragma HLS array_partition variable =outmem_data complete dim=2
 		#pragma HLS array_partition variable =outmem_data complete dim=1
 
-	
 
 		for(int i=0;i<OUT_PORT_BATCH_NUM;i++)
 		{
@@ -1375,6 +1311,7 @@ void write_output_row(
 		#endif
 
 	}
+		// getchar();
 }
 
 
@@ -2113,8 +2050,6 @@ void write_output_to_DDR3(
 
 	static ap_uint<24> out_ddr_offset0;
 	static ap_uint<24> out_ddr_offset1;
-	static ap_uint<24> out_ddr_offset2;
-	static ap_uint<24> out_ddr_offset3;
 
 	
 	
@@ -2126,62 +2061,96 @@ void write_output_to_DDR3(
 	{
 		out_ddr_offset0=0;
 		out_ddr_offset1=conv_desc.output_burst_length;
-		out_ddr_offset2=conv_desc.output_burst_length*2;
-		out_ddr_offset3=conv_desc.output_burst_length*3;
+		// out_ddr_offset2=conv_desc.output_burst_length*2;
+		// out_ddr_offset3=conv_desc.output_burst_length*3;
 	}
 
 	ap_uint<16> rowtile_baseaddr_increment_step=conv_desc.wino_tile_number_in_outwidth;
 	ap_uint<16> rowtile_baseaddr0=0;
 	ap_uint<16> rowtile_baseaddr1=0;
-
-
+	ap_uint<3> 	buffer_counter=0;
 
 	for(ap_uint<8> row_idx=0; row_idx<conv_desc.out_rowstep;row_idx+=2)
 	{
+		std::cout<<"addr0 "<<out_ddr_offset0<<std::endl;
+		std::cout<<"addr1 "<<out_ddr_offset1<<std::endl;
 
-		if(conv_desc.wino3x3_flag || row_idx/2%2==0)
+		write_output_row<0>(
+		out_DDR0+out_ddr_offset0,
+		out_buffer[0],
+		rowtile_baseaddr0,
+		outrow_idx,
+		buffer_counter!=0,
+		conv_desc);
+
+		write_output_row<1>(
+		out_DDR1+out_ddr_offset1,
+		out_buffer[1],
+		rowtile_baseaddr0,
+		outrow_idx+1,
+		buffer_counter!=0,
+		conv_desc);
+
+
+
+		write_output_row<0>(
+		out_DDR0+out_ddr_offset0,
+		out_buffer[2],
+		rowtile_baseaddr0,
+		outrow_idx,
+		buffer_counter!=2,
+		conv_desc);
+
+		write_output_row<1>(
+		out_DDR1+out_ddr_offset1,
+		out_buffer[3],
+		rowtile_baseaddr0,
+		outrow_idx+1,
+		buffer_counter!=2,
+		conv_desc);
+
+
+		#if WINO_OUT_SIZE_CELL == 6
+		write_output_row<0>(
+		out_DDR0+out_ddr_offset0,
+		out_buffer[4],
+		rowtile_baseaddr0,
+		outrow_idx,
+		buffer_counter!=4,
+		conv_desc);
+
+		write_output_row<1>(
+		out_DDR1+out_ddr_offset1,
+		out_buffer[5],
+		rowtile_baseaddr0,
+		outrow_idx+1,
+		buffer_counter!=4,
+		conv_desc);
+		#endif
+
+
+
+		out_ddr_offset0+=conv_desc.out_ddr_increment_step;
+		out_ddr_offset1+=conv_desc.out_ddr_increment_step;
+
+		if(buffer_counter==conv_desc.wino_output_tile_size-2)
 		{
-			write_output_row<0>(
-			out_DDR0+out_ddr_offset0,
-			out_buffer[0],
-			rowtile_baseaddr0,
-			outrow_idx,
-			conv_desc);
-
-			write_output_row<1>(
-			out_DDR1+out_ddr_offset1,
-			out_buffer[1],
-			rowtile_baseaddr0,
-			outrow_idx+1,
-			conv_desc);
-
+			buffer_counter=0;
 			rowtile_baseaddr0+=rowtile_baseaddr_increment_step;
-			out_ddr_offset0+=conv_desc.out_ddr_increment_step;
-			out_ddr_offset1+=conv_desc.out_ddr_increment_step;
 		}
 		else
 		{
-			write_output_row<0>(
-			out_DDR0+out_ddr_offset2,
-			out_buffer[2],
-			rowtile_baseaddr1,
-			outrow_idx,
-			conv_desc);
-
-			write_output_row<1>(
-			out_DDR1+out_ddr_offset3,
-			out_buffer[3],
-			rowtile_baseaddr1,
-			outrow_idx+1,
-			conv_desc);
-
-			rowtile_baseaddr1+=rowtile_baseaddr_increment_step;
-			out_ddr_offset2+=conv_desc.out_ddr_increment_step;
-			out_ddr_offset3+=conv_desc.out_ddr_increment_step;
+			buffer_counter+=2;
 		}
-
+		// rowtile_baseaddr1+=rowtile_baseaddr_increment_step;
+		// out_ddr_offset2+=conv_desc.out_ddr_increment_step;
+		// out_ddr_offset3+=conv_desc.out_ddr_increment_step;
+	
+		// if(buffer_counter==conv_desc.wino_out)
 		outrow_idx+=2;
 	}
+
+
 }
 
 

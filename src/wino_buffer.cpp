@@ -1,7 +1,7 @@
 
 
-#ifndef _WINO_BUFFER_HPP_
-#define _WINO_BUFFER_HPP_
+#ifndef _WINO_BUFFER_CPP_
+#define _WINO_BUFFER_CPP_
 #include "wino_macro.h"
 #include "wino_struct.h"
 #include <ap_int.h>
@@ -335,13 +335,11 @@ void input_feed_underconstruction(
 			else if(loop_wino_tile_col_cnt == loop_wino_tile_col_reset_cycle)
 			{
 				input_head_row_idx+=wino_output_tile_size;
-
 				for(int i=0;i<WINO_DOMAIN_SIZE;i++)
 				{
 					#pragma HLS unroll
 					input_row_idx[i]+=wino_output_tile_size;
 				}
-			
 			}
 
 
@@ -366,6 +364,207 @@ void input_feed_underconstruction(
 		}
 	}	
 }
+
+
+void input_transform(
+	hls::stream< ap_uint<8*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &input_tile_stream,
+	hls::stream< ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> > &input_tile_transformed_stream,
+	int input_transform_feeding_loop_bound,
+	bool wino3x3_flag,
+	ap_uint<3> wino_array_col
+)
+{
+	#if DEBUG_FILE_PRINT
+	printf("---input_transform---\n");fflush(stdout);
+
+	int write_idx=0;
+	#endif
+	
+	for(int cycle=0;cycle<input_transform_feeding_loop_bound;cycle++)
+	{
+		#pragma HLS pipeline
+		ap_uint<8*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> input_tile_stream_data;
+		input_tile_stream>>input_tile_stream_data;
+
+		ap_int<IN_WIDTH> in[WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=in complete dim=1
+		#pragma HLS array_partition variable=in complete dim=2
+		#pragma HLS array_partition variable=in complete dim=3
+
+
+
+		for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+		{
+			#pragma HLS unroll
+			for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+			{
+				#pragma HLS unroll
+				for(int k=0;k<BATCH_SIZE;k++)
+				{
+					#pragma HLS unroll
+					in[i][j][k]=input_tile_stream_data.range( ((i*WINO_DOMAIN_SIZE+j)*BATCH_SIZE+k)*8+IN_WIDTH-1, ((i*WINO_DOMAIN_SIZE+j)*BATCH_SIZE+k)*8);
+				}
+			}
+		}
+		#if DEBUG_FILE_PRINT
+			char infilename[100];
+			sprintf(infilename,"intile_transform_%d.txt",(int) wino_array_col);
+			attach_output_vector<IN_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(in,write_idx,infilename);
+		#endif
+		// if(cycle == 0)
+		// {
+		// 	for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+		// 	{
+		// 		for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+		// 		{
+		// 			printf("[%8d]",(int) in[i][j][0] );
+		// 		}
+		// 		printf("\n");
+
+		// 	}
+		// 	printf("\n");
+		// 	for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+		// 	{
+		// 		for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+		// 		{
+		// 			printf("[%8d]",(int) in[i][j][1] );
+		// 		}
+		// 		printf("\n");
+
+		// 	}
+		// 	getchar();
+		// // }
+
+
+		ap_int<DB_WIDTH> DB[WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=DB complete dim=1
+		#pragma HLS array_partition variable=DB complete dim=2
+		#pragma HLS array_partition variable=DB complete dim=3
+
+		for(int k=0;k<BATCH_SIZE;k++)
+		{
+		#pragma HLS unroll
+			for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+			{
+			#pragma HLS unroll
+				#if WINO_DOMAIN_SIZE == 6
+					DB6x6_1(in,DB,i,k)
+				#else
+					DB4x4_1(in,DB,i,k)
+				#endif	
+			}
+		}
+		// std::cout<<"DB"<<std::endl;
+		// for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+		// {
+		// 	for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+		// 	{
+		// 		printf("%8d ",(int) DB[i][j][0] );
+		// 	}
+		// 	printf("\n");
+
+		// }
+		
+		// for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+		// {
+		// 	for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+		// 	{
+		// 		printf("%8d ",(int) DB[i][j][1] );
+		// 	}
+		// 	printf("\n");
+
+		// }
+		// getchar();
+
+		ap_int<BTB_WIDTH> BtDB[WINO_DOMAIN_SIZE][WINO_DOMAIN_SIZE][BATCH_SIZE];
+		#pragma HLS array_partition variable=BtDB complete dim=1
+		#pragma HLS array_partition variable=BtDB complete dim=2
+		#pragma HLS array_partition variable=BtDB complete dim=3
+
+
+		if(wino3x3_flag)
+		{
+	
+			for(int k=0;k<BATCH_SIZE;k++)
+			{
+			#pragma HLS unroll
+				for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+				{
+				#pragma HLS unroll
+					#if WINO_DOMAIN_SIZE ==6
+						BTB6x6_1(DB,BtDB,i,k)
+					#else
+						BTB4x4_1(DB,BtDB,i,k)
+					#endif	
+				}
+			}
+
+		}
+		else
+		{
+			for(int k=0;k<BATCH_SIZE;k++)
+			{
+				#pragma HLS unroll
+				for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+				{
+					#pragma HLS unroll
+					for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+					{
+						#pragma HLS unroll
+						BtDB[i][j][k]=in[i][j][k];
+					}
+				}
+			}
+		}
+	
+		// if(cycle == 0)
+		// {
+			// std::cout<<"BtdB"<<std::endl;
+			// for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+			// {
+			// 	for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+			// 	{
+			// 		printf("%8d ",(int) BtDB[i][j][0] );
+			// 	}
+			// 	printf("\n");
+			// }
+			// for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+			// {
+			// 	for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+			// 	{
+			// 		printf("%8d ",(int) BtDB[i][j][1] );
+			// 	}
+			// 	printf("\n");
+			// }
+			// getchar();
+		// }
+		ap_uint<BTB_WIDTH*BATCH_SIZE*WINO_DOMAIN_SIZE_SQUARE> input_tile_transformed_data;
+
+		for(int i=0;i<WINO_DOMAIN_SIZE;i++)
+		{
+			#pragma HLS unroll
+			for(int j=0;j<WINO_DOMAIN_SIZE;j++)
+			{
+				#pragma HLS unroll
+				for(int k=0;k<BATCH_SIZE;k++)
+				{
+					#pragma HLS unroll
+					input_tile_transformed_data.range(  ((i*WINO_DOMAIN_SIZE+j)*BATCH_SIZE+k)*BTB_WIDTH+BTB_WIDTH-1, ((i*WINO_DOMAIN_SIZE+j)*BATCH_SIZE+k)*BTB_WIDTH)=BtDB[i][j][k];
+				}
+			}
+		}
+
+
+		#if DEBUG_FILE_PRINT
+			// char infilename[100];
+			sprintf(infilename,"intile_transform_%d.txt",(int) wino_array_col);
+			attach_output_vector<BTB_WIDTH,WINO_DOMAIN_SIZE,BATCH_SIZE>(BtDB,write_idx,infilename);
+			write_idx++;
+		#endif
+		input_tile_transformed_stream<<input_tile_transformed_data;
+	}
+}
+
 
 
 //template<int dummy>
@@ -397,9 +596,10 @@ void load_weight_ddr_one_port(
 	ap_uint<8> counter_boundary;
 
 	#if WINO_DOMAIN_SIZE == 6
-	if(kernel_size==5)
-		counter_boundary=WEIGHTDDR_INDEPTH_MINITILE_128BIT_STEP-1;
-	else
+	// if(kernel_size==5)
+	// 	counter_boundary=WEIGHTDDR_INDEPTH_MINITILE_128BIT_STEP-1;
+	// else
+	// 	counter_boundary=INDEPTH_MINITILE_SIZE/2-1;
 		counter_boundary=INDEPTH_MINITILE_SIZE/2-1;
 	#else
 		counter_boundary=INDEPTH_MINITILE_SIZE/2-1;
@@ -430,52 +630,9 @@ void load_weight_ddr_one_port(
 
 	// std::cout<<"counter_boundary" <<counter_boundary <<std::endl;
 	for(int address = 0; address<weightDDR_port_burst_length; address++)
-	{
-
-		
+	{		
 		#pragma HLS pipeline
-
-
 		ap_uint<128> temp128 = offseted_weight_DDR[address];
-
-		
-
-		#if WINO5x5_EN
-			ap_uint<W_WIDTH*4> temp32[4];
-			#pragma HLS array_partition  variable = temp32 complete
-			for(int i=0;i<4;i++)
-			{
-				#pragma HLS unroll
-
-				for(int j=0;j<4;j++)
-				{
-					#pragma HLS unroll
-					temp32[i].range(j*W_WIDTH+W_WIDTH-1,j*W_WIDTH) =temp128.range(i*32+j*8+W_WIDTH-1,i*32+j*8);
-				}
-			}
-
-			for(int i=0;i<4;i++)
-			{
-				#pragma HLS unroll
-				for(int j=0;j<4;j++)
-				{
-					#pragma HLS unroll
-					temp32[i].range(j*W_WIDTH+W_WIDTH-1,j*W_WIDTH) =temp128.range(i*32+j*8+W_WIDTH-1,i*32+j*8);
-				}
-			}
-
-	
-			// printf("\taddress: %d, port_idx: %d, bufferaddr:%d\n", (int)address,(int) buffer_idx,(int) buffer_address );
-			for(int i=0;i<WINO_DOMAIN_SIZE_SQUARE*INDEPTH_MINITILE_SIZE/4;i++)
-			{
-				#pragma HLS unroll
-				if( i/4==counter_x2/2)
-				{
-					weight_reg[i]=temp32[i%4];
-				}
-			}
-
-		#endif
 
 		#if WINO3x3_EN
 			ap_int<G_WIDTH> g_tile[2][3][3];
@@ -546,7 +703,7 @@ void load_weight_ddr_one_port(
 				for(int r=0;r<WINO_DOMAIN_SIZE;r++)
 				{
 					#pragma HLS unroll
-					// gGT(g_tile,gG_tile,c,b);
+					
 					#if WINO_DOMAIN_SIZE==6
 					GgG3to6(gG_tile,GgG_tile,r,b);
 					#else
@@ -574,7 +731,7 @@ void load_weight_ddr_one_port(
 				for(int i=0;i<2*WINO_DOMAIN_SIZE_SQUARE;i++)
 				{
 					#pragma HLS unroll
-					GgG_tile_flat[i]=g_tile[i/WINO_DOMAIN_SIZE_SQUARE][0][0];//.range(RG_WIDTH-1,RG_WIDTH-W_WIDTH);
+					GgG_tile_flat[i]=g_tile[i/WINO_DOMAIN_SIZE_SQUARE][0][0]*(512>>(RG_WIDTH-W_WIDTH) ) ;//.range(RG_WIDTH-1,RG_WIDTH-W_WIDTH);
 				}
 			}
 			else
@@ -582,7 +739,7 @@ void load_weight_ddr_one_port(
 				for(int i=0;i<2*WINO_DOMAIN_SIZE_SQUARE;i++)
 				{
 					#pragma HLS unroll
-					GgG_tile_flat[i]=GgG_tile[i/WINO_DOMAIN_SIZE_SQUARE][i%WINO_DOMAIN_SIZE_SQUARE/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE];//.range(RG_WIDTH-1,RG_WIDTH-W_WIDTH);
+					GgG_tile_flat[i]=GgG_tile[i/WINO_DOMAIN_SIZE_SQUARE][i%WINO_DOMAIN_SIZE_SQUARE/WINO_DOMAIN_SIZE][i%WINO_DOMAIN_SIZE].range(RG_WIDTH-1,RG_WIDTH-W_WIDTH);
 				}
 			}
 
