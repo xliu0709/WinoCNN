@@ -29,6 +29,13 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ul
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 } Clk_slave {/zynq_ultra_ps_e_0/pl_clk0 } Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 } Master {/wino_systolic_top_0/m_axi_mem_params} Slave {/zynq_ultra_ps_e_0/S_AXI_HP2_FPD} intc_ip {/axi_smc_2} master_apm {0}}  [get_bd_intf_pins wino_systolic_top_0/m_axi_mem_params]
 
 
+
+# set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE AltSpreadLogic_high [get_runs impl_1]
+# set_property STEPS.POST_PLACE_POWER_OPT_DESIGN.TCL.PRE {} [get_runs impl_1]
+# set_property STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE AlternateFlowWithRetiming [get_runs impl_1]
+# set_property STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE MoreGlobalIterations [get_runs impl_1]
+# set_property STEPS.OPT_DESIGN.ARGS.DIRECTIVE ExploreWithRemap [get_runs impl_1]
+
 make_wrapper -files [get_files ./RTL/RTL.srcs/sources_1/bd/design_1/design_1.bd] -top
 add_files -norecurse ./RTL/RTL.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
 
