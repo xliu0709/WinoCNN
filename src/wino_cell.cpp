@@ -2146,7 +2146,7 @@ void winoPEB_EDG(
 		)
 {
 	#if DEBUG_FILE_PRINT
-	printf("---wino_stream_block---\n");fflush(stdout);
+	printf("---winoPEB_EDG---\n");fflush(stdout);
 	#endif
 	#pragma HLS interface ap_stable port=ap_clk_div2
 	#pragma HLS interface ap_stable port=weightbuffer_outdepth_minitile_number
@@ -2268,6 +2268,8 @@ void winoPEB_EDG(
 	#endif
 	for(int cycle=0;cycle < loop_wino_cell_bound; cycle++)
 	{
+		// std::cout<<"cycle "<<cycle<<std::endl;
+		// getchar();
 
 		// for(int oload_idx=0;oload_idx<conv_desc.weightbuffer_load_outdepth_number;oload_idx++)
 		// for(int iload_idx=0;iload_idx<conv_desc.weightbuffer_load_indepth_number;iload_idx++)
@@ -2976,7 +2978,7 @@ void winoPEB_CORN(
 		)
 {
 	#if DEBUG_FILE_PRINT
-	printf("---wino_stream_block---\n");fflush(stdout);
+	printf("---winoPEB_CORN---\n");fflush(stdout);
 	#endif
 	#pragma HLS interface ap_stable port=ap_clk_div2
 	#pragma HLS interface ap_stable port=weightbuffer_outdepth_minitile_number

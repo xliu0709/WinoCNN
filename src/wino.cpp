@@ -427,7 +427,7 @@ void wino_kernel_merge_row(
 )
 {
     int merge_weight_offset=merge_weight_row_offset+conv_desc.merge_weight_col_step;
-
+    std::cout<<" wino_kernel_merge_row "<<std::endl;
     ap_uint<2> merge_kernel_step=conv_desc.merge_kernel_step;
     ap_uint<4> merge_kernel_size_w=conv_desc.merge_kernel_size_w;
     for(ap_uint<4> col_offset=0;col_offset<merge_kernel_size_w;col_offset+=merge_kernel_step)

@@ -254,6 +254,8 @@ void wino_systolic_kernel_wrapper(
 	#pragma HLS array_partition variable=out_buffer dim=2 complete
 	#pragma HLS array_partition variable=out_buffer dim=3 complete
 	#pragma HLS array_partition variable=out_buffer dim=4 complete
+
+    std::cout<<" wino_systolic_kernel_wrapper "<<std::endl;
 	wino_systolic_kernel(
         WEIGHT_PORTS_CALL(weight_DDR),
         input_buffer,

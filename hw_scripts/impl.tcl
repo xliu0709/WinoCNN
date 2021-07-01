@@ -5,7 +5,7 @@ create_bd_design "design_1"
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:zynq_ultra_ps_e:3.3 zynq_ultra_ps_e_0
 apply_bd_automation -rule xilinx.com:bd_rule:zynq_ultra_ps_e -config {apply_board_preset "1" }  [get_bd_cells zynq_ultra_ps_e_0]
-set_property -dict [list CONFIG.PSU__USE__M_AXI_GP1 {0} CONFIG.PSU__USE__S_AXI_GP2 {1} CONFIG.PSU__USE__S_AXI_GP3 {1} CONFIG.PSU__USE__S_AXI_GP4 {1} CONFIG.PSU__USE__S_AXI_GP5 {1} CONFIG.PSU__USE__IRQ0 {0} CONFIG.PSU__CRL_APB__PL0_REF_CTRL__FREQMHZ {100}] [get_bd_cells zynq_ultra_ps_e_0]
+set_property -dict [list CONFIG.PSU__USE__M_AXI_GP1 {0} CONFIG.PSU__USE__S_AXI_GP2 {1} CONFIG.PSU__USE__S_AXI_GP3 {1} CONFIG.PSU__USE__S_AXI_GP4 {1} CONFIG.PSU__USE__S_AXI_GP5 {1} CONFIG.PSU__USE__IRQ0 {0} CONFIG.PSU__CRL_APB__PL0_REF_CTRL__FREQMHZ {220}] [get_bd_cells zynq_ultra_ps_e_0]
 
 
 set_property  ip_repo_paths  ./HLS [current_project]
@@ -29,8 +29,7 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ul
 apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ultra_ps_e_0/pl_clk0 } Clk_slave {/zynq_ultra_ps_e_0/pl_clk0 } Clk_xbar {/zynq_ultra_ps_e_0/pl_clk0 } Master {/wino_systolic_top_0/m_axi_mem_params} Slave {/zynq_ultra_ps_e_0/S_AXI_HP2_FPD} intc_ip {/axi_smc_2} master_apm {0}}  [get_bd_intf_pins wino_systolic_top_0/m_axi_mem_params]
 
 
-
-# set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE AltSpreadLogic_high [get_runs impl_1]
+set_property STEPS.PLACE_DESIGN.ARGS.DIRECTIVE WLDrivenBlockPlacement [get_runs impl_1]
 # set_property STEPS.POST_PLACE_POWER_OPT_DESIGN.TCL.PRE {} [get_runs impl_1]
 # set_property STEPS.PHYS_OPT_DESIGN.ARGS.DIRECTIVE AlternateFlowWithRetiming [get_runs impl_1]
 # set_property STEPS.ROUTE_DESIGN.ARGS.DIRECTIVE MoreGlobalIterations [get_runs impl_1]
@@ -38,6 +37,14 @@ apply_bd_automation -rule xilinx.com:bd_rule:axi4 -config { Clk_master {/zynq_ul
 
 make_wrapper -files [get_files ./RTL/RTL.srcs/sources_1/bd/design_1/design_1.bd] -top
 add_files -norecurse ./RTL/RTL.srcs/sources_1/bd/design_1/hdl/design_1_wrapper.v
+
+
+
+# launch_runs synth_1 -jobs 16
+# wait_on_run synth_1
+
+# add_files -fileset constrs_1 /home/xliu79/Research/2020/WinoCNN/hw_scripts/pblock2.xdc
+# set_property target_constrs_file /home/xliu79/Research/2020/WinoCNN/hw_scripts/pblock2.xdc [current_fileset -constrset]
 
 
 launch_runs impl_1 -to_step write_bitstream -jobs 16

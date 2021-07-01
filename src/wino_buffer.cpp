@@ -377,7 +377,7 @@ void input_transform(
 	#if DEBUG_FILE_PRINT
 	printf("---input_transform---\n");fflush(stdout);
 
-	int write_idx=0;
+	// int write_idx=0;
 	#endif
 	
 	for(int cycle=0;cycle<input_transform_feeding_loop_bound;cycle++)

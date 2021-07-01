@@ -874,7 +874,7 @@ void load_input_rowtile_from_ddr(
 			required_loaded_input_row_number
 			);
 
-			load_input_row_from_ddr<1>(
+			load_input_row_from_ddr<0>(
 			DDR_port0,
 			input_buffer[2],
 			input_buffer[6],
@@ -1186,7 +1186,7 @@ void write_output_row(
 			for(int b=0;b<BATCH_SIZE;b++)
 			{	
 				#pragma HLS unroll
-				ap_int<19-ODDR_WIDTH> judge_bits0=outmem_data_scale[i][b].range(17,ODDR_WIDTH-1);
+				ap_int<OUT_WIDTH-ODDR_WIDTH> judge_bits0=outmem_data_scale[i][b].range(OUT_WIDTH-1,ODDR_WIDTH-1);
 
 				if(judge_bits0==0 || judge_bits0==-1)
 				{

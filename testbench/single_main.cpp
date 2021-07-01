@@ -111,8 +111,8 @@ int main(int argc, char** argv)
 
 
     // declare layer info wiehgt
-    char* weight_int = new char[ kernel_size_h*kernel_size_w* input_depth*output_depth];
-    short* bias_int = new short[ ALIGN(output_depth,8) ];
+    char* weight_int = new char[65535*16*4];
+    short* bias_int = new short[1024*4 ];
     
     linfo_vect[0].weightbuffer_quant.push_back(weight_int);
     linfo_vect[0].biasbuffer_quant.push_back(bias_int);
@@ -126,13 +126,20 @@ int main(int argc, char** argv)
     prepare_conv_descriptor(linfo_vect);
 
 
-    int* conv_desc_param=new int[128];
-    int* bias=new int[128];
+    int* conv_desc_param=new int[65535];
+    int* bias=new int[1024];
     memcpy(conv_desc_param,&(linfo_vect[0].conv_desc),sizeof(ConvDesc_t));
 
     FILE* fptr=fopen("param.bin","w");
     fwrite(conv_desc_param,sizeof(int),128,fptr);
     fclose(fptr);
+
+
+    for(int i=0;i<128;i++)
+    {
+        std::cout<<"param["<<i<<"]:"<<conv_desc_param[i]<<std::endl;
+    }
+
 
     if(dump_method=="dump_param")
     {
@@ -180,6 +187,7 @@ int main(int argc, char** argv)
 
     feature_map_init(fmap_dict["in"],input_gold);
  
+
     featuremap_int_to_hw_pointers(
         fmap_dict["in"].buffers_int[0],
         fmap_dict["in"].buffers_int[1],
@@ -200,47 +208,48 @@ int main(int argc, char** argv)
 
 
     init_bias_int(linfo_vect[0].biasbuffer_quant[0],output_depth,"zero");
-
-    wino_model_int(fmap_dict["in"].buffers_int[0],
-        input_depth,
-        input_height,
-        input_width,
-        fmap_dict["out"].buffers_int[0],
-        output_depth,
-        output_height,
-        output_width,
-        linfo_vect[0].weightbuffer_quant[0],
-        linfo_vect[0].biasbuffer_quant[0],
-        kernel_size_h,
-        kernel_size_w,
-        pad_size_h,
-        pad_size_w,
-        stride_size,
-        relu_flag,
-        Scale_oback_int,
-        use_kernel_size
-    );
-
-    wino_model_int(fmap_dict["in"].buffers_int[1],
-        input_depth,
-        input_height,
-        input_width,
-        fmap_dict["out"].buffers_int[1],
-        output_depth,
-        output_height,
-        output_width,
-        linfo_vect[0].weightbuffer_quant[0],
-        linfo_vect[0].biasbuffer_quant[0],
-        kernel_size_h,
-        kernel_size_w,
-        pad_size_h,
-        pad_size_w,
-        stride_size,
-        relu_flag,
-        Scale_oback_int,
-        use_kernel_size
-    );
-
+if(dump_method!="dump_param" )
+{
+//    wino_model_int(fmap_dict["in"].buffers_int[0],
+//        input_depth,
+//        input_height,
+//        input_width,
+//        fmap_dict["out"].buffers_int[0],
+//        output_depth,
+//        output_height,
+//        output_width,
+//        linfo_vect[0].weightbuffer_quant[0],
+//        linfo_vect[0].biasbuffer_quant[0],
+//        kernel_size_h,
+//        kernel_size_w,
+//        pad_size_h,
+//        pad_size_w,
+//        stride_size,
+//        relu_flag,
+//        Scale_oback_int,
+//        use_kernel_size
+//    );
+//
+//    wino_model_int(fmap_dict["in"].buffers_int[1],
+//        input_depth,
+//        input_height,
+//        input_width,
+//        fmap_dict["out"].buffers_int[1],
+//        output_depth,
+//        output_height,
+//        output_width,
+//        linfo_vect[0].weightbuffer_quant[0],
+//        linfo_vect[0].biasbuffer_quant[0],
+//        kernel_size_h,
+//        kernel_size_w,
+//        pad_size_h,
+//        pad_size_w,
+//        stride_size,
+//        relu_flag,
+//        Scale_oback_int,
+//        use_kernel_size
+//    );
+}
     char* inputddr=fmap_dict["in"].buffers_hw[0];
     char* outputddr=fmap_dict["out"].buffers_hw[0];
     char* weightddr0=linfo_vect[0].weightbuffers_hw[0];
